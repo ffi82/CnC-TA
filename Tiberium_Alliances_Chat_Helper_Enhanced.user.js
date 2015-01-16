@@ -11,7 +11,6 @@
 // ==/UserScript==
 
 // type: /chelp in any text box and hit <enter> for a list of commands
-
 // Please report urls that are not tagged properly
 
 // window.chatHelper_suppressBrowserAltKeys suppresses normal browser menu keys [Alt+(a,p,b,i,u,s)] when you are in a textarea so that the menus don't open.
