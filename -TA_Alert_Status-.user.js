@@ -8,7 +8,6 @@
 // @author      der_flake
 // @grant          none
 // ==/UserScript==
-
 (function () {
     var original_title = window.document.title;
     var enable_sound   = true; // false
