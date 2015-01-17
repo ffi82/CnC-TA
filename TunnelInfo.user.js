@@ -7,7 +7,7 @@
 // @updateURL https://userscripts.org/scripts/source/293295.meta.js
 // @downloadURL https://userscripts.org/scripts/source/293295.user.js
 // @author KRS_L
-// @grant          none
+// @grant none
 // ==/UserScript==
 (function () {
 	var TATI_main = function () {
