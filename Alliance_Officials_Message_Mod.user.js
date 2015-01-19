@@ -3,7 +3,7 @@
 // @description Replaces the "My Commanders" option in the new message window with an "Alliance Officials" option.
 // @namespace message_mod
 // @include https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @version 1.2
+// @version 1.3
 // @author KRS_L
 // @updateURL https://userscripts.org/scripts/source/158537.meta.js
 // @downloadURL https://userscripts.org/scripts/source/158537.user.js
