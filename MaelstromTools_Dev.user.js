@@ -5,6 +5,7 @@
 // @version     0.1.3.2
 // @author      Maelstrom, HuffyLuf, KRS_L and Krisan
 // @include     http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
+// @grant none
 // ==/UserScript==
 //var offense_units = own_city.get_CityArmyFormationsManager().GetFormationByTargetBaseId(current_city.get_Id()).get_ArmyUnits().l;
 //System.Int64 GetForumIdByType (ClientLib.Data.Forum.EForumType eForumType)
