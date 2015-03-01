@@ -1,12 +1,12 @@
 // ==UserScript==
-// @name           Tiberium Alliances Repair Time Of Death
-// @version        1.0.0
-// @namespace      http://openuserjs.org/users/petui
-// @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
-// @author         petui
-// @description    Displays how much offense repair time a dead base had at the time of death
-// @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @grant          none
+// @name	Tiberium Alliances Repair Time Of Death
+// @version	1.0.0
+// @namespace	http://openuserjs.org/users/petui
+// @license	GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
+// @author	petui
+// @description	Displays how much offense repair time a dead base had at the time of death
+// @include	http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
+// @grant	none
 // ==/UserScript==
 'use strict';
 
