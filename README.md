@@ -1,28 +1,28 @@
 # CnC-TA
 
-Customize the way CnC:TA displays or behaves, by using small bits of JavaScript.
+Customize the way [b]CnC:TA[/b] displays or behaves, by using small bits of [i]JavaScript[/i].
 
+[hr]
+[u][b]How to get them:[/b][/u]
 
-How to get them:
+[b]1.[/b] Install a browser.
+[b]2.[/b] Install an addon depending on which browser you use.
+[b]3.[/b] Go to [b][url]http://userscripts.org:8080/[/url][/b] (in most cases) and install the scripts that you want.
+[hr]
+[u][b]List of browsers and script managers:[/b][/u]
 
-1. Install a browser.
-2. Install an addon depending on which browser you use.
-3. Install the scripts that you want.
+[b]1.Mozilla Firefox and Greasemonkey[/b]
+- [url]http://www.mozilla.org/en-US/firefox/all/[/url][i] - browser[/i]
+- [url]http://addons.mozilla.org/en-US/firefox/addon/greasemonkey/[/url][i] - script manager[/i]
 
-List of browsers and script managers:
+[b]2. Waterfox and Greasemonkey[/b]
+- [url]http://www.waterfoxproject.org/[/url][i] - browser for x64 systems, fast, based on the Mozilla platform[/i]
+- [url]http://addons.mozilla.org/en-US/firefox/addon/greasemonkey/[/url][i] - script manager[/i]
 
-1.Mozilla Firefox and Greasemonkey
-- http://www.mozilla.org/en-US/firefox/all/ - browser
-- http://addons.mozilla.org/en-US/firefox/addon/greasemonkey/ - script manager
+[b]3. Google Chrome and Tampermonkey[/b]
+- [url]http://www.google.com/intl/en/chrome/browser/[/url][i] - browser[/i]
+- [url]http://tampermonkey.net/[/url][i] - script manager[/i]
 
-2. Waterfox and Greasemonkey
-- http://www.waterfoxproject.org/ - browser for x64 systems, fast, based on the Mozilla platform
-- http://addons.mozilla.org/en-US/firefox/addon/greasemonkey/ - script manager
-
-3. Google Chrome and Tampermonkey
-- http://www.google.com/intl/en/chrome/browser/ - browser
-- http://tampermonkey.net/ - script manager
-
-4. Opera and Tampermonkey
-- http://www.opera.com/ - browser
-- http://tampermonkey.net/ - script manager
+[b]4. Opera and Tampermonkey[/b]
+- [url]http://www.opera.com/[/url][i] - browser[/i]
+- [url]http://tampermonkey.net/[/url][i] - script manager[/i]
