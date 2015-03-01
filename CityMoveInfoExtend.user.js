@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name CityMoveInfoExtend
-// @version 14.06.17
-// @description Extended move info.
-// @namespace https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @include https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @author Nogrod
-// @grant none
+// @name	CityMoveInfoExtend
+// @versio	14.06.17
+// @descriptio	Extended move info.
+// @namespac	https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
+// @includ	https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
+// @autho	Nogrod
+// @gran	none
 // ==/UserScript==
 
 (function() {
