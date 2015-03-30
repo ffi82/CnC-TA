@@ -11,7 +11,7 @@ How to get them:
 Browsers and script managers:
 
 Mozilla Firefox and Greasemonkey
-- http://www.mozilla.org/en-US/firefox/all/[/url][i] - browser[/i]
+- http://www.mozilla.org/en-US/firefox/all/ - browser
 - http://addons.mozilla.org/en-US/firefox/addon/greasemonkey/ - script manager
 
 Waterfox and Greasemonkey
