@@ -23,6 +23,7 @@
 2012-11-25: Special thanks to PythEch for fixing this up so it worked again!
 
 */
+
 var scity = null;
 var tcity = null;
 var tbase = null;
