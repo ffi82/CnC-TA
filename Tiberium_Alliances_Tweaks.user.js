@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           Tiberium Alliances Tweaks
-// @version        1.1.0
+// @version        1.1.1
 // @namespace      http://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @author         petui
@@ -265,7 +265,8 @@
 						allowMaximize: false,
 						allowMinimize: false,
 						textColor: 'text-region-tooltip',
-						width: 465
+						resizable: [true, false],
+						width: 500
 					});
 					this.getChildControl('icon').set({
 						scale: true,
@@ -274,11 +275,24 @@
 						alignY: 'middle'
 					});
 
+					var mainContainer = qx.core.Init.getApplication().getMainContainer();
+					mainContainer.addListener('resize', function(event) {
+						this.setMaxHeight(event.getData().height);
+					}, this);
+					this.setMaxHeight(mainContainer.getBounds().height);
+
 					var mainOverlayBounds = qx.core.Init.getApplication().getMainOverlay().getBounds();
 					this.moveTo(
 						mainOverlayBounds.left + mainOverlayBounds.width - this.getWidth() - 120,
 						mainOverlayBounds.top + 100
 					);
+
+					var scrollContainer = new qx.ui.container.Composite(new qx.ui.layout.VBox());
+					var scroller = new qx.ui.container.Scroll(scrollContainer);
+					scrollContainer.addListener('resize', function(event) {
+						this.setHeight(event.getData().height);
+					}, scroller);
+					this.add(scroller, { flex: 1 });
 
 					this.categoryContainers = {};
 					this.features = [];
@@ -292,7 +306,7 @@
 							font: 'font_size_13',
 							textColor: 'text-region-value'
 						}));
-						this.add(container);
+						scrollContainer.add(container);
 					}
 
 					var cancelButton = new qx.ui.form.Button('Cancel').set({
