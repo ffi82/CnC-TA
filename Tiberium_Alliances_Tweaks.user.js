@@ -6,6 +6,7 @@
 // @author         petui
 // @description    A collection of more or less useful features that attempt to improve the gaming experience.
 // @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
+// @grant none
 // ==/UserScript==
 'use strict';
 
