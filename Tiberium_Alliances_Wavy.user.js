@@ -6,6 +6,7 @@
 // @author         petui
 // @description    Displays details about forgotten attack wave zones.
 // @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
+// @grant          none
 // @contributor    mogsy
 // ==/UserScript==
 /* 
