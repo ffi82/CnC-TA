@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name           BaseInfo
-// @version        3.1.6
-// @author         Dirk Kántor
+// @version        3.2.8
+// @author         Dirk Kántor (NurIcke)
+// @contributor    leo7044 (helping out for translations)
 // @description    Basis Informationen zur Auswertung und Übergabe an die Allianz Befehlshaber. Rechts oberhalb des Spielfensters befindet sich ein neuer Button der das Script aufruft.
 // @namespace      http://baseinfo.scriptarea.net/download/show/144825
 // @require        http://baseinfo.scriptarea.net/download/update/144825
@@ -13,29 +14,58 @@
 // @grant          none
 // ==/UserScript==
 
+
 (function () {
-    var BaseInfoMain = function () {
-        function BaseInfoCreate()
-            {
-                try
-                    {
+	var BaseInfoMain = function () {
+		function BaseInfoCreate()
+			{
+
+// ########################################### //
+// ############# S E T T I N G S ############# //
+// ########################################### //
+// 
+// ###### CHANGE YOUR OWN BUTTON DESIGN ###### //
+// 
+// Use 1 for Image and Name Like: [ ((i)) BaseInfo ] *** Standard
+// Use 2 for Name only. Like: [ BaseInfo ]
+// Use 3 for Image only. Like: [ ((i)) ]
+//
+var BIBUTTONDESIGN = 1; // <- Change only the Number
+//
+// ########################################### //
+// 
+// ##### CHANGE YOUR OWN BUTTON POSITION ##### //
+// 
+// Use 1 for Top-Right (Left from the World Button) *** Standard
+// Use 2 for Top-Left (Right from your own Playername)
+// Use 3 for Bottom-Right (Left from the ServerInfo Area)
+// Use 4 for Bottom-Left (Top of the Chat)
+//
+var BIBUTTONPOSITION = 1; // <- Change only the Number
+//
+// ########################################### //
+// ####### E N D  O F  S E T T I N G S ####### //
+// ########################################### //
+
+if(BIBUTTONDESIGN == 3) { var BIBUTTONHEIGHT = 32; var BIBUTTONWIDTH = 41;}
+else if(BIBUTTONDESIGN == 2) { var BIBUTTONHEIGHT = 32; var BIBUTTONWIDTH = 75;}
+else { var BIBUTTONHEIGHT = 32; var BIBUTTONWIDTH = 100;}
+				try
+					{
 						qx.Class.define("BaseInfoLang", {
 							type: "singleton",
 							extend: qx.core.Object,
 							construct: function (language) {
 								/*
 									Enthaltene Sprachen:
-									de=deutsch (Welt) STANDART,
-									en=englisch (World), ro=rumänisch (Lume), hu=ungarisch (Világ),
-									it=italienisch (Mondo), tr=türkisch (Dünya), fr=französisch (Monde), 
-									
-									Kommende Sprachen:
-									Mundo = Spanisch, Portugiesisch, Brasilianisch
-									Svět = tschechisch
-									Svet = Slowakisch
+									deutsch (de), englisch=(en), rumänisch (ro), ungarisch (hu), italienisch (it),
+									Türkisch (tr), Französisch (fr), Spanisch (es), Portugiesisch (pt), Tschechisch (cs)
+									Slowakisch (sk), Ukrainisch (uk), Weissrussland (be), Russisch (ru), Schwedisch (sv),
+									Norwegisch (nb), Niederländisch (nl), Kroatisch (hr), Griechisch (el), Finnisch (fi),
+									Dänisch (da), Bulgarisch (bg), Arabisch (ar), Polnisch (pl), Indonesisch (id),
 								*/
-								this.Languages = ['de','en','ro','hu','it','tr','fr'];
-								if (language != null) {
+								this.Languages = ['de','en','ro','hu','it','tr','fr','es','pt','cs','sk','uk','be','ru','sv','nb','nl','hr','el','fi','da','bg','ar','pl','id'];
+								if (language !== null) {
 									this.MyLanguage = language;
 								}
 							},
@@ -53,63 +83,74 @@
 									}
 
 									this.Data = new Object();
-									// this.Data[DESCRIPTION] = [VALUES,VLAUES,...][l];
-									this.Data["Sprache"] = ["de","en","ro","hu","it","tr","fr","","",""][l];
-									this.Data["Serversprache"] = ["Serversprache","Server Language","Limbaj Server","Szerver nyelv","Lingua Server","Sunucu Dil","Langage de Serveur","","",""][l];
-									this.Data["Öffnen"] = ["Öffnen","Open","Deschidere","Nyitás","Apertura","Açılış","Ouverture","","",""][l];
-									this.Data["Basenwerte"] = ["Basenwerte","Base values","Valorile de Bază","Bázis Értékek","Valori di Base","Üs Değerler","Les valeurs de base","","",""][l];
-									this.Data["Mitglieder"] = ["Mitglieder","Members","Membrii","Tagok","Membri","Üyeler","membres","","",""][l];
-									this.Data["Scriptinfo"] = ["Scriptinfo","Scripts Info","Informații Scripturi","Scripts Információkat","Informazioni Scripts","Script bilgisi","Scripts d'infos","","",""][l];
-									this.Data["Allgemeine Informationen"] = ["Allgemeine Informationen","Genral Information","Informații Generale","Általános Információk","Informazioni Generali","Genel bilgi","informations générales","","",""][l];
-									this.Data["Gesamte Produktion"] = ["Gesamte Produktion","Total Production","Producția Totală de","Összes Termelés","La Produzione Totale","Toplam üretim","La production totale","","",""][l];
-									this.Data["Erste Offensive"] = ["Erste Offensive","First Offense","Primul Ofensivă","Első Támadó","Prima Attaccante","birinci ofansif","première offensive","","",""][l];
-									this.Data["Zweite Offensive"] = ["Zweite Offensive","Second Offense","Al Doilea Ofensivă","Második Támadó","Secondo Attaccante","ikinci bir ofansif","deuxième offensive","","",""][l];
-									this.Data["Werte übertragen"] = ["Werte übertragen","Transfer Values","Valorile de Transfer","Transfer Értékek","Valori di Trasferimento","transferi değerler","Les valeurs de transfert","","",""][l];
-									this.Data["Weltkarte"] = ["Weltkarte","Worldmap","Hartă Lumii","Térkép a Világ","Mappamondo","dünyada haritası","carte du monde","","",""][l];
-									this.Data["Allianz Rolle"] = ["Allianz Rolle","Alliance Role","Rol Alianță","Szövetség Szerepe","Ruolo Alleanza","İttifak rolü","rôle de l'Alliance","","",""][l];
-									this.Data["Spielername"] = ["Spielername","Player Name","Nume Jucător","Játékos Neve","Nome Giocatore","Oyuncu Adı","Nom du joueur","","",""][l];
-									this.Data["Spielerklasse"] = ["Spielerklasse","Player Class","Clasa Jucător","Töredék","Fazione","Grup","Faction","","",""][l];
-									this.Data["Aktuelle Uhrzeit"] = ["Aktuelle Uhrzeit","Current Time","Ora curenta","Idő","Ora Attuale","şimdiki zaman","Date actuelle","","",""][l];
-									this.Data["Rang"] = ["Rang","Rank","Rang","Helyezés","rango","Derece","Classement","","",""][l];
-									this.Data["Maximale KP"] = ["Maximale KP","Maximal CP","Puncte de Comando Maxime","Maximális Parancsnoki Pont","Comando il Massimo dei Punti","Maksimum Komutanlığı Puan","Points de Commandement maximum","","",""][l];
-									this.Data["Maximale Repzeit"] = ["Maximale Repzeit","Maximal Reptime","Timp Maxim de Reparație","Maximális Javítási Idő","Tempo Massimo di Riparazione","Maksimum onarım süresi","Temps maximum de réparation","","",""][l];
-									this.Data["Stunden"] = ["Stunden","Hours","Ore","Óra","Orario","saatleri","heures","","",""][l];
-									this.Data["Basenanzahl"] = ["Basenanzahl","Basecount","Numarul de Bază","Szám Bázisok","Numero di Base","Üs Numarası","Nombre de base","","",""][l];
-									this.Data["Anzahl Offensiv Basen"] = ["Anzahl Offensiv Basen","Offense Bases Count","Baze număr Ofensivă","Szám Sértő Bázisok","Basi numero Attaccante","Numara saldırgan Üs","Nombre de bases offensives","","",""][l];
-									this.Data["Support Gebäude Level Ø"] = ["Support Gebäude Level Ø","Support Building Level Ø","Suport de Constructii Nivel Ø","Támogatás Építési Szint Ø","Supporto Livello Edificio Ø","Destek Bina Seviye Ø","Bâtiment Niveau de soutien","","",""][l];
-									this.Data["VE Ø aller Basen"] = ["VE Ø aller Basen","DF Ø all Bases","Ø Unitate de Apărare Toate Bazele","Védelem Létrehozása Ø Összes Bázisok","Stazioni di difesa Ø di tutte le basi","Savunma Tesis Ø bütün Üs","Fonds de défense Ø de toutes les bases","","",""][l];
-									this.Data["Kristall"] = ["Kristall","Crystal","Cristal","Kristály","Cristallo","kristal","cristaux","","",""][l];
-									this.Data["Tiberium"] = ["Tiberium","Tiberium","Tiberium","Tibérium","Tiberium","Tiberium","Tiberium","","",""][l];
-									this.Data["Strom"] = ["Strom","Power","Putere","Áram","Energia","enerji","Énergie","","",""][l];
-									this.Data["Credit"] = ["Credit","Credit","Credit","Kredit","Crediti","kredi","Crédit","","",""][l];									
-									this.Data["Kristall Produktion"] = ["Kristall Produktion","Crystal Production","Producția de Cristal","Összes Kristály Termelés","Produzione del Cristallo","Toplam Kristal üretimi","cristaux de production","","",""][l];
-									this.Data["Tiberium Produktion"] = ["Tiberium Produktion","Tiberium Production","Producția de Tiberium","Összes Tibérium Termelés","Produzione del Tiberium","Toplam Tiberium üretimi","Tiberium de production","","",""][l];
-									this.Data["Strom Produktion"] = ["Strom Produktion","Power Production","Producția de Putere","Összes Áram Termelés","Produzione del Energia","Toplam enerji üretimi","Énergie de production","","",""][l];
-									this.Data["Credit Produktion"] = ["Credit Produktion","Credit Production","Producția de Credit","Összes Kredit Termelés","Produzione del Crediti","Toplam kredi üretimi","Crédit de production","","",""][l];									
-									this.Data["Gesamte Kristall Produktion"] = ["Gesamte Kristall Produktion","Total Crystal Production","Producția Totală de Cristal","Összes Kristály Termelés","Produzione del Cristallo totale","Toplam Kristal üretimi","cristaux de production","","",""][l];
-									this.Data["Gesamte Tiberium Produktion"] = ["Gesamte Tiberium Produktion","Total Tiberium Production","Producția Totală de Tiberium","Összes Tibérium Termelés","Produzione del Tiberium totale","Toplam Tiberium üretimi","Tiberium de production","","",""][l];
-									this.Data["Gesamte Strom Produktion"] = ["Gesamte Strom Produktion","Total Power Production","Producția Totală de Putere","Összes Áram Termelés","Produzione del Energia totale","Toplam enerji üretimi","Énergie de production","","",""][l];
-									this.Data["Gesamte Credit Produktion"] = ["Gesamte Credit Produktion","Total Credit Production","Producția Totală de Credit","Összes Kredit Termelés","Produzione del Crediti totale","Toplam kredi üretimi","Crédit de production","","",""][l];
-									this.Data["Basis Name"] = ["Basis Name","Base Name","Numele de Bază","Bázis Név","Nome di Base","Üs isim","nom de la base","","",""][l];
-									this.Data["Basis Level"] = ["Basis Level","Base Level","Nivelul de Bază","Bázis Szint","Livello Base","Üs seviye","Niveau de base","","",""][l];
-									this.Data["Offensiv Level"] = ["Offensiv Level","Offense Level","Nivelul Ofensivă","Támadó Szint","Livello Attaccante","Saldırgan Seviye","Niveau offensive","","",""][l];
-									this.Data["Defensiv Level"] = ["Defensiv Level","Defense Level","Nivelul Defensiv","Védelmi Szint","Livello Difensiva","Defansif Seviye","Niveau défensif","","",""][l];
-									this.Data["Strom Produktion"] = ["Strom Produktion","Power Produktion","Producția de Energie","Áram Termelés","Produzione di Energia","enerji üretimi","la production d'énergie","","",""][l];
-									this.Data["Fußtruppen Reparaturzeit"] = ["Fußtruppen Reparaturzeit","Infantry Repairtime","Timp de Reparații de Infanterie","Gyalogos Javítási Idő","Tempo di riparazione Fanteria","Piyade onarım süresi","Temps de réparation d'infanterie","","",""][l];
-									this.Data["Fahrzeug Reparaturzeit"] = ["Fahrzeug Reparaturzeit","Vehicle Repairtime","Timp de Reparații de Vehicul","Jármű Javítási Idő","Tempo di riparazione Veicolo","Araç onarım süresi","Temps de réparation du véhicule","","",""][l];
-									this.Data["Flugzeug Reparaturzeit"] = ["Flugzeug Reparaturzeit","Aircraft Repairtime","Timp de Reparații de Avioane","Repülőgép Javítási Idő","Tempo di riparazione Aeromobile","Uçak onarım süresi","Temps de réparation d'aéronefs","","",""][l];
-									this.Data["Spieler Produktion"] = ["Spieler Produktion","Players Production","Jucatori de Producție","A játékosok Termelés","Giocatori di produzione","Oyuncular Üretim","Les joueurs de production","","",""][l];
-									this.Data["Gesamte Produktion"] = ["Gesamte Produktion","Total Production","Producția totală","Összes termelés","La produzione totale","Toplam Üretim","La production totale","","",""][l];
-									this.Data["aller Basen"] = ["aller Basen","all bases","toate bazele","minden bázisok","tutte le basi","tüm üsleri","toutes les bases"][l];
-									this.Data["inklusive POI Bonus"] = ["inklusive POI Bonus","inclusiv Bonus POI","inclusiv de POI","beleértve POI Bonus","compresi POI Bonus","dahil POI Bonus","y compris POI Bonus"][l];
 
-									/*
-									this.Data["Mitglieder Auflistung"] = ["","","","","","",""][l];
-									this.Data["Nur für OBH's sichtbar"] = ["","","","","","",""][l];
-									this.Data["Mitglieder Anpassung"] = ["","","","","","",""][l];
-									this.Data["Mitglieder abgleichen"] = ["","","","","","",""][l];
-									this.Data["Du mußt auf der BaseInfo-Seite eingeloggt sein"] = ["","","","","","",""][l];
-									*/
+									this.Data["Sprache"] = ['de','en','ro','hu','it','tr','fr','es','pt','cs','sk','uk','be','ru','sv','nb','nl','hr','el','fi','da','bg','ar','pl','id'][l];
+									this.Data["Server Sprache"] = ["Server Sprache","Server Language","Limbaj Server","Szerver nyelv","Lingua Server","Sunucu Dil","Langage de Serveur","Idioma del Servidor","Servidor Idioma","Serveru Jazyka","Servera Language","Cервера мову","Cэрвэр Язык","Сервер Язык","Serverspråk","Server Språk","Server Taal","Poslužitelj Jezik","διακομιστή Γλώσσα","Server Kieli","Server Sprog","Сървър Език","الخادم اللغة","Serwer Język","Server Bahasa"][l];
+									this.Data["Öffnen"] = ["Öffnen","Open","Deschidere","Nyitás","Apertura","Açılış","Ouverture","Apertura","Abertura","Otevřít","otvor","відкриття","адкрыццё","открытие","öppning","åpning","opening","otvaranje","άνοιγμα","aukko","åbning","отвор","افتتاح","otwarcie","pembukaan"][l];
+									this.Data["Basenwerte"] = ["Basenwerte","Base values","Valorile de Bază","Bázis Értékek","Valori di Base","Üs Değerler","Les valeurs de base","los valores de base","valores de base","Základní hodnoty","základné hodnoty","базисні показники","базісныя паказчыкі","базисные показатели","basvärden","verdigrunnlag","Base waarden","Baza vrijednosti","τιμές βάσης","tukikohta arvot","uædle værdier","Базови стойности","قيم قاعدة","wartości bazowe","nilai-nilai dasar"][l];
+									this.Data["Mitglieder"] = ["Mitglieder","Members","Membrii","Tagok","Membri","Üyeler","membres","Miembros","membros","Členové","členovia","члени","члены","члены","Medlemmar","medlemmer","leden","članovi","Μέλη","jäsenet","medlemmer","Потребители","الأعضاء","Użytkownicy","anggota"][l];
+									this.Data["Scriptinfo"] = ["Scriptinfo","Scripts Info","Informații Scripturi","Scripts Információkat","Informazioni Scripts","Script bilgisi","Scripts d'infos","Información Guión","Informações Script","skriptu Informace","script Informácie","інформація сценарію","інфармацыя сцэнара","информация сценария","Skriptinformation","skriptet Informasjon","script Informatie","Skripta informacije","σενάριο Πληροφορίες","skripti tiedot","script oplysninger","скрипта Информация","معلومات النصي","Informacje script","Script Informasi"][l];
+									this.Data["Allgemeine Informationen"] = ["Allgemeine Informationen","General Informations","Informații Generale","Általános Információk","Informazioni Generali","Genel bilgi","Informations Générales","Información General","Informação Geral","Obecná Informace","Všeobecná Informácie","Загальна Інформація","Агульная Інфармацыя","Общая Информация","Allmän Information","Generell Informasjon","Algemene Informatie","Opće Informacije","Γενικές Πληροφορίες","Yleistiedot","generelle oplysninger","Обща Информация","معلومات عامة","Informacje Ogólne","Informasi Umum"][l];
+									this.Data["Allgemein"] = ["Allgemein","General","Generale","Általános","General","Genel","Générales","general","geralmente","obecný","obvykle","в цілому","Генеральная","Генеральная","Allmänt","Generelt","algemeen","obično","γενικός","yleinen","generelt","общо","عام","ogólny","umum"][l];
+									this.Data["Gesamte Produktion"] = ["Gesamte Produktion","Total Production","Producția Totală de","Összes Termelés","La Produzione Totale","Toplam üretim","La production totale","La producción total","A produção total","celková produkce","Celková produkcia","Загальний обсяг виробництва","агульны аб'ём вытворчасці","Общий объем производства","Den sammanlagda produktionen","totale produksjonen","De totale productie","Ukupna proizvodnja","Συνολική παραγωγή","kokonaistuotanto","samlet produktion","Общото производство","إجمالي الإنتاج","Całkowita produkcja","produksi total"][l];
+									this.Data["Erste Offensive"] = ["Erste Offensive","First Offense","Primul Ofensivă","Első Támadó","Prima Attaccante","Birinci Ofansif","Première Offensive","primero Ofensivo","primeiro Ofensivo","První Ofenzivní","prvý Ofenzívny","По-перше Образливий","Па-першае абразлівыя","Во-первых Оскорбительный","första offensiv","First Offensive","eerste Offensive","Prvo Uvredljiva","Πρώτα Επιθετικά","First Hyökkäävä","First Offensive","Първо Offensive","أول هجوم","pierwszy Ofensywny","pertama Serangan"][l];
+									this.Data["Zweite Offensive"] = ["Zweite Offensive","Second Offense","Al Doilea Ofensivă","Második Támadó","Secondo Attaccante","Ikinci bir Ofansif","Deuxième Offensive","Segundo Ofensivo","segundo Ofensivo","druhý Ofenzivní","druhý Ofenzívny","По-друге Образливий","Па-другое абразлівыя","Во-вторых Оскорбительный","andra Offensive","Second Offensive","tweede Offensive","Drugo Uvredljiva","δεύτερη Επιθετικά","toinen Hyökkäävä","Second Offensive","Второ Offensive","الهجومية الثانية","drugi Ofensywny","kedua Serangan"][l];
+									this.Data["Werte übertragen"] = ["Werte übertragen","Transfer Values","Valorile de Transfer","Transfer Értékek","Valori di Trasferimento","transferi değerler","Les valeurs de transfert","valores de Transferencia","valores de transferência","hodnoty Přenos","hodnoty Prenos","переносити вартість","пераносіць кошт","переносить стоимость","överföringsvärden","overføre verdier","Transfer waarden","vrijednosti prijenos","τιμές μεταβίβασης","siirtoarvoja","Overfør værdier","прехвърлят","القيم نقل","wartości transferowe","nilai transfer"][l];
+									this.Data["Weltkarte"] = ["Weltkarte","Worldmap","Hartă Lumii","Térkép a Világ","Mappamondo","Dünyada Haritası","Carte du Monde","mapa del mundo","mapa do mundo","Mapa světa","mapa sveta","Карта світу","карта свету","Карта мира","Karta över världen","verdenskart","kaart van de wereld","karta svijeta","Χάρτης του κόσμου","Maailmankartta","kort over verden","Карта на света","خريطة العالم","Mapa świata","peta dunia"][l];
+									this.Data["Allianz Rolle"] = ["Allianz Rolle","Alliance Role","Rol Alianță","Szövetség Szerepe","Ruolo Alleanza","İttifak rolü","rôle de l'Alliance","papel Alianza","papel Alliance","Alliance role","alliance role","Альянс роль","альянс ролю","Альянс роль","Alliance roll","Alliance rolle","Alliance rol","Savez uloga","ρόλος της Συμμαχίας","Alliance rooli","alliance rolle","Alliance роля","دور التحالف","rola sojuszu","peran aliansi"][l];
+									this.Data["Spielername"] = ["Spielername","Player Name","Nume Jucător","Játékos Neve","Nome Giocatore","Oyuncu Adı","Nom du joueur","Jugadores Nombre","Nome Jogadores","hráči Jméno","hráči Meno","Гравці Ім'я","гульцы Імя","Игроки Имя","spelare Namn","spillere Navn","spelers Naam","igrači Ime","Παίκτες Όνομα","Pelaajat Nimi","spillere Navn","Играчи Име","اللاعبين الاسم","Gracze Nazwa","pemain Nama"][l];
+									this.Data["Spielerklasse"] = ["Spielerklasse","Player Class","Clasa Jucător","Töredék","Fazione","Grup","Faction","Clase jugador","Classe jogador","hráč Class","hráč Class","клас гравця","клас гульца","Класс игрока","Spelar klass","spiller Class","Player Class","igrač klase","παίκτης Class","Player Class","Spiller Class","Player Class","فئة اللاعب","Klasa graczem","pemain Kelas"][l];
+									this.Data["Aktuelle Uhrzeit"] = ["Aktuelle Uhrzeit","Current Time","Ora curenta","Idő","Ora Attuale","şimdiki zaman","Date actuelle","Tiempo Actual","Tempo Atual","Aktuální čas","aktuálny čas","поточне Час","бягучае Час","Текущее Время","Aktuell tid","Nåværende Tid","huidige Tijd","Trenutno vrijeme","Τρέχουσα Ώρα","Nykyinen aika","Aktuel tid","Current Time","الوقت الحالي","Obecny Czas","Waktu Saat Ini"][l];
+									this.Data["Rang"] = ["Rang","Rank","Rang","Helyezés","rango","Derece","Classement","rango","categoria","hodnost","hodnosť","Ранг","ранг","ранг","Placering","Rank","rang","čin","τάξη","arvo","Rank","ранг","مرتبة","ranga","pangkat"][l];
+									this.Data["Maximale KP"] = ["Maximale KP","Maximal CP","Puncte de Comando Maxime","Maximális Parancsnoki Pont","Comando il Massimo dei Punti","Maksimum Komutanlığı Puan","Points de Commandement maximum","CP máximo","CP máxima","Maximální CP","maximálna CP","Максимальна CP","максімальная CP","Максимальная CP","maximal CP","maksimal CP","maximale CP","maksimalna CP","μέγιστη CP","Suurin CP","maksimal CP","Максимална CP","الحد الأقصى CP","Maksymalna CP","maksimum CP"][l];
+									this.Data["Maximale Repzeit"] = ["Maximale Repzeit","Maximal Reptime","Timp Maxim de Reparație","Maximális Javítási Idő","Tempo Massimo di Riparazione","Maksimum onarım süresi","Temps maximum de réparation","Repzeit máximo","Repzeit máxima","Maximální Repzeit","maximálna Repzeit","Максимальна Repzeit","максімальная Repzeit","Максимальная Repzeit","maximal Repzeit","maksimal Repzeit","maximale Repzeit","maksimalna Repzeit","μέγιστη Repzeit","Suurin Repzeit","maksimal Repzeit","Максимална Repzeit","أقصى Repzeit","Maksymalna Repzeit","Repzeit maksimum"][l];
+									this.Data["Stunden"] = ["Stunden","Hours","Ore","Óra","Orario","Saatleri","Heures","horas","horas","hodiny","hodiny","годин","гадзін","часов","timmar","timer","Hours","Radno vrijeme","ώρες","tuntia","Timer","Часове","ساعات","godziny","jam"][l];
+									this.Data["Basenanzahl"] = ["Basenanzahl","Basecount","Numarul de Bază","Szám Bázisok","Numero di Base","Üs Numarası","Nombre de base","Número Base","Número de base","Základní Number","základné Number","базовий номер","базавы нумар","Базовый номер","basnummer","Base Number","Base Number","baza broj","Αριθμός βάση","Base Number","Base Number","Base Number","عدد قاعدة","Ilość bazowa","Jumlah dasar"][l];
+									this.Data["Anzahl Offensiv Basen"] = ["Anzahl Offensiv Basen","Offense Bases Count","Baze număr Ofensivă","Szám Sértő Bázisok","Basi numero Attaccante","Numara saldırgan Üs","Nombre de bases offensives","Bases Número ofensivas","Número bases ofensivas","Počet ofenzivní základny","Počet ofenzívnej základne","Кількість образливі основи","Колькасць абразлівыя асновы","Количество оскорбительные основы","Antal offensiva baser","Antall offensive baser","Aantal offensief bases","Broj uvredljive baze","Βάσεις Αριθμός προσβλητικό","Numero loukkaavaa emäkset","Nummer offensive baser","Номер обидни бази","عدد القواعد هجوم","Podstawy Liczba obraźliwe","Basis Nomor ofensif"][l];
+									this.Data["Support Gebäude Level Ø"] = ["Support Gebäude Level Ø","Support Building Level Ø","Suport de Constructii Nivel Ø","Támogatás Építési Szint Ø","Supporto Livello Edificio Ø","Destek Bina Seviye Ø","Bâtiment Niveau de soutien","Soporte Nivel Edificio Ø","Suporte Nível Edifício Ø","Podpora budova úroveň Ø","Podpora budova úroveň Ø","Підтримка Будівництво Ø Рівень","Падтрымка Будаўніцтва Ø Узровень","Поддержка Строительство Ø Уровень","Support Building Level Ø","Support Bygning Nivå Ø","Ondersteuning Building Level Ø","Podrška Građevinska Razina Ø","Υποστήριξη Κτίριο Επίπεδο Ø","Tuki Building Level Ø","Support Building Level Ø","Подкрепа Building Level Ø","دعم بناء مستوى Ø","Pomoc budynek Poziom Ø","Dukungan Building Tingkat Ø"][l];
+									this.Data["VE Ø aller Basen"] = ["VE Ø aller Basen","DF Ø all Bases","Ø Unitate de Apărare Toate Bazele","Védelem Létrehozása Ø Összes Bázisok","Stazioni di difesa Ø di tutte le basi","Savunma Tesis Ø bütün Üs","Fonds de défense Ø de toutes les bases","DF Ø todas las bases","DF Ø todas as bases","DF Ø Všechny základny","DF Ø Všetky základne","DF Ø всі підстави","DF Ø усе падставы","DF Ø все основания","DF Ø alla baser","DF Ø alle baser","DF Ø alle bases","DF Ø Svi baze","DF Ø όλες τις βάσεις","DF Ø kaikki alustat","DF Ø alle baser","DF Ø всички бази","DF Ø كل القواعد","DF Ø wszystkich baz","DF Ø semua basis"][l];
+									this.Data["Def Ø aller Basen"] = ["Def Ø aller Basen","Def Ø all Bases","Ø Unitate de Def Toate Bazele","Def Ø Összes Bázisok","Def Ø di tutte le basi","Def Ø bütün Üs","Def Ø de toutes les bases","Def Ø todas las bases","Def Ø todas as bases","Def Ø Všechny základny","Def Ø Všetky základne","Def Ø всі підстави","Def Ø усе падставы","Def Ø все основания","Def Ø alla baser","Def Ø alle baser","Def Ø alle bases","Def Ø Svi baze","Def Ø όλες τις βάσεις","Def Ø kaikki alustat","Def Ø alle baser","Def Ø всички бази","Def Ø كل القواعد","Def Ø wszystkich baz","Def Ø semua basis"][l];
+									this.Data["Kristall"] = ["Kristall","Crystal","Cristal","Kristály","Cristallo","Kristal","Cristaux","cristal","cristal","krystal","kryštál","кристал","крышталь","кристалл","kristall","krystall","kristal","kristal","κρύσταλλο","kristalli","krystal","кристал","بلور","kryształ","kristal"][l];
+									this.Data["Tiberium"] = ["Tiberium","Tiberium","Tiberium","Tibérium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","Tiberium","tiberium من","tyberium","Tiberium"][l];
+									this.Data["Strom"] = ["Strom","Power","Putere","Áram","Energia","Enerji","Énergie","corriente","atual","proud","prúd","струм","ток","ток","Aktuell","Nåværende","stroom","struja","ρεύμα","nykyinen","nuværende","ток","تيار","prąd","arus"][l];
+									this.Data["Credit"] = ["Credit","Credit","Credit","Kredit","Crediti","Kredi","Crédit","crédito","crédito","úvěr","úver","кредит","крэдыт","кредит","kredit","Credit","krediet","kredit","πίστωση","luotto","Credit","кредит","ائتمان","kredyt","kredit"][l];									
+									this.Data["Kristall Produktion"] = ["Kristall Produktion","Crystal Production","Producția de Cristal","Összes Kristály Termelés","Produzione del Cristallo","Toplam Kristal üretimi","cristaux de production","la producción de cristal","produção de cristal","výroba Crystal","výroba Crystal","кристал виробництво","крышталь вытворчасць","Кристалл производство","kristallproduktion","Crystal produksjon","Crystal productie","Crystal proizvodnja","κρυστάλλινα παραγωγής","Crystal tuotanto","krystal produktion","производство Crystal","إنتاج الكريستال","produkcji kryształu","produksi kristal"][l];
+									this.Data["Tiberium Produktion"] = ["Tiberium Produktion","Tiberium Production","Producția de Tiberium","Összes Tibérium Termelés","Produzione del Tiberium","Toplam Tiberium üretimi","Tiberium de production","producción Tiberium","produção Tiberium","výroba Tiberium","výroba Tiberium","виробництво Tiberium","вытворчасць Tiberium","производство Tiberium","Tiberium produktion","Tiberium produksjon","Tiberium productie","proizvodnja Tiberium","παραγωγή Tiberium","Tiberium tuotanto","Tiberium produktion","производство Tiberium","إنتاج tiberium من","produkcja tyberium","produksi Tiberium"][l];
+									this.Data["Strom Produktion"] = ["Strom Produktion","Power Production","Producția de Putere","Összes Áram Termelés","Produzione del Energia","Toplam enerji üretimi","Énergie de production","La producción actual","A produção atual","Aktuální produkce","aktuálnej produkcie","продукція, що випускається","выпускаемая прадукцыя","Выпускаемая продукция","Aktuell produktion","dagens produksjon","De huidige productie","Trenutna proizvodnja","Η τρέχουσα παραγωγή","Nykyinen tuotanto","nuværende produktion","текущото производство","الإنتاج الحالي","Obecna produkcja","produksi saat ini"][l];
+									this.Data["Credit Produktion"] = ["Credit Produktion","Credit Production","Producția de Credit","Összes Kredit Termelés","Produzione del Crediti","Toplam kredi üretimi","Crédit de production","la producción de Crédito","produção de Crédito","Credit výroba","credit výroba","Кредитна виробництво","крэдытная вытворчасць","Кредитная производство","kredit produktion","Credit produksjon","credit productie","Kreditni proizvodnja","Πιστωτικές παραγωγής","luotto tuotanto","Credit produktion","Credit производство","إنتاج الائتمان","produkcja kredytowej","produksi kredit"][l];									
+									this.Data["Gesamte Kristall Produktion"] = ["Gesamte Kristall Produktion","Total Crystal Production","Producția Totală de Cristal","Összes Kristály Termelés","Produzione del Cristallo totale","Toplam Kristal üretimi","cristaux de production","La producción total de cristal","A produção total de cristal","Celková produkce krystal","Celková produkcia kryštál","Загальний обсяг виробництва кристалів","Агульны аб'ём вытворчасці крышталяў","Общий объем производства кристаллов","Totalt kristallproduktion","Total krystall produksjon","Totaal kristal productie","Ukupna proizvodnja kristala","Συνολική παραγωγή κρυστάλλων","Total kristalli tuotanto","Samlede krystal produktion","Общото производство на кристална","إجمالي إنتاج الكريستال","Całkowita produkcja kryształów","Total produksi kristal"][l];
+									this.Data["Gesamte Tiberium Produktion"] = ["Gesamte Tiberium Produktion","Total Tiberium Production","Producția Totală de Tiberium","Összes Tibérium Termelés","Produzione del Tiberium totale","Toplam Tiberium üretimi","Tiberium de production","La producción total de Tiberium","A produção total de Tiberium","Celková výroba Tiberium","Celková výroba Tiberium","Загальний обсяг виробництва Tiberium","Агульны аб'ём вытворчасці Tiberium","Общий объем производства Tiberium","Totalt Tiberium produktion","Total Tiberium produksjon","Totaal Tiberium productie","Ukupno Tiberium proizvodnja","Συνολική παραγωγή Tiberium","Total Tiberium tuotanto","Total Tiberium produktion","Общото производство на Tiberium","إنتاج tiberium من مجموع","Całkowita produkcja tyberium","Total produksi Tiberium"][l];
+									this.Data["Gesamte Strom Produktion"] = ["Gesamte Strom Produktion","Total Power Production","Producția Totală de Putere","Összes Áram Termelés","Produzione del Energia totale","Toplam enerji üretimi","Énergie de production","La producción total de electricidad","A produção total de electricidade","Celková výroba elektrické energie","Celková výroba elektrickej energie","Загальний обсяг виробництва електроенергії","Агульны аб'ём вытворчасці электраэнергіі","Общий объем производства электроэнергии","Total elproduktion","Total produksjon av elektrisitet","Totale elektriciteitsproductie","Ukupna proizvodnja električne energije","Η συνολική παραγωγή ηλεκτρικής ενέργειας","Koko sähköntuotannosta","Samlet elproduktion","Общо количество произведена електроенергия","إجمالي إنتاج الكهرباء","Całkowita produkcja energii elektrycznej","Total produksi listrik"][l];
+									this.Data["Gesamte Credit Produktion"] = ["Gesamte Credit Produktion","Total Credit Production","Producția Totală de Credit","Összes Kredit Termelés","Produzione del Crediti totale","Toplam kredi üretimi","Crédit de production","La producción total de crédito","Produção total de crédito","Celkový kredit výroba","Celkový kredit výroba","Загальний обсяг виробництва кредитні","Агульны аб'ём вытворчасці крэдытныя","Общий объем производства кредитные","Total poäng produktion","Total kreditt produksjon","Credit totaal productie","Ukupna kreditna proizvodnja","Η συνολική πιστωτική παραγωγής","Kokonaispisteet tuotanto","Total credit produktion","Общо кредити на производството","إجمالي الإنتاج الائتمان","Całkowita produkcja kredytowej","Produksi total kredit"][l];
+									this.Data["Basis Name"] = ["Basis Name","Base Name","Numele de Bază","Bázis Név","Nome di Base","Üs isim","nom de la base","basename","basename","basename","basename","Basename","Basename","Basename","grundnamn","basename","basename","basename","basename","basename","basename","Basename","Basename","basename","basename"][l];
+									this.Data["Basis Level"] = ["Basis Level","Base Level","Nivelul de Bază","Bázis Szint","Livello Base","Üs seviye","Niveau de base","Nivel Básico","Nível Básico","Základní Úroveň","základné Úroveň","початковий Рівень","пачатковы Узровень","Начальный Уровень","Grundläggande nivå","grunnleggende nivå","Basic Level","Osnovna razina","Βασικό Επίπεδο","Perustaso","grundlæggende Level","основно ниво","مستوى الأساسي","Poziom Podstawowy","Tingkat Dasar"][l];
+									this.Data["Offensiv Level"] = ["Offensiv Level","Offense Level","Nivelul Ofensivă","Támadó Szint","Livello Attaccante","Saldırgan Seviye","Niveau offensive","Nivel Ofensivo","Nível ofensivo","Ofenzivní Level","ofenzívny Level","наступ Рівень","наступ Узровень","Наступление Уровень","offensiv Nivå","offensive nivå","Offensive Level","Uvredljiva Razina","Επιθετικά Επίπεδο","Hyökkäävä Level","offensiv Level","Offensive Level","مستوى الهجومية","Ofensywny Level","Tingkat Serangan"][l];
+									this.Data["Defensiv Level"] = ["Defensiv Level","Defense Level","Nivelul Defensiv","Védelmi Szint","Livello Difensiva","Defansif Seviye","Niveau défensif","Nivel Defensivo","Nível defensivo","defenzivní Level","defenzívne Level","оборонна Рівень","абарончая Узровень","Оборонительная Уровень","defensiv Nivå","defensive nivå","defensieve Level","Povučen Razina","αμυντικά Επίπεδο","puolustava Level","defensiv Level","Отбранителна Level","المستوى الدفاعي","Defensywny Level","Tingkat defensif"][l];
+									this.Data["Strom Produktion"] = ["Strom Produktion","Power Produktion","Producția de Energie","Áram Termelés","Produzione di Energia","enerji üretimi","la production d'énergie","La producción actual","A produção atual","Aktuální produkce","aktuálnej produkcie","продукція, що випускається","выпускаемая прадукцыя","Выпускаемая продукция","Aktuell produktion","dagens produksjon","De huidige productie","Trenutna proizvodnja","Η τρέχουσα παραγωγή","Nykyinen tuotanto","nuværende produktion","текущото производство","الإنتاج الحالي","Obecna produkcja","produksi saat ini"][l];
+									this.Data["Fußtruppen Reparaturzeit"] = ["Fußtruppen Reparaturzeit","Infantry Repairtime","Timp de Reparații de Infanterie","Gyalogos Javítási Idő","Tempo di riparazione Fanteria","Piyade onarım süresi","Temps de réparation d'infanterie","El tiempo de reparación de Infantería","Tempo de reparação de infantaria","Pěchota doba opravy","Pechota doba opravy","Час піхотної ремонт","Час пяхотнай рамонт","Время пехотной ремонт","Infanteri reparationstiden","Infantry reparasjonstiden","Infanterie reparatietijd","Vrijeme Pješačko popravak","Χρόνος επισκευής Πεζικού","Jalkaväki korjausaika","Infanteri reparationstid","Време за ремонт пехотна","وقت الإصلاح المشاة","Czas naprawy Piechota","Waktu perbaikan Infanteri"][l];
+									this.Data["Fahrzeug Reparaturzeit"] = ["Fahrzeug Reparaturzeit","Vehicle Repairtime","Timp de Reparații de Vehicul","Jármű Javítási Idő","Tempo di riparazione Veicolo","Araç onarım süresi","Temps de réparation du véhicule","El tiempo de reparación de vehículos","Tempo de reparação de veículos","Opravy vozidel čas","Opravy vozidiel čas","Час ремонту автомобіля","Час рамонту аўтамабіля","Время ремонта автомобиля","Fordonsreparationstiden","Vehicle reparasjonstiden","Voertuig reparatietijd","Vrijeme za popravak vozila","Χρόνος επισκευής του οχήματος","Ajoneuvojen korjausaika","Køretøj reparationstid","Време за ремонт на превозни средства","الوقت إصلاح المركبات","Czas naprawy pojazdu","Waktu perbaikan kendaraan"][l];
+									this.Data["Flugzeug Reparaturzeit"] = ["Flugzeug Reparaturzeit","Aircraft Repairtime","Timp de Reparații de Avioane","Repülőgép Javítási Idő","Tempo di riparazione Aeromobile","Uçak onarım süresi","Temps de réparation d'aéronefs","El tiempo de reparación de aeronaves","Tempo de reparação de aeronaves","Oprava letadla čas","Oprava lietadla čas","Час ремонту літака","Час рамонту самалёта","Время ремонта самолета","Flygplan reparationstiden","Aircraft reparasjonstiden","Vliegtuigen reparatietijd","Vrijeme popravak zrakoplova","Χρόνος επισκευής των αεροσκαφών","Lentokoneiden korjaus- aika","Aircraft reparationstid","Време за ремонт на въздухоплавателни средства","الوقت إصلاح الطائرات","Samoloty czas naprawy","Waktu perbaikan Pesawat"][l];
+									this.Data["Spieler Produktion"] = ["Spieler Produktion","Players Production","Jucatori de Producție","A játékosok Termelés","Giocatori di produzione","Oyuncular Üretim","Les joueurs de production","Jugadores Producción","jogadores de Produção","hráči Production","hráči Production","Гравці Виробництво","гульцы Вытворчасць","Игроки Производство","spelare Produktion","spillere Produksjon","spelers Production","igrači Proizvodnja","Παίκτες παραγωγής","Pelaajat Tuotanto","","Играчите Производство","إنتاجspillere Produktion لاعبين","Gracze Produkcja","Produksi pemain"][l];
+									this.Data["Gesamte Produktion"] = ["Gesamte Produktion","Total Production","Producția totală","Összes termelés","La produzione totale","Toplam Üretim","La production totale","La producción total","A produção total","celková produkce","Celková produkcia","Загальний обсяг виробництва","агульны аб'ём вытворчасці","Общий объем производства","Total produktion","Total produksjon","De totale productie","Ukupna proizvodnja","Συνολική παραγωγή","kokonaistuotanto","samlet produktion","Общото производство","إجمالي الإنتاج","Całkowita produkcja","total produksi"][l];
+									this.Data["aller Basen"] = ["aller Basen","all bases","toate bazele","minden bázisok","tutte le basi","tüm üsleri","toutes les bases","todas las bases","todas as bases","všechny základny","všetky základne","всі підстави","усе падставы","все основания","alla baser","alle baser","alle bases","sve baze","όλες οι βάσεις","kaikki alustat","alle baser","всички бази","كل القواعد","wszystkie zasady","semua basis"][l];
+									this.Data["inklusive POI Bonus"] = ["inklusive POI Bonus","inclusiv Bonus POI","inclusiv de POI","beleértve POI Bonus","compresi POI Bonus","dahil POI Bonus","y compris POI Bonus","incluyendo PDI Bono","incluindo POI Bonus","včetně POI Bonus","vrátane POI Bonus","в тому числі об'єкти до досвіду","у тым ліку аб'екты да вопыту","в том числе объекты к опыту","inklusive POI Bonus","inkludert POI Bonus","waaronder POI Bonus","uključujući POI bonus","συμπεριλαμβανομένων των POI Μπόνους","mukaan lukien KP Bonus","herunder POI Bonus","включително POI Bonus","بما في ذلك مكافأة POI","w tym Bonus POI","termasuk Bonus POI"][l];
+									this.Data["Name"] = ["Name","Name","Numele","Név","Nome","Isim","Nom","nombre","nome","název","Názov","ім'я","мя","имя","namn","navn","naam","naziv","όνομα","nimi","navn","име","اسم","nazwa","nama"][l];
+									this.Data["Version"] = ["Version","Version","Versiune","Változat","Versione","Versiyon","Version","versión","versão","verze","verzia","версія","версія","версия","version","versjon","versie","verzija","εκδοχή","versio","Version","версия","نسخة","wersja","versi"][l];
+									this.Data["Ersteller"] = ["Ersteller","Creator","Creator","Teremtő","Creatore","Yaratıcı","Créateur","creador","criador","tvůrce","tvorca","творець","стваральнік","создатель","Skaparen","Creator","Schepper","tvorac","δημιουργός","Luoja","skaberen","създател","الخالق","twórca","pencipta"][l];
+									this.Data["Webseite"] = ["Webseite","Homepage","Pagina de start","Honlap","Homepage","Anasayfa","Page d'accueil","sitio web","site","webové stránky","webové stránky","сайт","сайт","сайт","Webbplats","nettsted","website","website","δικτυακός τόπος","verkkosivusto","websted","уебсайт","الموقع","witryna internetowa","situs web"][l];
+									this.Data["E-Mail"] = ["E-Mail","E-Mail","E-Mail","E-Mail","E-Mail","E-Mail","E-Mail","E-mail","E-mail","E-mail","E-mail","Електронна пошта","Электронная пошта","Электронная почта","E-post","E-post","E-mail","E-mail","E-mail","E-mail","E-mail","Е-поща","البريد الإلكتروني","E-mail","E-mail"][l];
+									this.Data["Mitglieder Auflistung"] = ["Mitglieder Auflistung","Members Listing","Lista de Membrii","Tagok Listája","Lista Membri","Üye Listesini","Liste des Membres","lista de Miembros","lista de membros","seznam členů","zoznam členov","користувачі","карыстальнікі","Пользователи","Medlemmar listan","medlemmer liste","ledenlijst","popis članova","Λίστα Μελών","jäsenluettelo","medlemmer liste","Списък с членовете","قائمة الأعضاء","lista członków","daftar anggota"][l];
+									this.Data["Nur für OBH's sichtbar"] = ["Nur für OBH's sichtbar","Visible only for CiC","Vizibil doar pentru Commander","Csak akkor látható, a Commander","Visibile solo per il Comandante","Sadece Komutanı görebilir","Visible uniquement pour le commandant","Visible sólo para CiC","Visível apenas para CiC","Viditelné pouze pro CiC","Viditeľné len pre CiC","Відомий тільки для CiC","Бачны толькі для CiC","Видимый только для CiC","Synlig endast för CiC","Bare synlig for CiC","Alleen zichtbaar voor CiC","Vidljivo samo za CiC","Ορατό μόνο για CiC","Näkyvä ainoastaan CiC","Kun synlig for CiC","Видим само за CiC","تظهر فقط لفي CiC","Widoczne tylko dla CiC","Terlihat hanya untuk CiC dunia"][l];
+									this.Data["Mitglieder Anpassung"] = ["Mitglieder Anpassung","Members Adaptation","Adaptarea Membrilor","Tagok Adaptáció","Membri Adattamento","Üye Adaptasyon","Membres Adaptation","Miembros adaptación","adaptação membros","Členové adaptace","členovia adaptácia","користувачі адаптації","карыстальнікі адаптацыі","Пользователи адаптации","medlemmar anpassning","medlemmer tilpasning","aanpassing leden","Članovi prilagodba","προσαρμογή Μέλη","jäsenet sopeutuminen","medlemmer tilpasning","членове адаптация","التكيف الأعضاء","adaptacja członków","anggota adaptasi"][l];
+									this.Data["Mitgliederliste erneuern"] = ["Mitgliederliste erneuern","Renew Memberlist","Reînnoi Membri","Megújítani Taglista","Rinnovare Iscritti","Üye Listesini yenilemek","Renouveler Membres","Renovar Miembros","Renove Membros","obnovit uživatelů","obnoviť užívateľov","замінити Користувачі","замяніць Карыстальнікі","Заменить Пользователи","förnya Medlems","Forny Medlems","Renew Gebruikerslijst","obnovite Članstvo","Ανανέωση Μελών","Uudista Ohje","forny Grupper","Renew Потребители","تجديد الاعضاء","Odnów Użytkownicy Użytkownicy","Renew Anggota"][l];
+									this.Data["Du mußt auf der BaseInfo-Seite eingeloggt sein"] = ["Du mußt auf der BaseInfo-Seite eingeloggt sein","You need to log in on the BaseInfo Page","Trebuie să vă conectați de pe pagina Informații de Bază","Be kell jelentkezni a Base Információs oldal","Devi effettuare il login nella pagina Informazioni di base","Base Bilgileri sayfasında giriş yapmanız gerekiyor","Vous devez vous connecter sur la Page d'information de Base","¡Tienes que entrar en la página de Información de Base","Você precisa fazer o login na página Information Base","Musíte se přihlásit na základní stránce Informace","Musíte sa prihlásiť na základnej stránke Informácie","Ви повинні увійти на сторінці інформаційної бази","Вы павінны ўвайсці на старонцы інфармацыйнай базы","Вы должны войти на странице информационной базы","Du måste logga in på basera informationssidan","Du må logge inn på Base informasjonssiden","Je moet inloggen op de Basis Informatie pagina","Morate se prijaviti na stranicu baze Informacijskog","Θα πρέπει να συνδεθείτε στην σελίδα Βάση Πληροφοριών","Sinun täytyy kirjautua sisään Base Infosivu","Du er nødt til at logge ind på Base Infoside","Необходимо е да влезете в по въпросите на информационното страницата Base","تحتاج إلى تسجيل الدخول على الصفحة قاعدة المعلومات","Musisz zalogować się na stronie Bazy Informacji","Anda harus login pada halaman Information Base"][l];
+									this.Data["Account Erstellung"] = ["Account Erstellung","Account Creation","Crearea de Conturi","Fiók Létrehozása","Creazione di un Account","Hesap Oluşturma","Création de Compte","La creación de Cuentas","A criação de Contas","Vytvoření účtu","Vytvorenie účtu","створення облікового запису","стварэнне ўліковага запісу","создание учетной записи","skapa konto","kontoopprettelse","Aanmaken van een Account","Izrada Računa","δημιουργία λογαριασμού","Tilin Luominen","Kontooprettelse","създаване на профил","إنشاء حساب","Utworzenie Konta","Pembuatan Akun"][l];
+									this.Data["Alle Basen"] = ["Alle Basen","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases","All Bases"][l];
+									this.Data["Überblick über die Basen"] = ["Überblick über die Basen","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview","All Bases Overview"][l];
+									this.Data["BH"] = ["BH","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY","CY"][l];
+									this.Data["KZ"] = ["KZ","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC","CC"][l];
+									this.Data["VE"] = ["VE","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF","DF"][l];
+									this.Data["VZ"] = ["VZ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ","HQ"][l];
 								},
 								get: function (ident) {
 									return this.gt(ident);
@@ -123,16 +164,15 @@
 							}
 						}),
 
-						console.log("BaseInfo initialized..");
-                        qx.Class.define("BaseInfo", {
-                            type: "singleton",
-                            extend: qx.core.Object,
-                            construct: function () {
-                                window.addEventListener("click", this.onClick, false);
-                                window.addEventListener("keyup", this.onKey, false);
-                                window.addEventListener("mouseover", this.onMouseOver, false);
-                                BIVERSION = '3.1.6';
-                                BIAUTHOR = 'Dirk Kántor';
+						qx.Class.define("BaseInfo", {
+							type: "singleton",
+							extend: qx.core.Object,
+							construct: function () {
+								window.addEventListener("click", this.onClick, false);
+								window.addEventListener("keyup", this.onKey, false);
+								window.addEventListener("mouseover", this.onMouseOver, false);
+								BIVERSION = '3.2.8';
+                                BIAUTHOR = 'Dirk Kántor (NurIcke)';
                                 BICLASS = 'BaseInfo';
                                 BIHOMEPAGE = 'http://baseinfo.scriptarea.net';
                                 BICONTACT = 'BaseInfo@scriptarea.net';
@@ -144,97 +184,128 @@
 							members: {
 								BaseinfoFenster: null,
 								BaseinfoTab: null,
-								BaseinfoPage: null,
+								BaseinfoGeneralPage: null,
+								BaseinfoBasesPage: null,
+								BaseinfoMemberPage: null,
+								BaseinfoInfoPage: null,
+								BaseinfoGeneralVBox: null,
+								BaseinfoBasesVBox: null,
+								BaseinfoMemberVBox: null,
+								BaseinfoInfoVBox: null,
 								BaseinfoVBox: null,
 								BaseinfoButton: null,
 								app: null,
 								initialize: function () {
-									Lang.loadData(qx.locale.Manager.getInstance().getLocale().split("_")[0]);
-									this.BaseinfoFenster = new qx.ui.window.Window(BICLASS + " " + BIVERSION + " [" + Lang.gt("Sprache") + "] (" + Lang.gt("Serversprache") + ": " + BIUSERLANGUAGE + ")",BIIMAGE).set({
-										padding: 5,
-										paddingRight: 0,
-										width: 350,
-										showMaximize:false,
-										showMinimize:false,
-										showClose:true,
-										allowClose:true,
-										resizable:false
-									});
-									this.BaseinfoFenster.setTextColor('black');
-									this.BaseinfoFenster.setLayout(new qx.ui.layout.HBox); 
-									this.BaseinfoFenster.moveTo(280, 10);
-									
-									// Tab Reihe
-									this.BaseinfoTab = (new qx.ui.tabview.TabView).set({
-										contentPaddingTop: 3,
-										contentPaddingBottom: 6,
-										contentPaddingRight: 7,
-										contentPaddingLeft: 3
-									});
-									this.BaseinfoFenster.add(this.BaseinfoTab);
-									
-									// Tab 1
-									this.BaseinfoPage = new qx.ui.tabview.Page(Lang.gt("Basenwerte"));
-									this.BaseinfoPage.setLayout(new qx.ui.layout.VBox(5));
-									this.BaseinfoTab.add(this.BaseinfoPage);
-									this.BaseinfoVBox = new qx.ui.container.Composite();
-									this.BaseinfoVBox.setLayout(new qx.ui.layout.VBox(5));
-									this.BaseinfoVBox.setThemedPadding(10);
-									this.BaseinfoVBox.setThemedBackgroundColor("#eef");
-									this.BaseinfoPage.add(this.BaseinfoVBox);
-									
-									// Tab 2
-									this.BaseinfoMemberPage = new qx.ui.tabview.Page(Lang.gt("Mitglieder"));
-									this.BaseinfoMemberPage.setLayout(new qx.ui.layout.VBox(5));
-									this.BaseinfoTab.add(this.BaseinfoMemberPage);
-									this.BaseinfoMemberVBox = new qx.ui.container.Composite();
-									this.BaseinfoMemberVBox.setLayout(new qx.ui.layout.VBox(5));
-									this.BaseinfoMemberVBox.setThemedPadding(10);
-									this.BaseinfoMemberVBox.setThemedBackgroundColor("#eef");
-									this.BaseinfoMemberPage.add(this.BaseinfoMemberVBox);
-									
-									// Tab 3
-									this.BaseinfoInfoPage = new qx.ui.tabview.Page(Lang.gt("Scriptinfo"));
-									this.BaseinfoInfoPage.setLayout(new qx.ui.layout.VBox(5));
-									this.BaseinfoTab.add(this.BaseinfoInfoPage);
-									this.BaseinfoInfoVBox = new qx.ui.container.Composite();
-									this.BaseinfoInfoVBox.setLayout(new qx.ui.layout.VBox(5));
-									this.BaseinfoInfoVBox.setThemedPadding(10);
-									this.BaseinfoInfoVBox.setThemedBackgroundColor("#eef");
-									this.BaseinfoInfoPage.add(this.BaseinfoInfoVBox);
-									
-									this.BaseinfoButton = new qx.ui.form.Button("<b>" + BICLASS + "</b>",BIIMAGESMALL).set({
-										toolTipText: "" + Lang.gt("Öffnen") + ": " + BICLASS + " " + BIVERSION + "",
-										width: 100,
-										height: 32,
-										maxWidth: 100,
-										maxHeight: 32,
-										center: true,
-										rich: true
-									});
-									this.BaseinfoButton.addListener("click", function (e) {
-										this.BaseinfoVBox.removeAll();
-										this.BaseinfoMemberVBox.removeAll();
-										this.BaseinfoInfoVBox.removeAll();
-										this.showBaseinfo();
-										this.BaseinfoFenster.show();
-									}, this);
-									this.app = qx.core.Init.getApplication();
-									this.app.getDesktop().add(this.BaseinfoButton, {
-										right: 125,
-										top: 0
-									});
+									try
+										{
+											console.log("BaseInfo: Initialized...");
+											Lang.loadData(qx.locale.Manager.getInstance().getLocale().split("_")[0]);
+											this.BaseinfoFenster = new qx.ui.window.Window(BICLASS + " " + BIVERSION + " (" + Lang.gt("Server Sprache") + ": " + BIUSERLANGUAGE + ")",BIIMAGE).set({
+												padding: 5,
+												paddingRight: 0,
+												width: 200,
+												showMaximize:false,
+												showMinimize:false,
+												showClose:true,
+												allowClose:true,
+												resizable:false
+											});
+											this.BaseinfoFenster.setTextColor('black');
+											this.BaseinfoFenster.setLayout(new qx.ui.layout.HBox); 
+											this.BaseinfoFenster.moveTo(280, 10);
+											
+											// Tab Reihe
+											this.BaseinfoTab = (new qx.ui.tabview.TabView).set({
+												contentPaddingTop: 3,
+												contentPaddingBottom: 6,
+												contentPaddingRight: 7,
+												contentPaddingLeft: 3
+											});
+											this.BaseinfoFenster.add(this.BaseinfoTab);
+											
+											// Tab 1
+											this.BaseinfoGeneralPage = new qx.ui.tabview.Page(Lang.gt("Allgemein"));
+											this.BaseinfoGeneralPage.setLayout(new qx.ui.layout.VBox(5));
+											this.BaseinfoTab.add(this.BaseinfoGeneralPage);
+											this.BaseinfoGeneralVBox = new qx.ui.container.Composite();
+											this.BaseinfoGeneralVBox.setLayout(new qx.ui.layout.VBox(5));
+											this.BaseinfoGeneralVBox.setThemedPadding(10);
+											this.BaseinfoGeneralVBox.setThemedBackgroundColor("#eef");
+											this.BaseinfoGeneralPage.add(this.BaseinfoGeneralVBox);
+											
+											// Tab 2
+											this.BaseinfoBasesPage = new qx.ui.tabview.Page(Lang.gt("Basenwerte"));
+											this.BaseinfoBasesPage.setLayout(new qx.ui.layout.VBox(5));
+											this.BaseinfoTab.add(this.BaseinfoBasesPage);
+											this.BaseinfoBasesVBox = new qx.ui.container.Composite();
+											this.BaseinfoBasesVBox.setLayout(new qx.ui.layout.VBox(5));
+											this.BaseinfoBasesVBox.setThemedPadding(10);
+											this.BaseinfoBasesVBox.setThemedBackgroundColor("#eef");
+											this.BaseinfoBasesPage.add(this.BaseinfoBasesVBox);
+
+											// Tab 3
+											this.BaseinfoAllBasesPage = new qx.ui.tabview.Page(Lang.gt("Alle Basen"));
+											this.BaseinfoAllBasesPage.setLayout(new qx.ui.layout.VBox(5));
+											this.BaseinfoTab.add(this.BaseinfoAllBasesPage);
+											this.BaseinfoAllBasesVBox = new qx.ui.container.Composite();
+											this.BaseinfoAllBasesVBox.setLayout(new qx.ui.layout.VBox(5));
+											this.BaseinfoAllBasesVBox.setThemedPadding(10);
+											this.BaseinfoAllBasesVBox.setThemedBackgroundColor("#eef");
+											this.BaseinfoAllBasesPage.add(this.BaseinfoAllBasesVBox);
+
+											var BIBUTTONIMAGE = (BIBUTTONDESIGN == 1 || BIBUTTONDESIGN == 3) ? BIIMAGESMALL : '' ;
+											var BIBUTTONNAME = (BIBUTTONDESIGN == 1 || BIBUTTONDESIGN == 2) ? '<b>' + BICLASS + '</b>' : '' ;
+											this.BaseinfoButton = new qx.ui.form.Button(BIBUTTONNAME,BIBUTTONIMAGE).set({
+												toolTipText: "" + Lang.gt("Öffnen") + ": " + BICLASS + " " + BIVERSION + "",
+												width: BIBUTTONWIDTH,
+												height: BIBUTTONHEIGHT,
+												maxWidth: BIBUTTONWIDTH,
+												maxHeight: BIBUTTONHEIGHT,
+												center: true,
+												rich: true
+											});
+											this.BaseinfoButton.addListener("click", function (e) {
+												this.BaseinfoGeneralVBox.removeAll();
+												this.BaseinfoBasesVBox.removeAll();
+												this.BaseinfoAllBasesVBox.removeAll();
+												this.showBaseinfo();
+												this.BaseinfoFenster.show();
+											}, this);
+											this.app = qx.core.Init.getApplication();
+											if(BIBUTTONPOSITION == 4) this.app.getDesktop().add(this.BaseinfoButton, {left: 125,bottom: 180}); // Chat
+											else if(BIBUTTONPOSITION == 3) this.app.getDesktop().add(this.BaseinfoButton, {right: 122,bottom: 0}); // Serverinfo
+											else if(BIBUTTONPOSITION == 2) this.app.getDesktop().add(this.BaseinfoButton, {left: 127,top: 0}); // Playername
+											else this.app.getDesktop().add(this.BaseinfoButton, {right: 125,top: 0}); // Standard Worldname
+										}
+									catch(e)
+										{
+											console.log("BaseInfo: Initialize Error - ", e);
+										}
 								},
 								showBaseinfo: function (ev) {
 									try
 										{
-
+											console.log("BaseInfo: Loading...");
 											var instance = ClientLib.Data.MainData.GetInstance();
 											var alliance = instance.get_Alliance();
+											var allianceid = alliance.get_Id();
 											var serverName = instance.get_Server().get_Name();
 											var player = instance.get_Player();
 											var faction1 = player.get_Faction();
 											var playerRank = player.get_OverallRank();
+											var playerSubstitution = player.get_IsSubstituted();
+											var accountId = player.get_AccountId();
+											var accountCreate = new Date(player.get_CreationDate());
+											var Stunde1 = accountCreate.getHours();
+											var Minute1 = accountCreate.getMinutes();
+											var Monat1 = accountCreate.getMonth()+1 ;
+											var Tag1 = accountCreate.getDate();
+											var Jahr1 = accountCreate.getFullYear();
+											if(Stunde1<10) Stunde1 = "0" + Stunde1;
+											if(Minute1<10) Minute1 = "0" + Minute1;
+											if(Tag1<10) Tag1 = "0" + Tag1;
+											if(Monat1<10) Monat1 = "0" + Monat1;
+												accountCreate = Tag1 + "." + Monat1 + "." + Jahr1 + " - " + Stunde1 + ":" + Minute1;
 											var aktuellesDatum = new Date();
 											var Stunde = aktuellesDatum.getHours();
 											var Minute = aktuellesDatum.getMinutes();
@@ -257,6 +328,7 @@
 											var VE_lvl = null;
 											var support = 0;
 											var supportlvl = null;
+											var supportname = '';
 											var def_durchschnitt = null;
 											var credit_durchschnitt = null;
 											var repairMaxTime = null;
@@ -318,14 +390,52 @@
 											var baseidforWorldmap = null;
 											var coordsforWorldmap = '';
 											var worldidforWorldmap = document.URL.split("/");
-											while (len--)
+											var AllianzMemberList = '';
+											if(AllianzID > 0)
 												{
-													member = members[keys[len]];
-													AllianzRolle[member.Id] = member.RoleName;
-													AllianzSpieler[member.Id] = member.Name;
+													while (len--)
+														{
+															member = members[keys[len]];
+															AllianzRolle[member.Id] = member.RoleName;
+															AllianzSpieler[member.Id] = member.Name;
+															AllianzMemberList += (AllianzMemberList != '') ? '|||' + AllianzID + ',' + AllianzName + ',' + worldidforWorldmap[3] + ',' + member.Id + ',' + member.Name + ',' + member.Bases + ',' + factionArt[member.Faction] + ',' + member.Rank + ',' + member.RoleName + ',' + member.HasControlHubCode + ',' + member.Level + '' : '' + AllianzID + ',' + AllianzName + ',' + worldidforWorldmap[3] + ',' + member.Id + ',' + member.Name + ',' + member.Bases + ',' + factionArt[member.Faction] + ',' + member.Rank + ',' + member.RoleName + ',' + member.HasControlHubCode + ',' + member.Level + '' ;
+														}
 												}
 											var allBases = '';
-											var aB_basename,aB_baselvl,aB_offlvl,aB_deflvl,aB_velvl,aB_vzlvl,aB_cclvl,aB_supportlvl,aB_credits,aB_strom,aB_tiberium,aB_crystal;
+											var aB_basename,aB_baselvl,aB_offlvl,aB_deflvl,aB_bhlvl,aB_velvl,aB_vzlvl,aB_cclvl,aB_supportweapon,aB_supportlvl,aB_credits,aB_strom,aB_tiberium,aB_crystal;
+											var aB__basename,aB__baselvl,aB__offlvl,aB__deflvl,aB__bhlvl,aB__velvl,aB__vzlvl,aB__cclvl,aB__supportweapon,aB__supportlvl,aB__credits,aB__strom,aB__tiberium,aB__crystal = new Array();
+											var GeneralField5 = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "center"}));
+											GeneralField5.add(new qx.ui.basic.Label("<big><u><b>" + Lang.gt("Überblick über die Basen") + "</b></u></big>").set({rich: true}));
+											GeneralField5.add(new qx.ui.basic.Label("").set({rich: true}));
+											var Basen = new qx.ui.container.Composite(new qx.ui.layout.HBox(10).set({alignX: "center"}));
+											var BasenName = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											var BasenBase = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											var BasenOffensive = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											var BasenDefensive = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											var BasenBH = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											var BasenCC = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											var BasenVE = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											var BasenVZ = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											var BasenSupport = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											var BasenTiberium = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											var BasenCrystal = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											var BasenPower = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											var BasenCredits = new qx.ui.container.Composite(new qx.ui.layout.VBox(1).set({alignX: "right"}));
+											BasenName.add(new qx.ui.basic.Label("<b>" + Lang.gt("Basis Name") + "</b>").set({rich: true, alignX: "center"}));
+											BasenBase.add(new qx.ui.basic.Label("<b>Lvl</b>").set({rich: true, alignX: "center"}));
+											BasenOffensive.add(new qx.ui.basic.Label("<b>Off</b>").set({rich: true, alignX: "center"}));
+											BasenDefensive.add(new qx.ui.basic.Label("<b>Def</b>").set({rich: true, alignX: "center"}));
+											BasenBH.add(new qx.ui.basic.Label("<b>" + Lang.gt("BH") + "</b>").set({rich: true, alignX: "center"}));
+											BasenCC.add(new qx.ui.basic.Label("<b>" + Lang.gt("KZ") + "</b>").set({rich: true, alignX: "center"}));
+											BasenVE.add(new qx.ui.basic.Label("<b>" + Lang.gt("VE") + "</b>").set({rich: true, alignX: "center"}));
+											BasenVZ.add(new qx.ui.basic.Label("<b>" + Lang.gt("VZ") + "</b>").set({rich: true, alignX: "center"}));
+											BasenSupport.add(new qx.ui.basic.Label("<b>Support</b>").set({rich: true, alignX: "center"}));
+											BasenTiberium.add(new qx.ui.basic.Label("<b>" + Lang.gt("Tiberium") + "</b>").set({rich: true, alignX: "center"}));
+											BasenCrystal.add(new qx.ui.basic.Label("<b>" + Lang.gt("Kristall") + "</b>").set({rich: true, alignX: "center"}));
+											BasenPower.add(new qx.ui.basic.Label("<b>" + Lang.gt("Strom") + "</b>").set({rich: true, alignX: "center"}));
+											BasenCredits.add(new qx.ui.basic.Label("<b>" + Lang.gt("Credit") + "</b>").set({rich: true, alignX: "center"}));
+
+
 											for (var key in apcl)
 												{
 													player_basen++;
@@ -338,16 +448,18 @@
 																	support_gebaeude++;
 																	support = sd.get_Level();
 																	supportlvl = supportlvl+support;
-																	
+																	supportname = c.get_SupportWeapon().n.replace(/NOD_SUPPORT_/gi,"").replace(/GDI_SUPPORT_/gi,"").replace(/FOR_SUPPORT_/gi,"");
 																}
 															else
 																{
 																	support = 0;
+																	supportname = '-';
 																}
 															unitData = c.get_CityBuildingsData();
 															ve = unitData.GetUniqueBuildingByTechName(ClientLib.Base.ETechName.Defense_Facility);
 															vz = unitData.GetUniqueBuildingByTechName(ClientLib.Base.ETechName.Defense_HQ);
-															repairMaxTime = c.GetResourceMaxStorage(ClientLib.Base.EResourceType.RepairChargeInf);
+															bh = unitData.GetUniqueBuildingByTechName(ClientLib.Base.ETechName.Construction_Yard);
+															cc = unitData.GetUniqueBuildingByTechName(ClientLib.Base.ETechName.Command_Center);
 															commandpointsMaxStorage = c.GetResourceMaxStorage(ClientLib.Base.EResourceType.CommandPoints);
 															
 															creditPerHour = ClientLib.Base.Resource.GetResourceGrowPerHour(c.get_CityCreditsProduction(), false) + ClientLib.Base.Resource.GetResourceBonusGrowPerHour(c.get_CityCreditsProduction(), false);
@@ -370,6 +482,7 @@
 															
 															if(c.get_CommandCenterLevel() > 0)
 																{
+																	repairMaxTime = c.GetResourceMaxStorage(ClientLib.Base.EResourceType.RepairChargeInf);
 																	if(firstOfflvl < c.get_LvlOffense())
 																		{
 																			secondBaseName = firstBaseName;
@@ -419,22 +532,39 @@
 																{
 																	allBases += ' |||| ';
 																}
-															if(ve !== null) { aB_velvl = ve.get_CurrentLevel().toString(); } else { aB_velvl = 0;}
-															if(vz !== null) { aB_vzlvl = vz.get_CurrentLevel().toString(); } else { aB_vzlvl = 0;}
-															if(c.get_CommandCenterLevel())  { aB_cclvl =  c.get_CommandCenterLevel().toString(); } else { aB_cclvl = 0;}
-															allBases += '' + c.get_Name().toString() + ' | ' + c.get_LvlBase().toFixed(2).toString() + ' | ' + c.get_LvlOffense().toFixed(2).toString() + ' | ' + c.get_LvlDefense().toFixed(2).toString() + ' | ' + aB_velvl + ' | ' + aB_vzlvl + ' | ' + aB_cclvl + ' | ' + support.toFixed(2).toString() + ' | ' + parseInt(creditPerHour) + ' | ' + parseInt(c.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Power, false, false) + c.GetResourceBonusGrowPerHour(ClientLib.Base.EResourceType.Power) + alliance.GetPOIBonusFromResourceType(ClientLib.Base.EResourceType.Power)) + ' | ' + parseInt(c.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Tiberium, false, false) + c.GetResourceBonusGrowPerHour(ClientLib.Base.EResourceType.Tiberium) + alliance.GetPOIBonusFromResourceType(ClientLib.Base.EResourceType.Tiberium)) + ' | ' + parseInt(c.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Crystal, false, false) + c.GetResourceBonusGrowPerHour(ClientLib.Base.EResourceType.Crystal) + alliance.GetPOIBonusFromResourceType(ClientLib.Base.EResourceType.Crystal)) + ' | ' + key + '';
+															if(ve !== null) { aB_velvl = ve.get_CurrentLevel().toString(); } else { aB_velvl = '-';}
+															if(vz !== null) { aB_vzlvl = vz.get_CurrentLevel().toString(); } else { aB_vzlvl = '-';}
+															if(bh !== null) { aB_bhlvl = bh.get_CurrentLevel().toString(); } else { aB_bhlvl = '-';}
+															if(cc !== null) { aB_cclvl = cc.get_CurrentLevel().toString(); } else { aB_cclvl = '-';}
+															allBases += '' + c.get_Name().toString() + ' | ' + c.get_LvlBase().toFixed(2).toString() + ' | ' + c.get_LvlOffense().toFixed(2).toString() + ' | ' + c.get_LvlDefense().toFixed(2).toString() + ' | ' + aB_bhlvl + ' | ' + aB_velvl + ' | ' + aB_vzlvl + ' | ' + aB_cclvl + ' | ' + support.toFixed(2).toString() + ' | ' + supportname.toString() + ' | ' + parseInt(creditPerHour) + ' | ' + parseInt(c.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Power, false, false) + c.GetResourceBonusGrowPerHour(ClientLib.Base.EResourceType.Power) + alliance.GetPOIBonusFromResourceType(ClientLib.Base.EResourceType.Power)) + ' | ' + parseInt(c.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Tiberium, false, false) + c.GetResourceBonusGrowPerHour(ClientLib.Base.EResourceType.Tiberium) + alliance.GetPOIBonusFromResourceType(ClientLib.Base.EResourceType.Tiberium)) + ' | ' + parseInt(c.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Crystal, false, false) + c.GetResourceBonusGrowPerHour(ClientLib.Base.EResourceType.Crystal) + alliance.GetPOIBonusFromResourceType(ClientLib.Base.EResourceType.Crystal)) + ' | ' + key + '';
 															if(baseidforWorldmap == null)
 																{
 																	baseidforWorldmap = key;
 																	coordsforWorldmap = c.get_PosX() + ':' + c.get_PosY();
 																}
+															
+															// all Bases Tab
+															BasenName.add(new qx.ui.basic.Label(c.get_Name().toString()).set({rich: true, alignX: "left"}));
+															BasenBase.add(new qx.ui.basic.Label(c.get_LvlBase().toFixed(2).toString()).set({rich: true, alignX: "right"}));
+															BasenOffensive.add(new qx.ui.basic.Label(c.get_LvlOffense().toFixed(2).toString()).set({rich: true, alignX: "right"}));
+															BasenDefensive.add(new qx.ui.basic.Label(c.get_LvlDefense().toFixed(2).toString()).set({rich: true, alignX: "right"}));
+															BasenBH.add(new qx.ui.basic.Label(aB_bhlvl).set({rich: true, alignX: "right"}));
+															BasenCC.add(new qx.ui.basic.Label(aB_cclvl).set({rich: true, alignX: "right"}));
+															BasenVE.add(new qx.ui.basic.Label(aB_velvl).set({rich: true, alignX: "right"}));
+															BasenVZ.add(new qx.ui.basic.Label(aB_vzlvl).set({rich: true, alignX: "right"}));
+															BasenSupport.add(new qx.ui.basic.Label(support.toFixed(0).toString() + " " + supportname.toString()).set({rich: true, alignX: "left"}));
+															BasenTiberium.add(new qx.ui.basic.Label(parseInt(TiberiumProduction).toLocaleString()).set({rich: true, alignX: "right"}));
+															BasenCrystal.add(new qx.ui.basic.Label(parseInt(CrystalProduction).toLocaleString()).set({rich: true, alignX: "right"}));
+															BasenPower.add(new qx.ui.basic.Label(parseInt(PowerProduction).toLocaleString()).set({rich: true, alignX: "right"}));
+															BasenCredits.add(new qx.ui.basic.Label(parseInt(creditPerHour).toLocaleString()).set({rich: true, alignX: "right"}));
+
 														}
 													catch (e)
 														{
-															console.warn("BaseInfo pro Base: ", e); 
+															console.warn("BaseInfo: AllBases - ", e); 
 														}
 												}
-
+											
 											def_durchschnitt = def_durchschnitt / player_basen;
 											newAusgabe["off_basen"] = offbasen;
 											if(player_basen>0)
@@ -519,9 +649,12 @@
 													second_rep_fuss = "0:" + second_rep_fuss;
 												}
 											
+											newAusgabe["AccountID"] = accountId;
 											newAusgabe["AllianzID"] = AllianzID;
-											newAusgabe["AllianzName"] = AllianzName.toString();
-											newAusgabe["AllianzRolle"] = AllianzRolle[PlayerID].toString();
+											if(AllianzID > 0) newAusgabe["AllianzName"] = AllianzName.toString();
+											else newAusgabe["AllianzName"] = " ";
+											if(AllianzID > 0) newAusgabe["AllianzRolle"] = AllianzRolle[PlayerID].toString();
+											else newAusgabe["AllianzRolle"] = " ";
 											newAusgabe["ServerName"] = serverName.toString();
 											newAusgabe["SpielerID"] = PlayerID;
 											newAusgabe["Spieler"] = PlayerName;
@@ -529,12 +662,14 @@
 											newAusgabe["Datum"] = Datum;
 											newAusgabe["Uhrzeit"] = Uhrzeit;
 											newAusgabe["Rang"] = playerRank;
+											newAusgabe["Substitution"] = playerSubstitution;
 											newAusgabe["maxKP"] = commandpointsMaxStorage;
 											newAusgabe["repZeit"] = repairMaxTime / 60 / 60;
 											newAusgabe["Basen"] = player_basen;
 											newAusgabe["Creditproduktion"] = parseInt(creditsPerHour);
 											newAusgabe["Tiberiumproduktion"] = parseInt(TiberiumsPerHour);
 											newAusgabe["Kristallproduktion"] = parseInt(CrystalsPerHour);
+											newAusgabe["Stromproduktion"] = parseInt(PowersPerHour);
 											newAusgabe["1st_Base"] = firstBaselvl.toFixed(2).toString();
 											newAusgabe["1st_Def"] = firstDeflvl.toFixed(2).toString();
 											newAusgabe["1st_Off"] = firstOfflvl.toFixed(2).toString();
@@ -563,12 +698,18 @@
 
 
 											// Field 1
-											var field1 = new qx.ui.container.Composite(new qx.ui.layout.VBox(2).set({alignX: "center"}));
-											field1.add(new qx.ui.basic.Label("<big><u><b>" + Lang.gt("Allgemeine Informationen") + "</b></u></big>").set({rich: true, selectable: true}));
+											var GeneralField1 = new qx.ui.container.Composite(new qx.ui.layout.VBox(2).set({alignX: "center"}));
+											GeneralField1.add(new qx.ui.basic.Label("<big><u><b>" + Lang.gt("Allgemeine Informationen") + "</b></u></big>").set({rich: true, selectable: true}));
+											GeneralField1.add(new qx.ui.basic.Label("").set({rich: true, selectable: true}));
+
+											var GeneralField2 = new qx.ui.container.Composite(new qx.ui.layout.VBox(2).set({alignX: "center"}));
+											GeneralField2.add(new qx.ui.basic.Label("<br><big><u><b>" + Lang.gt("Script Informationen") + "</b></u></big>").set({rich: true, selectable: true}));
+											GeneralField2.add(new qx.ui.basic.Label("").set({rich: true, selectable: true}));
 
 											// Field 2
 											var field2 = new qx.ui.container.Composite(new qx.ui.layout.VBox(2).set({alignX: "center"}));
 											field2.add(new qx.ui.basic.Label("<big><u><b>" + Lang.gt("Gesamte Produktion") + "</b></u></big>").set({rich: true, selectable: true}));
+											field2.add(new qx.ui.basic.Label("").set({rich: true, selectable: true}));
 
 											var production = new qx.ui.container.Composite(new qx.ui.layout.HBox(50).set({alignX: "center"}));
 											// 2.1
@@ -586,34 +727,46 @@
 											// 3.1
 											var firstoff = new qx.ui.container.Composite(new qx.ui.layout.VBox(2).set({alignX: "center"}));
 											firstoff.add(new qx.ui.basic.Label("<big><u><b>" + Lang.gt("Erste Offensive") + "</b></u></big>").set({rich: true, selectable: true}));
+											firstoff.add(new qx.ui.basic.Label("").set({rich: true, selectable: true}));
 											// 3.2
 											var secondoff = new qx.ui.container.Composite(new qx.ui.layout.VBox(2).set({alignX: "center"}));
 											secondoff.add(new qx.ui.basic.Label("<big><u><b>" + Lang.gt("Zweite Offensive") + "</b></u></big>").set({rich: true, selectable: true}));
+											secondoff.add(new qx.ui.basic.Label("").set({rich: true, selectable: true}));
 
-											// Field 4
-											var field4 = new qx.ui.container.Composite(new qx.ui.layout.HBox(5).set({alignX: "center"}));
-											field4.add(new qx.ui.basic.Label("").set({rich: true, selectable: true}));
-											// 4.1
-											var sending = new qx.ui.container.Composite(new qx.ui.layout.VBox(2).set({alignX: "center"}));
-											sending.add(new qx.ui.basic.Label("<form action='http://baseinfo.scriptarea.net/index.php' method='post' target='_blank'><input type='hidden' name='usersubmit' value='" + usersubmit + "' /><input type='hidden' name='allBases' value='" + allBases + "' /><input type='submit' name='' value='&nbsp;&nbsp;" + Lang.gt("Werte übertragen") + "&nbsp;&nbsp;' style='font-weight: bold;' /></form>").set({rich: true, selectable: true}));
-											// 4.2
-											var worldmap = new qx.ui.container.Composite(new qx.ui.layout.VBox(2).set({alignX: "center"}));
-											worldmap.add(new qx.ui.basic.Label("<a href='http://map.tiberium-alliances.com/map/"+worldidforWorldmap[3]+"#"+coordsforWorldmap+"|3|"+baseidforWorldmap+"|~' target='_blank'><button><b>&nbsp;&nbsp;" + Lang.gt("Weltkarte") + "&nbsp;&nbsp;</b></button></a>").set({rich: true, selectable: true}));
-
-
+								
 											var chrystal,tiberium,power,dollar,squad,vehicle,plane,firstoff,secondoff,name,level,off,def,strom;
 
-											field1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Allianz Rolle") + ":</b> " + AllianzRolle[PlayerID].toString()).set({rich: true}));
-											field1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Spielername") + ":</b> " + PlayerName).set({rich: true}));
-											field1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Spielerklasse") + ":</b> " + factionArt[faction1]).set({rich: true}));
-											field1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Aktuelle Uhrzeit") + ":</b> " + Datum + " " + Uhrzeit).set({rich: true}));
-											field1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Rang") + ":</b> " + playerRank).set({rich: true}));
-											field1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Maximale KP") + ":</b> " + commandpointsMaxStorage).set({rich: true}));
-											field1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Maximale Repzeit") + ":</b> " + repairMaxTime / 60 / 60 + " " + Lang.gt("Stunden")).set({rich: true}));
-											field1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Basenanzahl") + ":</b> " + player_basen).set({rich: true}));
-											field1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Anzahl Offensiv Basen") + ":</b> " + offbasen).set({rich: true}));
-											field1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Support Gebäude Level Ø") + ":</b> " + newAusgabe["support_lvl"]).set({rich: true}));
-											field1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("VE Ø aller Basen") + ":</b> " + newAusgabe["ve"]).set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Account Erstellung") + ":</b> " + accountCreate.toString()).set({rich: true}));
+											if(AllianzID > 0) GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Allianz Rolle") + ":</b> " + AllianzRolle[PlayerID].toString()).set({rich: true}));
+											else GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Allianz Rolle") + ":</b> ---").set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Spielername") + ":</b> " + PlayerName).set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Spielerklasse") + ":</b> " + factionArt[faction1]).set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Aktuelle Uhrzeit") + ":</b> " + Datum + " " + Uhrzeit).set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Rang") + ":</b> " + playerRank).set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Maximale KP") + ":</b> " + commandpointsMaxStorage).set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Maximale Repzeit") + ":</b> " + repairMaxTime / 60 / 60 + " " + Lang.gt("Stunden")).set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Basenanzahl") + ":</b> " + player_basen).set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Anzahl Offensiv Basen") + ":</b> " + offbasen).set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Support Gebäude Level Ø") + ":</b> " + newAusgabe["support_lvl"]).set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("VE Ø aller Basen") + ":</b> " + newAusgabe["ve"]).set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Def Ø aller Basen") + ":</b> " + newAusgabe["def_durchschnitt"]).set({rich: true}));
+											GeneralField1.add(new qx.ui.basic.Label("").set({rich: true, selectable: true}));
+											var worldmap = '&nbsp;&nbsp;&nbsp;<a href="http://map.tiberium-alliances.com/map/'+worldidforWorldmap[3]+'#'+coordsforWorldmap+'|3|'+baseidforWorldmap+'|~" target="_blank"><button style="font-weight: bold; font-size: 18px;"><b>&nbsp;' + Lang.gt("Weltkarte") + '&nbsp;</b></button></a>';
+											if(AllianzID > 0)
+												{
+													GeneralField1.add(new qx.ui.basic.Label('<form action="http://baseinfo.scriptarea.net/index.php" method="post" target="_blank" style="display:inline;"><input type="hidden" name="usersubmit" value="' + usersubmit + '" /><input type="hidden" name="allBases" value="' + allBases + '" /><input type="hidden" name="allMembers" value="' + AllianzMemberList + '" /><input type="submit" name="" value="&nbsp;' + Lang.gt("Werte übertragen") + '&nbsp;" style="font-weight: bold; font-size: 18px;" /></form> ' + worldmap + '').set({rich: true, selectable: true}));
+												}
+											else
+												{
+													GeneralField1.add(new qx.ui.basic.Label("<button disabled='disabled'><s>&nbsp;" + Lang.gt('Werte übertragen') + "&nbsp;</s></button>").set({rich: true, selectable: true, toolTipText: "Deactivated"}));
+												}
+
+											GeneralField2.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Name") + ":</b> " + BICLASS).set({rich: true}));
+											GeneralField2.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Version") + ":</b> " + BIVERSION).set({rich: true}));
+											GeneralField2.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Ersteller") + ":</b> " + BIAUTHOR).set({rich: true}));
+											GeneralField2.add(new qx.ui.basic.Atom("<b>" + Lang.gt("Webseite") + ":</b> <a href='" + BIHOMEPAGE + "' target='_blank'>" + BIHOMEPAGE + "</a>").set({rich: true}));
+											if(AllianzID > 0) GeneralField2.add(new qx.ui.basic.Atom("<b>" + Lang.gt("E-Mail") + ":</b> <a href='mailto:" + BICONTACT + "?subject=BaseInfo%20InGame%20Contact&amp;body=Hi, my InGame Name is " + PlayerName.toString() + " and im in the alliance " + AllianzName.toString() + " and im playing at the world " + serverName.toString() + " (" + worldidforWorldmap[3] + "),' target='_blank'>" + BICONTACT + "</a>").set({rich: true}));
+											else GeneralField2.add(new qx.ui.basic.Atom("<b>" + Lang.gt("E-Mail") + ":</b> <a href='mailto:" + BICONTACT + "?subject=BaseInfo%20InGame%20Contact&amp;body=Hi, my InGame Name is " + PlayerName.toString() + " and im not in a alliance and im playing at the world " + serverName.toString() + " (" + worldidforWorldmap[3] + "),' target='_blank'>" + BICONTACT + "</a>").set({rich: true}));
 
 											playerproduction.add(chrystal = new qx.ui.basic.Atom("" + parseInt(CrystalsProduction).toLocaleString() + "", "webfrontend/ui/common/icn_res_chrystal.png").set({rich: true}));
 											chrystal.setToolTipIcon("webfrontend/ui/common/icn_res_chrystal.png");
@@ -646,13 +799,11 @@
 											tiberium.setToolTipText(Lang.gt("Gesamte Tiberium Produktion"));
 											tiberium.getChildControl("icon").set({ width: 18, height: 18, scale: true, alignY: "middle" });
 											production.add(overallproduction);
-											/*
 											overallproduction.add(power = new qx.ui.basic.Atom("" + parseInt(PowersPerHour).toLocaleString(), "webfrontend/ui/common/icn_res_power.png").set({rich: true}));
 											power.setToolTipIcon("webfrontend/ui/common/icn_res_power.png");
 											power.setToolTipText(Lang.gt("Gesamte Strom Produktion"));
 											power.getChildControl("icon").set({ width: 18, height: 18, scale: true, alignY: "middle" });
 											production.add(overallproduction);
-											*/
 
 											firstoff.add(name = new qx.ui.basic.Atom(firstBaseName, "FactionUI/icons/icon_arsnl_base_buildings.png").set({rich: true}));
 											name.setToolTipIcon("FactionUI/icons/icon_arsnl_base_buildings.png");
@@ -736,69 +887,49 @@
 											plane.getChildControl("icon").set({ width: 18, height: 18, scale: true, alignY: "middle" });
 											offensive.add(secondoff);
 
+											// Tab 1 General Informations
+											this.BaseinfoGeneralVBox.add(GeneralField1);
+											this.BaseinfoGeneralVBox.add(GeneralField2);
 
-											// Tab 1
+											// Tab 2 Base values
 											field2.add(production);
 											field3.add(offensive);
-											this.BaseinfoVBox.add(field1);
-											this.BaseinfoVBox.add(field2);
-											this.BaseinfoVBox.add(field3);
-											field4.add(sending);
-											field4.add(worldmap);
-											this.BaseinfoVBox.add(field4);
+											this.BaseinfoBasesVBox.add(field2);
+											field3.add(new qx.ui.basic.Label("").set({rich: true, selectable: true}));
+											field3.add(new qx.ui.basic.Label("").set({rich: true, selectable: true}));
+											this.BaseinfoBasesVBox.add(field3);
 											
-											// Tab 2 Mitglieder
-											var keys = Object.keys(AllianzSpieler);
-											var anzahl = keys.length;
-											var len = keys.length;
-											var member='',userreplace='',i=0;
-											userreplace += newAusgabe["AllianzID"] + ',' + newAusgabe["AllianzName"] + ',' + newAusgabe["AllianzRolle"] + ',' + newAusgabe["ServerName"] + ',' + worldidforWorldmap[3] + ',';
-											while (len--)
-												{
-													i++;
-													if(member != '')
-														{
-															if(i == 5)
-																{
-																	member += ',<br>';
-																	i = 0;
-																}
-															else
-																{
-																	member += ', ';
-																}
-															userreplace += ',';
-														}
-													member += AllianzSpieler[keys[len]];
-													userreplace += AllianzSpieler[keys[len]];
-												}
-											this.BaseinfoMemberVBox.add(new qx.ui.basic.Label("<table cellspacing='1' cellpadding='10'><tr><td><big><b><u>" + Lang.gt("Mitglieder Auflistung") + " (" + anzahl + ")</u></b></big><br><br>" + member + "</td></tr></table>").set({rich: true, selectable: true}));
-											if(leaders.l.indexOf(PlayerID) != "-1")
-												{
-													this.BaseinfoMemberVBox.add(new qx.ui.basic.Label("<table cellspacing='1' cellpadding='10'><tr><td><span style='color: #bb0000;'><u>" + Lang.gt("Nur für OBH's sichtbar") + ":</u></span></td></tr></table>").set({rich: true}));
-													this.BaseinfoMemberVBox.add(new qx.ui.basic.Label("<table cellspacing='1' cellpadding='10'><tr><td><big><b><u>" + Lang.gt("Mitglieder Anpassung") + "</u></b></big><br>Mit diesem Button kannste du deine Mitglieder auf<br>der BaseInfo Seite anpassen, sollten ehemalige Mitglieder,<br>die z.Z. einer anderen Allianz angehören,<br>noch in der Auflistung angezeigt werden.</td></tr></table>").set({rich: true}));
-													this.BaseinfoMemberVBox.add(new qx.ui.basic.Label("<table cellspacing='1' cellpadding='10'><tr><td><form action='http://baseinfo.scriptarea.net/index.php' method='post' target='_blank'><input type='hidden' name='userreplace' value='" + userreplace + "'/><input type='submit' name='submit' value='&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + Lang.gt("Mitglieder abgleichen") + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' style='font-weight: bold;' /></form><br><span style='color: #bb0000;'><i>" + Lang.gt("Du musst auf der BaseInfo-Seite eingeloggt sein") + "</i></span></td></tr></table>").set({rich: true}));
-												}
-
-											// Tab 3 ScriptInfo
-											this.BaseinfoInfoVBox.add(new qx.ui.basic.Label("<table cellspacing='1' cellpadding='10'><tr><td><big><b><u>Script Informationen</u></b></big><br><b>Name:</b> " + BICLASS + "<br><b>Version:</b> " + BIVERSION + "<br><b>Ersteller:</b> " + BIAUTHOR + "<br><b>Kontakt:</b><br><a href='" + BIHOMEPAGE + "' target='_blank'><button>Homepage</button></a> <a href='mailto:" + BICONTACT + "' target='_blank'><button>E-Mail</button></a><br><br><big><b><u>Warum entstand dieses Script?</u></b></big><br>Es gibt ein paar Hauptgründe warum dieses Script entstand. Zum einen wollten Befehlshaber einen Überblick haben, über die einzelnen Werte ihrer Mitglieder, zum anderen sollten die Mitglieder selber sehen, wie ihre Werte sind.<br><br><big><b><u>Was bewirkt \"Werte übertragen\"?</u></b></big><br>Mit dem Button \"Werte übertragen\" können eure Basenwerte an eine Homepage übermittelt werden, wo sich OBH's anmelden können und ihre Allianz auswerten können. Die OBH's bekommen mit dem erstmaligen Übertragen ihrer eigenen Werte einen \"Befehlshaber Login\" angezeigt, welcher nur EINMAL sichtbar ist. Danach können sich Zugriffsberechtigte (diese Zugangsdaten sollten von diesem OBH an berechtigte Personen weitergegeben werden) ihre Allianz einsehen und diverse Einstellungen tätigen. Mitglieder bekommen mit dem übertragen ihrer Werte einen permanenten Link angezeigt welchen sie für ihre eigenen Werte nutzen können. Sie sehen dann ihre letzten 5 Einträge wo sie selbst auswerten können wo sie sich verbessert haben.</td></tr></table>").set({rich: true, width: 350}));
-
-
+											// Tab 3 Basen
+											Basen.add(BasenName);
+											Basen.add(BasenBase);
+											Basen.add(BasenOffensive);
+											Basen.add(BasenDefensive);
+											Basen.add(BasenBH);
+											Basen.add(BasenCC);
+											Basen.add(BasenVE);
+											Basen.add(BasenVZ);
+											Basen.add(BasenSupport);
+											Basen.add(BasenTiberium);
+											Basen.add(BasenCrystal);
+											Basen.add(BasenPower);
+											Basen.add(BasenCredits);
+											GeneralField5.add(Basen);
+											this.BaseinfoAllBasesVBox.add(GeneralField5);
 										}
 									catch(e)
 										{
-											console.log(e);
+											console.log("BaseInfo: Loading Error - ", e);
 										}
 								}
-						}
-                });          
-            }
-            catch (e)
-                    {
-                        console.warn("qx.Class.define(BaseInfo: ", e);      
-                    }
-				var Lang = BaseInfoLang.getInstance();
-                BaseInfo.getInstance();
+							}
+						});
+					}
+				catch (e)
+					{
+						console.warn("qx.Class.define(BaseInfo: ", e);
+					}
+					var Lang = BaseInfoLang.getInstance();
+					BaseInfo.getInstance();
             }
         function LoadExtension()
             {
