@@ -1,12 +1,11 @@
 // ==UserScript==
 // @name           Tiberium Alliances Tweaks
-// @version        1.1.1
+// @version        1.1.5
 // @namespace      http://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @author         petui
 // @description    A collection of more or less useful features that attempt to improve the gaming experience.
 // @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @grant none
 // ==/UserScript==
 'use strict';
 
@@ -58,6 +57,23 @@
 						this.initializeEntryPoint();
 						this.initialized = true;
 						this.fireEvent('initialize');
+
+						if (!this.hasSavedSettings()) {
+							webfrontend.gui.MessageBox.messageBox({
+								modal: false,
+								textRich: true,
+								title: 'Would you like to configure Tweaks?',
+								text: 'Looks like this is your first time running Tweaks in this server. Open settings now?<br/><br/>'
+									+ 'You can always access it later in the navigation bar under <i>Scripts</i>.',
+								okText: 'Yes',
+								cancelText: 'No',
+								executeOk: this.openSettingsWindow,
+								callbackContext: this
+							});
+
+							// Save empty settings so user won't be asked again
+							this.saveSettings({});
+						}
 					},
 
 					initializeEntryPoint: function() {
@@ -117,6 +133,13 @@
 					},
 
 					/**
+					 * @returns {Boolean}
+					 */
+					hasSavedSettings: function() {
+						return localStorage.getItem('Tweaks') !== null;
+					},
+
+					/**
 					 * @returns {Object}
 					 */
 					loadSettings: function() {
@@ -146,7 +169,8 @@
 							name: options.name || featureConstructor.classname,
 							description: options.description || null,
 							category: options.category || Tweaks.Category.Uncategorized,
-							configKey: options.configKey || featureConstructor.classname
+							configKey: options.configKey || featureConstructor.classname,
+							disabled: options.disabled || false
 						};
 
 						var featureKey = featureConstructor.classname;
@@ -157,19 +181,24 @@
 							options: normalizedOptions
 						};
 
-						try {
-							instance = new featureConstructor;
-							this.features[featureKey].instance = instance;
-						}
-						catch (e) {
-							qx.event.GlobalError.handleError(e);
+						if (!normalizedOptions.disabled) {
+							try {
+								instance = new featureConstructor;
+								this.features[featureKey].instance = instance;
+							}
+							catch (e) {
+								qx.event.GlobalError.handleError(e);
+							}
 						}
 
 						var config = this.getConfig(featureConstructor);
 						var container = this.settingsWindow.addFeature(instance, normalizedOptions, config);
 						this.features[featureKey].container = container;
 
-						if (instance === null) {
+						if (normalizedOptions.disabled) {
+							this.settingsWindow.addMessage(container, 'Disabled', normalizedOptions.disabled);
+						}
+						else if (instance === null) {
 							this.settingsWindow.addError(container, 'Failed to instantiate');
 						}
 						else if (config.enabled) {
@@ -457,9 +486,18 @@
 					 * @param {String} message
 					 */
 					addError: function(container, message) {
+						this.addMessage(container, 'Error', message);
+					},
+
+					/**
+					 * @param {qx.ui.container.Composite} container
+					 * @param {String} title
+					 * @param {String} message
+					 */
+					addMessage: function(container, title, message) {
 						container.add(new qx.ui.basic.Label().set({
 							rich: true,
-							value: '<span style="color: #f00;">Error: ' + message + '</span>'
+							value: '<span style="color: #f00;">' + title + ': ' + message + '</span>'
 						}));
 					}
 				}
@@ -494,7 +532,9 @@
 									right: -2,
 									top: -2
 								});
-								child.getContainerElement().setStyle('border-radius', '8px');
+
+								var containerElement = PerforceChangelist >= 430398 ? child.getContentElement() : child.getContainerElement();
+								containerElement.setStyle('border-radius', '8px');
 								break;
 							case 'icon':
 								child = qx.ui.form.Button.prototype._createChildControlImpl.apply(this, arguments).set({
@@ -1121,7 +1161,8 @@
 						name: 'Fix notification sidebar error',
 						description: 'Fixes a common script error caused by a bug in the notification sidebar. '
 							+ '<a href="http://forum.alliances.commandandconquer.com/showthread.php?tid=32553" style="color:' + webfrontend.gui.util.BBCode.clrLink + ';" target="_blank">Read more</a>',
-						configKey: 'NotificationSidebarFix'
+						configKey: 'NotificationSidebarFix',
+						disabled: PerforceChangelist >= 425395 ? 'Obsolete. Bug fixed in patch 15.2' : false
 					});
 				},
 				construct: function() {
@@ -1601,8 +1642,10 @@
 						this.newFeatureCount = 0;
 
 						for (var id in features) {
-							if (!core.hasConfig(features[id].construct)) {
-								this.highlightContainer(features[id].container);
+							var feature = features[id];
+
+							if (!core.hasConfig(feature.construct) && !feature.options.disabled) {
+								this.highlightContainer(feature.container);
 								this.newFeatureCount++;
 							}
 						}
@@ -1655,13 +1698,17 @@
 							this.alteredContainers = [];
 						}
 
+						var containerElement = (PerforceChangelist >= 430398)
+							? container.getContentElement()
+							: container.getContainerElement();
+
 						this.alteredContainers.push({
 							container: container,
 							backgroundColor: container.getBackgroundColor(),
 							marginLeft: container.getMarginLeft(),
 							paddingLeft: container.getPaddingLeft(),
 							textColor: container.getTextColor(),
-							borderRadius: container.getContainerElement().getStyle('border-radius')
+							borderRadius: containerElement.getStyle('border-radius')
 						});
 						container.set({
 							backgroundColor: '#3c7c3c',
@@ -1669,7 +1716,7 @@
 							paddingLeft: container.getPaddingLeft() + 4,
 							textColor: '#333'
 						});
-						container.getContainerElement().setStyle('border-radius', '8px');
+						containerElement.setStyle('border-radius', '8px');
 					},
 
 					restoreContainers: function() {
@@ -1685,7 +1732,12 @@
 								paddingLeft: info.paddingLeft,
 								textColor: info.textColor
 							});
-							info.container.getContainerElement().setStyle('border-radius', info.borderRadius);
+
+							var containerElement = PerforceChangelist >= 430398
+								? info.container.getContentElement()
+								: info.container.getContainerElement();
+
+							containerElement.setStyle('border-radius', info.borderRadius);
 						}
 
 						this.alteredContainers = null;
