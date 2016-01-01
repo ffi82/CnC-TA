@@ -1,12 +1,11 @@
 // ==UserScript==
 // @name           Tiberium Alliances ReplayShare
-// @version        0.3.1
+// @version        0.3.2
 // @namespace      http://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @author         petui
 // @description    Share combat reports with your friends in other alliances and worlds
 // @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @grant          none
 // ==/UserScript==
 'use strict';
 
@@ -58,6 +57,16 @@
 					},
 
 					initializeHacks: function() {
+						if (ClientLib.Vis.Battleground.Battleground.prototype.LoadCombatDirect === undefined) {
+							var onSimulateBattleMethodName = ClientLib.API.Battleground.prototype.SimulateBattle.toString()
+								.match(/"SimulateBattle",\s?\{battleSetup:[a-z]+\},\s?\(new \$I\.[A-Z]{6}\)\.[A-Z]{6}\(this,this\.([A-Z]{6})\),\s?this\);/)[1];
+
+							var loadCombatDirectMethodName = ClientLib.API.Battleground.prototype[onSimulateBattleMethodName].toString()
+								.match(/\$I\.[A-Z]{6}\.[A-Z]{6}\(\)\.[A-Z]{6}\(\)\.([A-Z]{6})\(b\.d\);/)[1];
+
+							ClientLib.Vis.Battleground.Battleground.prototype.LoadCombatDirect = ClientLib.Vis.Battleground.Battleground.prototype[loadCombatDirectMethodName];
+						}
+
 						var source = ClientLib.Vis.Battleground.Battleground.prototype.LoadCombatDirect.toString();
 						var initCombatMethodName = source.match(/this\.([A-Z]{6})\(null,[a-z]\);}$/)[1];
 
@@ -79,11 +88,12 @@
 					},
 
 					initializeEntryPoints: function() {
-						var subMenu = new qx.ui.menu.Menu();
-						var button = new qx.ui.menu.Button('Open');
-						button.addListener('execute', this.openWindow, this);
-						subMenu.add(button);
-						qx.core.Init.getApplication().getMenuBar().getScriptsButton().Add('ReplayShare', 'FactionUI/icons/icn_replay_speedup.png', subMenu);
+						var scriptsButton = qx.core.Init.getApplication().getMenuBar().getScriptsButton();
+						scriptsButton.Add('ReplayShare', 'FactionUI/icons/icn_replay_speedup.png');
+
+						var children = scriptsButton.getMenu().getChildren();
+						var lastChild = children[children.length - 1];
+						lastChild.addListener('execute', this.openWindow, this);
 
 						var shareButton = new qx.ui.form.Button('Share').set({
 							appearance: 'button-text-small',
