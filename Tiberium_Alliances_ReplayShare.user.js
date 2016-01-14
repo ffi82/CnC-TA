@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           Tiberium Alliances ReplayShare
-// @version        0.3.2
+// @version        0.3.3
 // @namespace      http://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @author         petui
@@ -376,7 +376,6 @@
 					onClickFetchReplayData: function() {
 						var replayData = this.replayShare.getLastReplayData();
 						replayData = JSON.parse(JSON.stringify(replayData));	// clone
-						delete replayData.debug;
 
 						if (this.replay === null || !this.replay.equals(replayData)) {
 							this.setReplay(new Replay().setData(replayData));
@@ -471,7 +470,7 @@
 								var defenderPlayerId = replayData.dpi;
 								var type;
 
-								switch (Math.abs(defenderPlayerId) % 10) {
+								switch (Math.abs(defenderPlayerId) % 100) {
 									case ClientLib.Data.WorldSector.WorldObjectNPCCamp.ECampType.Beginner:
 									case ClientLib.Data.WorldSector.WorldObjectNPCCamp.ECampType.Random:
 										type = 'tnf:mutants camp';
@@ -486,7 +485,7 @@
 										type = 'tnf:mutants base';
 								}
 
-								defenderBaseName = this.tr(type) + ' (' + Math.floor(Math.abs(defenderPlayerId) / 10) + ')';
+								defenderBaseName = this.tr(type) + ' (' + Math.floor(Math.abs(defenderPlayerId) / 100) + ')';
 								break;
 							default:
 								defenderBaseName = replayData.dn;
