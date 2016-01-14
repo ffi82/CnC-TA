@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name           Tiberium Alliances Tweaks
-// @version        1.1.5
+// @version        1.1.6
 // @namespace      http://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @author         petui
@@ -1313,7 +1313,8 @@
 						name: 'Fix notification ticker error',
 						description: 'Fixes a common script error caused by a bug in the notification ticker. '
 							+ '<a href="http://forum.alliances.commandandconquer.com/showthread.php?tid=32553" style="color:' + webfrontend.gui.util.BBCode.clrLink + ';" target="_blank">Read more</a>',
-						configKey: 'NotificationTickerFix'
+						configKey: 'NotificationTickerFix',
+						disabled: PerforceChangelist >= 436669 ? 'Obsolete. Bug fixed in patch 15.3' : false
 					});
 				},
 				construct: function() {
@@ -1771,7 +1772,10 @@
 					}
 
 					var source = ClientLib.Vis.Region.RegionCity.prototype[regionCity$ctorMemberName].toString();
-					var matches = source.match(/this\.([A-Z]{6})=\(new \$I\.([A-Z]{6})\)\.([A-Z]{6})\(\$I\.[A-Z]{6}\.Black/);
+					var matches = source.match(PerforceChangelist >= 443425
+						? /this\.([A-Z]{6})=\(new \$I\.([A-Z]{6})\)\.([A-Z]{6})\(h, this\.[A-Z]{6}, this\.[A-Z]{6}, this\.[A-Z]{6}\);/
+						: /this\.([A-Z]{6})=\(new \$I\.([A-Z]{6})\)\.([A-Z]{6})\(\$I\.[A-Z]{6}\.Black/
+					);
 					var basePlateMemberName = matches[1];
 					this.playerBasePlateClassName = matches[2];
 					var playerBasePlate$ctorMemberName = matches[3];
