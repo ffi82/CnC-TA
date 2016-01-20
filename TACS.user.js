@@ -3,8 +3,8 @@
 // @description    Allows you to simulate combat before actually attacking.
 // @namespace      https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
 // @include        https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @version        3.08b
-// @author         WildKatana | Updated by CodeEcho, PythEch, Matthias Fuchs, Enceladus, KRS_L, TheLuminary, Panavia2, Da Xue, MrHIDEn, TheStriker, JDuarteDJ, null
+// @version        3.13b
+// @author         KRS_L | Contributions/Updates by WildKatana, CodeEcho, PythEch, Matthias Fuchs, Enceladus, TheLuminary, Panavia2, Da Xue, MrHIDEn, TheStriker, JDuarteDJ, null
 // @translator     TR: PythEch | DE: Matthias Fuchs & Leafy | PT: JDuarteDJ & Contosbarbudos | IT: Hellcco | NL: SkeeterPan | HU: Mancika | FR: Pyroa & NgXAlex | FI: jipx
 // @grant none
 // ==/UserScript==
@@ -146,6 +146,7 @@
 				type : "singleton",
 				extend : qx.core.Object,
 				members : {
+					version : "3.13b",
 					// Default settings
 					saveObj : {
 						// section.option
@@ -420,6 +421,26 @@
 							this._PlayArea = this._Application.getPlayArea();
 							this._armyBarContainer = this._Application.getArmySetupAttackBar();
 							this._armyBar = this._Application.getUIItem(ClientLib.Data.Missions.PATH.BAR_ATTACKSETUP);
+							
+							if (PerforceChangelist >= 443425) { // 16.1 patch
+								for (var i in this._armyBarContainer) {
+									if (typeof this._armyBarContainer[i] == "object" && this._armyBarContainer[i] != null && this._armyBarContainer[i].objid == "btn_disable") {
+										console.log(this._armyBarContainer[i].objid);
+										var nativeSimBarDisableButton = this._armyBarContainer[i];
+										break;
+									}
+								}
+								var armyBarChildren = this._armyBar.getChildren();
+								for (var i in armyBarChildren) {
+									if (armyBarChildren[i].$$user_decorator == "pane-armysetup-right") {
+										console.log(armyBarChildren[i].$$user_decorator)
+										var armySetupRight = armyBarChildren[i];
+										armySetupRight.removeAt(1);
+										armySetupRight.addAt(nativeSimBarDisableButton, 1);
+										break;
+									}
+								}
+							}
 
 							// Fix Defense Bonus Rounding
 							for (var key in ClientLib.Data.City.prototype) {
@@ -441,30 +462,32 @@
 							this.buttons.simulate.back = new qx.ui.form.Button(lang("Setup"));
 							this.buttons.simulate.back.set({
 								width : 80,
-								appearance : "button-text-small",
+								height : 24,
+								appearance : "button-addpoints",
 								toolTipText : lang("Return to Combat Setup")
 							});
 							this.buttons.simulate.back.addListener("click", this.returnSetup, this);
 
 							// Skip to end Button
-							this.buttons.simulate.skip = new qx.ui.form.Button(lang("SKIP"));
+							this.buttons.simulate.skip = new qx.ui.form.Button();
 							this.buttons.simulate.skip.set({
-								width : 50,
-								height : 21,
-								appearance : "button-text-small",
+								width : 35,
+								height : 24,
+								appearance : "button-addpoints",
+								icon : "FactionUI/icons/icon_replay_skip.png",
 								toolTipText : lang("Skip to end")
 							});
 							this.buttons.simulate.skip.addListener("click", this.skipSimulation, this);
 
 							var replayBar = this._Application.getReportReplayOverlay();
 							replayBar.add(this.buttons.simulate.back, {
-								top : 12,
-								left : 150
+								top : 21,
+								left : 185
 							});
 							if (typeof(CCTAWrapper_IsInstalled) != 'undefined' && CCTAWrapper_IsInstalled) {
 								replayBar.add(this.buttons.simulate.skip, {
-									top : 38,
-									left : 460
+									top : 21,
+									left : 435
 								});
 							}
 
@@ -622,7 +645,7 @@
 							this.setupInterface();
 							this.createBasePlateFunction(ClientLib.Vis.Region.RegionNPCCamp);
 							this.createBasePlateFunction(ClientLib.Vis.Region.RegionNPCBase);
-							this.createBasePlateFunction(ClientLib.Vis.Region.RegionCity);
+							//this.createBasePlateFunction(ClientLib.Vis.Region.RegionCity);
 
 							// Fix armyBar container divs, the mouse has a horrible offset in the armybar when this is enabled
 							// if this worked it would essentially fix a layout bug, shame... using zIndex instead
@@ -997,7 +1020,7 @@
 							pVBox.setThemedBackgroundColor("#eef");
 							infoPage.add(pVBox);
 							var proHelpBar = new qx.ui.basic.Label().set({
-									value : "<a target='_blank' href='http://userscripts.org/scripts/discuss/138212'>" + lang("Forums") + "</a>",
+									value : "<a target='_blank' href='http://cncscripts.com/'>cncscripts.com</a>",
 									rich : true
 								});
 							pVBox.add(proHelpBar);
@@ -1401,7 +1424,7 @@
 							pVBox.setThemedBackgroundColor("#eef");
 							options.add(pVBox);
 							var proHelpBar = new qx.ui.basic.Label().set({
-									value : "<a target='_blank' href='http://userscripts.org/scripts/discuss/138212'>" + lang("Forums") + "</a>",
+									value : "<a target='_blank' href='http://cncscripts.com/'>cncscripts.com</a>",
 									rich : true
 								});
 							pVBox.add(proHelpBar);
@@ -1431,7 +1454,10 @@
 										if (BPDebug)
 											console.log("1: " + strFunction);
 
-										var re = /[A-Z]{6}\=\(new \$I.[A-Z]{6}\).[A-Z]{6}\(\$I.[A-Z]{6}.Black/;
+										var re = /[A-Z]{6}\=\(new \$I.[A-Z]{6}\).[A-Z]{6}\(this.[A-Z]{6}\(\)/;
+										//HZNOUV=(new $I.SRJRXT).QBXKKV(this.SMGAYW(),
+
+										//var re = /[A-Z]{6}\=\(new \$I.[A-Z]{6}\).[A-Z]{6}\(\$I.[A-Z]{6}.Black/;
 										//IWZRVB=(new $I.ISZOKO).FDXTHE($I.GIBPLN.Black
 										var strFunction = strFunction.match(re).toString();
 										var basePlate = strFunction.slice(0, 6);
@@ -1927,6 +1953,7 @@
 								padding : 0,
 								show : "icon",
 								appearance : "button-text-small",
+								enabled : false,
 								toolTipText : "<strong>"+lang("Undo")+"</strong>"
 							});
 							
@@ -1939,6 +1966,7 @@
 								padding : 0,
 								show : "icon",
 								appearance : "button-text-small",
+								enabled : false,
 								toolTipText : "<strong>"+lang("Redo")+"</strong>"
 							});
 							
@@ -3571,9 +3599,9 @@
 							for (var key in ClientLib.API.Battleground.prototype) {
 								if (typeof ClientLib.API.Battleground.prototype[key] === 'function') {
 									strFunction = ClientLib.API.Battleground.prototype[key].toString();
-									if (strFunction.indexOf("pavmCombatReplay,-1,0,0,0);") > -1) {
+									if (strFunction.indexOf(",-1,0,0,0);") > -1) {
 										strFunction = strFunction.substring(strFunction.indexOf("{") + 1, strFunction.lastIndexOf("}"));
-										var re = /.I.[A-Z]{6}.[A-Z]{6}\(.I.[A-Z]{6}.pavmCombatReplay,-1,0,0,0\)\;/;
+										var re = /.I.[A-Z]{6}.[A-Z]{6}\(.I.[A-Z]{6}.[a-zA-Z]+,-1,0,0,0\)\;/;
 										strFunction = strFunction.replace(re, "");
 										console.log(strFunction);
 										var fn = Function('a,b', strFunction);
