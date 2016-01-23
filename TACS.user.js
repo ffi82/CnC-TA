@@ -3,7 +3,7 @@
 // @description    Allows you to simulate combat before actually attacking.
 // @namespace      https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
 // @include        https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @version        3.14b
+// @version        3.21b
 // @author         KRS_L | Contributions/Updates by WildKatana, CodeEcho, PythEch, Matthias Fuchs, Enceladus, TheLuminary, Panavia2, Da Xue, MrHIDEn, TheStriker, JDuarteDJ, null
 // @translator     TR: PythEch | DE: Matthias Fuchs & Leafy | PT: JDuarteDJ & Contosbarbudos | IT: Hellcco | NL: SkeeterPan | HU: Mancika | FR: Pyroa & NgXAlex | FI: jipx
 // @grant none
@@ -110,6 +110,7 @@
 			"Version: " : ["Sürüm: ", "", "", "", "", "", "", "Versio: "],
 			"Mark saved targets on region map" : ["Kaydedilmiş hedefleri haritada işaretle", "Gespeicherte Ziele auf der Karte Markieren", "", "", "", "", "", "Merkitse tallennetut kohteet alue kartalle"], // region view
 			"Enable 'Double-click to (De)activate units'" : ["Çift-tıklama ile birlikleri (de)aktifleştirmeyi etkinleştir", "Doppel-Klick zum Einheiten (De)-Aktivieren ", "", "", "", "", "", "Tuplaklikkaus aktivoi/deaktivoi yksiköt"],
+			"Show Loot Summary" : ["", "", "", "", "", "", "", ""],
 			"Show Stats During Attack" : ["İstatistikleri saldırı sırasında göster", "", "", "", "", "", "", "Näytä tiedot -ikkuna hyökkäyksen aikana"],
 			"Show Stats During Simulation" : ["İstatistikleri simulasyondayken göster", "", "", "", "", "", "", "Näytä tiedot -ikkuna simuloinnin aikana"],
 			"Skip Victory-Popup After Battle" : ["Savaş Bitiminde Zafer Bildirimini Atla", "", "", "", "", "", "", "Ohita taistelun jälkeinen voittoruutu"],
@@ -146,7 +147,7 @@
 				type : "singleton",
 				extend : qx.core.Object,
 				members : {
-					version : "3.14b",
+					version : "3.21b",
 					// Default settings
 					saveObj : {
 						// section.option
@@ -158,6 +159,7 @@
 							battleResultsBoxTop : 125
 						},
 						checkbox : {
+							showLootSummary : true,
 							showStatsDuringAttack : true,
 							showStatsDuringSimulation : true,
 							skipVictoryPopup : false,
@@ -248,6 +250,12 @@
 							},
 							overall : null // lastEnemyPercentage
 						},
+						resourcesummary : {
+							research : null,
+							credits : null,
+							crystal : null,
+							tiberium : null
+						},
 						time : null,
 						supportLevel : null
 					},
@@ -284,6 +292,12 @@
 							overall : null, // enemyTroopStrengthLabel
 							outcome : null // simVictoryLabel
 						},
+						resourcesummary : {
+							research : null,
+							credits : null,
+							crystal : null,
+							tiberium : null
+						},
 						time : null, // simTimeLabel
 						supportLevel : null, // enemySupportLevelLabel
 						countDown : null // countDownLabel
@@ -315,6 +329,7 @@
 						repairLock : null,
 						markSavedTargets : null,
 						dblClick2DeActivate : null,
+						showLootSummary : null,
 						showStatsDuringAttack : null,
 						showStatsDuringSimulation : null,
 						skipVictoryPopup : null,
@@ -339,7 +354,7 @@
 					_armyBar : null,
 					attacker_modules : null,
 					defender_modules : null,
-
+					resourceSummaryVerticalBox : null,
 					battleResultsBox : null,
 					optionsWindow : null,
 					statsPage : null,
@@ -455,6 +470,7 @@
 
 							// Event Handlers
 							phe.cnc.Util.attachNetEvent(ClientLib.API.Battleground.GetInstance(), "OnSimulateBattleFinished", ClientLib.API.OnSimulateBattleFinished, this, this.onSimulateBattleFinishedEvent);
+							phe.cnc.Util.attachNetEvent(ClientLib.API.Battleground.GetInstance(), "OnSimulateCombatReport", ClientLib.API.OnSimulateCombatReport, this, this.OnSimulateCombatReportEvent);
 							phe.cnc.Util.attachNetEvent(this._VisMain, "ViewModeChange", ClientLib.Vis.ViewModeChange, this, this.viewChangeHandler);
 							phe.cnc.Util.attachNetEvent(this._MainData.get_Cities(), "CurrentOwnChange", ClientLib.Data.CurrentOwnCityChange, this, this.ownCityChangeHandler);
 
@@ -933,6 +949,43 @@
 								row : 1,
 								column : 1
 							});
+							
+							// Resource Summary Vertical Box
+							this.resourceSummaryVerticalBox = new qx.ui.container.Composite();
+							var layout = new qx.ui.layout.Grid();
+							layout.setColumnAlign(1, "right", "middle");
+							layout.setColumnWidth(0, 90);
+							this.resourceSummaryVerticalBox.setLayout(layout);
+							this.resourceSummaryVerticalBox.setThemedFont("bold");
+							this.resourceSummaryVerticalBox.setThemedBackgroundColor("#eef");
+							if (this.saveObj.checkbox.showLootSummary) {
+								this.statsPage.add(this.resourceSummaryVerticalBox);
+							}
+							
+							// Research Icon/Label
+							this.labels.resourcesummary.research = new qx.ui.basic.Atom("0", "webfrontend/ui/common/icn_res_research_mission.png");
+							this.resourceSummaryVerticalBox.add(this.labels.resourcesummary.research, {
+								row : 0,
+								column : 0
+							});
+							// Tiberium Icon/Label
+							this.labels.resourcesummary.tiberium = new qx.ui.basic.Atom("0", "webfrontend/ui/common/icn_res_tiberium.png");
+							this.resourceSummaryVerticalBox.add(this.labels.resourcesummary.tiberium, {
+								row : 0,
+								column : 1
+							});
+							// Credits Icon/Label
+							this.labels.resourcesummary.credits = new qx.ui.basic.Atom("0", "webfrontend/ui/common/icn_res_dollar.png");
+							this.resourceSummaryVerticalBox.add(this.labels.resourcesummary.credits, {
+								row : 1,
+								column : 0
+							});
+							// Crystal Icon/Label
+							this.labels.resourcesummary.crystal = new qx.ui.basic.Atom("0", "webfrontend/ui/common/icn_res_chrystal.png");
+							this.resourceSummaryVerticalBox.add(this.labels.resourcesummary.crystal, {
+								row : 1,
+								column : 1
+							});
 						} catch (e) {
 							console.log(e);
 						}
@@ -1319,13 +1372,24 @@
 								column : 2
 							});
 
+							// showLootSummary Checkbox
+							this.options.showLootSummary = new qx.ui.form.CheckBox(lang("Show Loot Summary"));
+							this.options.showLootSummary.saveLocation = "showLootSummary";
+							this.options.showLootSummary.setValue(this.saveObj.checkbox.showLootSummary);
+							this.options.showLootSummary.addListener("click", this.toggleCheckboxOption, this);
+							pssVBox.add(this.options.showLootSummary, {
+								row : 7,
+								column : 0,
+								colSpan : 3
+							});
+							
 							// showStatsDuringAttack Checkbox
 							this.options.showStatsDuringAttack = new qx.ui.form.CheckBox(lang("Show Stats During Attack"));
 							this.options.showStatsDuringAttack.saveLocation = "showStatsDuringAttack";
 							this.options.showStatsDuringAttack.setValue(this.saveObj.checkbox.showStatsDuringAttack);
 							this.options.showStatsDuringAttack.addListener("click", this.toggleCheckboxOption, this);
 							pssVBox.add(this.options.showStatsDuringAttack, {
-								row : 7,
+								row : 8,
 								column : 0,
 								colSpan : 3
 							});
@@ -1336,7 +1400,7 @@
 							this.options.showStatsDuringSimulation.setValue(this.saveObj.checkbox.showStatsDuringSimulation);
 							this.options.showStatsDuringSimulation.addListener("click", this.toggleCheckboxOption, this);
 							pssVBox.add(this.options.showStatsDuringSimulation, {
-								row : 8,
+								row : 9,
 								column : 0,
 								colSpan : 3
 							});
@@ -1347,7 +1411,7 @@
 							this.options.skipVictoryPopup.setValue(this.saveObj.checkbox.skipVictoryPopup);
 							this.options.skipVictoryPopup.addListener("click", this.toggleCheckboxOption, this);
 							pssVBox.add(this.options.skipVictoryPopup, {
-								row : 9,
+								row : 10,
 								column : 0,
 								colSpan : 3
 							});
@@ -1369,7 +1433,7 @@
 							this.options.disableAttackPreparationTooltips.setValue(this.saveObj.checkbox.disableAttackPreparationTooltips);
 							this.options.disableAttackPreparationTooltips.addListener("click", this.toggleCheckboxOption, this);
 							pssVBox.add(this.options.disableAttackPreparationTooltips, {
-								row : 10,
+								row : 11,
 								column : 0,
 								colSpan : 3
 							});
@@ -1380,7 +1444,7 @@
 							this.options.disableArmyFormationManagerTooltips.setValue(this.saveObj.checkbox.disableArmyFormationManagerTooltips);
 							this.options.disableArmyFormationManagerTooltips.addListener("click", this.toggleCheckboxOption, this);
 							pssVBox.add(this.options.disableArmyFormationManagerTooltips, {
-								row : 11,
+								row : 12,
 								column : 0,
 								colSpan : 3
 							});
@@ -1388,14 +1452,14 @@
 							this.options.statsOpacityLabel = new qx.ui.basic.Label(lang("Stats Window Opacity"));
 							this.options.statsOpacityLabel.setMarginTop(10);
 							pssVBox.add(this.options.statsOpacityLabel, {
-								row : 12,
+								row : 13,
 								column : 0,
 								colSpan : 3
 							});
 
 							this.options.statsOpacity = new qx.ui.form.Slider();
 							pssVBox.add(this.options.statsOpacity, {
-								row : 13,
+								row : 14,
 								column : 1,
 								colSpan : 2
 							});
@@ -1403,7 +1467,7 @@
 
 							this.options.statsOpacityOutput = new qx.ui.basic.Label(String(this.saveObj.slider.statsOpacity));
 							pssVBox.add(this.options.statsOpacityOutput, {
-								row : 13,
+								row : 14,
 								column : 0
 							});
 
@@ -1439,6 +1503,13 @@
 						this.saveObj.checkbox[tgt.saveLocation] = val;
 						//console.log("this.saveObj.checkbox[\"" + tgt.saveLocation + "\"] = " + this.saveObj.checkbox[tgt.saveLocation]);
 						//console.log("val = " + val);
+						if (tgt == this.options.showLootSummary) {
+							if (this.saveObj.checkbox.showLootSummary) {
+								this.statsPage.add(this.resourceSummaryVerticalBox);
+							} else {
+								this.statsPage.remove(this.resourceSummaryVerticalBox);
+							}
+						}
 						this.saveData();
 					},
 					createBasePlateFunction : function (r) {
@@ -2777,6 +2848,24 @@
 							}
 						} catch (e) {
 							console.log(e);
+						}
+					},
+					OnSimulateCombatReportEvent : function (data) {
+						// console.log(data);
+						this.timerEnd("OnSimulateCombatReportEvent");
+						try {
+							// Resource Summary
+							this.stats.resourcesummary.research = data.GetAttackerTotalResourceReceived(ClientLib.Base.EResourceType.ResearchPoints);
+							this.stats.resourcesummary.credits = data.GetAttackerTotalResourceReceived(ClientLib.Base.EResourceType.Gold);
+							this.stats.resourcesummary.crystal = data.GetAttackerTotalResourceReceived(ClientLib.Base.EResourceType.Crystal);
+							this.stats.resourcesummary.tiberium = data.GetAttackerTotalResourceReceived(ClientLib.Base.EResourceType.Tiberium);
+
+							this.labels.resourcesummary.research.setLabel(phe.cnc.gui.util.Numbers.formatNumbersCompact(this.stats.resourcesummary.research));
+							this.labels.resourcesummary.credits.setLabel(phe.cnc.gui.util.Numbers.formatNumbersCompact(this.stats.resourcesummary.credits));
+							this.labels.resourcesummary.crystal.setLabel(phe.cnc.gui.util.Numbers.formatNumbersCompact(this.stats.resourcesummary.crystal));
+							this.labels.resourcesummary.tiberium.setLabel(phe.cnc.gui.util.Numbers.formatNumbersCompact(this.stats.resourcesummary.tiberium));
+						} catch (e) {
+							console.log('OnSimulateCombatReportEvent()', e);
 						}
 					},
 					onSimulateBattleFinishedEvent : function (data) {
