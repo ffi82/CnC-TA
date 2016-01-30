@@ -3,11 +3,12 @@
 // @description    Allows you to simulate combat before actually attacking.
 // @namespace      https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
 // @include        https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @version        3.21b
+// @version        3.41b
 // @author         KRS_L | Contributions/Updates by WildKatana, CodeEcho, PythEch, Matthias Fuchs, Enceladus, TheLuminary, Panavia2, Da Xue, MrHIDEn, TheStriker, JDuarteDJ, null
-// @translator     TR: PythEch | DE: Matthias Fuchs & Leafy | PT: JDuarteDJ & Contosbarbudos | IT: Hellcco | NL: SkeeterPan | HU: Mancika | FR: Pyroa & NgXAlex | FI: jipx
+// @translator     TR: PythEch | DE: Matthias Fuchs, Leafy & sebb912 | PT: JDuarteDJ & Contosbarbudos | IT: Hellcco | NL: SkeeterPan | HU: Mancika | FR: Pyroa & NgXAlex | FI: jipx | RO: MoshicVargur
 // @grant none
 // ==/UserScript==
+window.TACS_version = GM_info.script.version;
 (function () {
 	'use strict';
 	var TASuite_mainFunction = function () {
@@ -29,97 +30,98 @@
 		}*/
 
 		var locale = null;
-		var languages = ["tr_TR", "de_DE", "pt_PT", "it_IT", "nl_NL", "hu_HU", "fr_FR", "fi_FI"]; //en is default
+		var languages = ["tr_TR", "de_DE", "pt_PT", "it_IT", "nl_NL", "hu_HU", "fr_FR", "fi_FI", "ro_RO"]; //en is default
 		var translations = {
-			"Stats" : ["İstatistik", "Statistik", "Estatística", "Statistiche", "Statistieken", "Statisztika", "Statistiques", "Tiedot"],
-			"Enemy Base:" : ["Düşman Üssü:", "Feindliche Basis:", "Base Inimiga:", "Base Nemica:", "Vijandelijke Basis:", "Ellenséges bázis:", "Base Ennemie:", "Vihollisen tukikohta:"],
-			"Defences:" : ["Savunma Üniteleri:", "Verteidigung:", "Defesas:", "Difesa:", "Verdediging:", "Védelem:", "Défenses:", "Puolustus:"],
-			"Buildings:" : ["Binalar:", "Gebäude:", "Edifícios:", "Strutture:", "Gebouwen:", "Épületek:", "Bâtiments:", "Rakennelmat:"],
-			"Construction Yard:" : ["Şantiye:", "Bauhof:", "Estaleiro:", "Cantiere:", "Bouwplaats:", "Központ:", "Chantier De Construction:", "Rakennustukikohta:"],
-			"Defense Facility:" : ["Savunma Tesisi:", "Verteidigungseinrichtung:", "Instalações de Defesa:", "Stazione di Difesa:", "Defensiefaciliteit:", "Védelmi Bázis:", "Complexe De Défense:", "Puolustuslaitos:"],
-			"Command Center:" : ["Komuta Merkezi:", "Kommandozentrale:", "Centro de Comando:", "Centro di Comando:", "Commandocentrum:", "Parancsnoki központ:", "Centre De Commandement:", "Komentokeskus:"],
-			"Available Repair:" : ["Mevcut Onarım:", "", "", "", "", "", "", "Korjausaikaa jäljellä:"],
-			"Available Attacks:" : ["Mevcut Saldırılar:", "", "", "", "", "", "", "Hyökkäyksiä:"],
-			"Overall:" : ["Tüm Birlikler:", "Gesamt:", "Geral:", "Totale:", "Totaal:", "Áttekintés:", "Total:", "Yhteensä:"],
-			"Infantry:" : ["Piyadeler:", "Infanterie:", "Infantaria:", "Fanteria:", "Infanterie:", "Gyalogság:", "Infanterie:", "Jalkaväki:"],
-			"Vehicle:" : ["Motorlu Birlikler:", "Fahrzeuge:", "Veículos:", "Veicoli:", "Voertuigen:", "Jármu:", "Véhicules:", "Ajoneuvot:"],
-			"Aircraft:" : ["Hava Araçları:", "Flugzeuge:", "Aviões:", "Velivoli:", "Vliegtuigen:", "Légiero:", "Avions:", "Lentokoneet:"],
-			"Outcome:" : ["Sonuç:", "Ergebnis:", "Resultado:", "Esito:", "Uitkomst:", "Eredmény:", "Résultat:", "Lopputulos:"],
-			"Unknown" : ["Bilinmiyor", "Unbekannt", "Desconhecido", "Sconosciuto", "Onbekend", "Ismeretlen", "Inconnu", "Tuntematon"],
-			"Battle Time:" : ["Savaş Süresi:", "Kampfdauer:", "Tempo de Batalha:", "Tempo di Battaglia:", "Gevechtsduur:", "Csata ideje:", "Durée Du Combat:", "Taistelun kesto:"],
-			"Layouts" : ["Diziliş", "Layouts", "Formações", "Formazione", "Indelingen", "Elrendezés", "Dispositions", "Asetelmat"],
-			"Load" : ["Yükle", "Laden", "Carregar", "Carica", "Laad", "Töltés", "Charger", "Lataa"],
-			"Load this saved layout." : ["Kayıtlı dizilişi yükle.", "Gespeichertes Layout laden.", "Carregar esta formação guardada.", "Carica questa formazione salvata.", "Laad deze opgeslagen indeling.", "Töltsd be ezt az elmentett elrendezést.", "Charger Cette Disposition.", "Lataa valittu asetelma."],
-			"Delete" : ["Sil", "Löschen", "Apagar", "Cancella", "Verwijder", "Törlés", "Effacer", "Poista"],
-			"Name: " : ["İsim: ", "Name: ", "Nome: ", "Nome: ", "Naam: ", "Név: ", "Nom: ", "Nimi: "],
-			"Delete this saved layout." : ["Kayıtlı dizilişi sil.", "Gewähltes Layout löschen.", "Apagar esta formação guardada.", "Cancella questa formazione salvata.", "Verwijder deze opgeslagen indeling.", "Töröld ezt az elmentett elrendezést.", "Effacer Cette Disposition.", "Poista valittu asetelma."],
-			"Save" : ["Kaydet", "Speichern", "Guardar", "Salva", "Opslaan", "Mentés", "Sauvegarder", "Tallenna"],
-			"Save this layout." : ["Bu dizilişi kaydet.", "Layout speichern.", "Guardar esta formação.", "Salva questa formazione.", "Deze indeling opslaan.", "Mentsd el ezt az elrendezést.", "Sauvegarder Cette Disposition.", "Tallenna nykyinen asetelma."],
-			"Info" : ["Bilgi", "Info", "Info", "Info", "Info", "Info", "Infos", "Tietoa"],
-			"Forums" : ["Forum", "Forum", "Fóruns", "Forum", "Forums", "Fórum", "Forums", "Keskustelupalsta"],
-			"Spoils" : ["Ganimetler", "Rohstoffausbeute", "Espólios", "Bottino", "Opbrengst", "Zsákmény", "Butin", "Sotasaalis"],
-			"Options" : ["Seçenekler", "Optionen", "Opções:", "Opzioni:", "Opties:", "Opciók:", "Options:", "Asetukset"],
-			"TACS Options": ["TACS Seçenekleri", "", "", "", "", "", "", ""],
-			"Auto display stats" : ["İstatistik penceresini otomatik olarak göster", "Dieses Fenster automatisch öffnen", "Mostrar esta caixa automaticamente", "Apri automaticamente la finestra Strumenti", "Dit venster automatisch weergeven", "Ezen ablak autómatikus megjelenítése", "Affich. Auto. de cette Fenêtre", "Näytä simuloinnin tiedot automaattisesti"], // need to change translations
-			"Show shift buttons" : ["Kaydırma tuşlarını göster", "Bewegungstasten anzeigen", "Mostrar botões de deslocamento", "Mostra i pulsanti di spostamento", "Verschuifknoppen weergeven", "Eltoló gombok megjelenítése", "Affich. Auto. Boutons de Déplacement", "Näytä armeijan siirtopainikkeet"],
-			"Warning!" : ["Uyarı!", "Warnung!", "Aviso!", "Attenzione!", "Waarschuwing!", "Figyelem!", "Attention!", "Varoitus!"],
-			"Simulate" : ["Simule et", "Simulieren", "Simular", "Simula", "Simuleer", "Szimuláció", "Simuler", "Simuloi"],
-			"Start Combat Simulation" : ["Savaş Simulasyonunu Başlat", "Kampfsimulation starten", "Começar a simalação de combate", "Avvia simulazione", "Start Gevechtssimulatie", "Csata szimuláció elindítása", "Démarrer La Simulation Du Combat", "Aloita taistelun simulaatio"],
-			"Setup" : ["Düzen", "Aufstellung", "Configuração", "Setup", "Opzet", "Elrendezés", "Organisation", "Takaisin"],
-			"Return to Combat Setup" : ["Ordu düzenini göster", "Zurück zur Einheitenaufstellung", "Voltar à configuração de combate", "Ritorna alla configurazione", "Keer terug naar Gevechtsopzet", "Vissza az egységek elrendezéséhez", "Retourner à l'Organisation Des Troupes", "Return to Combat Setup"],
-			"Unlock" : ["Kilidi aç", "Freigabe", "Desbloquear", "Sblocca", "Ontgrendel", "Felold", "Debloquer", "Avaa"],
+			"Stats" : ["İstatistik", "Statistik", "Estatística", "Statistiche", "Statistieken", "Statisztika", "Statistiques", "Tiedot", "Statistici"],
+			"Enemy Base:" : ["Düşman Üssü:", "Feindliche Basis:", "Base Inimiga:", "Base Nemica:", "Vijandelijke Basis:", "Ellenséges bázis:", "Base Ennemie:", "Vihollisen tukikohta:", "Baza inamică"],
+			"Defences:" : ["Savunma Üniteleri:", "Verteidigung:", "Defesas:", "Difesa:", "Verdediging:", "Védelem:", "Défenses:", "Puolustus:", "Apărare"],
+			"Buildings:" : ["Binalar:", "Gebäude:", "Edifícios:", "Strutture:", "Gebouwen:", "Épületek:", "Bâtiments:", "Rakennelmat:", "Clădiri"],
+			"Construction Yard:" : ["Şantiye:", "Bauhof:", "Estaleiro:", "Cantiere:", "Bouwplaats:", "Központ:", "Chantier De Construction:", "Rakennustukikohta:", "Șantierul de construcții"],
+			"Defense Facility:" : ["Savunma Tesisi:", "Verteidigungseinrichtung:", "Instalações de Defesa:", "Stazione di Difesa:", "Defensiefaciliteit:", "Védelmi Bázis:", "Complexe De Défense:", "Puolustuslaitos:", "Unitate de apărare"],
+			"Command Center:" : ["Komuta Merkezi:", "Kommandozentrale:", "Centro de Comando:", "Centro di Comando:", "Commandocentrum:", "Parancsnoki központ:", "Centre De Commandement:", "Komentokeskus:", "Centrul de comandă"],
+			"Available Repair:" : ["Mevcut Onarım:", "Verfügbare Reparaturen", "", "", "", "", "", "Korjausaikaa jäljellä:", "Timp de reparare disponibil"],
+			"Available Attacks:" : ["Mevcut Saldırılar:", "Verfügbare Angriffe", "", "", "", "", "", "Hyökkäyksiä:", "Atacuri disponibile"],
+			"Overall:" : ["Tüm Birlikler:", "Gesamt:", "Geral:", "Totale:", "Totaal:", "Áttekintés:", "Total:", "Yhteensä:", "Ansamblu"],
+			"Infantry:" : ["Piyadeler:", "Infanterie:", "Infantaria:", "Fanteria:", "Infanterie:", "Gyalogság:", "Infanterie:", "Jalkaväki:", "Infanterie"],
+			"Vehicle:" : ["Motorlu Birlikler:", "Fahrzeuge:", "Veículos:", "Veicoli:", "Voertuigen:", "Jármu:", "Véhicules:", "Ajoneuvot:", "Vehicule"],
+			"Aircraft:" : ["Hava Araçları:", "Flugzeuge:", "Aviões:", "Velivoli:", "Vliegtuigen:", "Légiero:", "Avions:", "Lentokoneet:", "Aviație"],
+			"Outcome:" : ["Sonuç:", "Ergebnis:", "Resultado:", "Esito:", "Uitkomst:", "Eredmény:", "Résultat:", "Lopputulos:", "Rezultat"],
+			"Unknown" : ["Bilinmiyor", "Unbekannt", "Desconhecido", "Sconosciuto", "Onbekend", "Ismeretlen", "Inconnu", "Tuntematon", "Necunoscut"],
+			"Battle Time:" : ["Savaş Süresi:", "Kampfdauer:", "Tempo de Batalha:", "Tempo di Battaglia:", "Gevechtsduur:", "Csata ideje:", "Durée Du Combat:", "Taistelun kesto:", "Timp de atac"],
+			"Layouts" : ["Diziliş", "Layouts", "Formações", "Formazione", "Indelingen", "Elrendezés", "Dispositions", "Asetelmat", "Scheme"],
+			"Load" : ["Yükle", "Laden", "Carregar", "Carica", "Laad", "Töltés", "Charger", "Lataa", "Încarcă"],
+			"Load this saved layout." : ["Kayıtlı dizilişi yükle.", "Gespeichertes Layout laden.", "Carregar esta formação guardada.", "Carica questa formazione salvata.", "Laad deze opgeslagen indeling.", "Töltsd be ezt az elmentett elrendezést.", "Charger Cette Disposition.", "Lataa valittu asetelma.", "Încarcă acest formație salvată."],
+			"Delete" : ["Sil", "Löschen", "Apagar", "Cancella", "Verwijder", "Törlés", "Effacer", "Poista", "Șterge"],
+			"Name: " : ["İsim: ", "Name: ", "Nome: ", "Nome: ", "Naam: ", "Név: ", "Nom: ", "Nimi: ", "Nume: "],
+			"Delete this saved layout." : ["Kayıtlı dizilişi sil.", "Gewähltes Layout löschen.", "Apagar esta formação guardada.", "Cancella questa formazione salvata.", "Verwijder deze opgeslagen indeling.", "Töröld ezt az elmentett elrendezést.", "Effacer Cette Disposition.", "Poista valittu asetelma.", "Șterge acest formație salvat."],
+			"Save" : ["Kaydet", "Speichern", "Guardar", "Salva", "Opslaan", "Mentés", "Sauvegarder", "Tallenna", "Salvează"],
+			"Save this layout." : ["Bu dizilişi kaydet.", "Layout speichern.", "Guardar esta formação.", "Salva questa formazione.", "Deze indeling opslaan.", "Mentsd el ezt az elrendezést.", "Sauvegarder Cette Disposition.", "Tallenna nykyinen asetelma.", "Salvează acest formație "],
+			"Info" : ["Bilgi", "Info", "Info", "Info", "Info", "Info", "Infos", "Tietoa", "Info"],
+			"Forums" : ["Forum", "Forum", "Fóruns", "Forum", "Forums", "Fórum", "Forums", "Keskustelupalsta", "Forum"],
+			"Spoils" : ["Ganimetler", "Rohstoffausbeute", "Espólios", "Bottino", "Opbrengst", "Zsákmény", "Butin", "Sotasaalis", "Pradă"],
+			"Options" : ["Seçenekler", "Optionen", "Opções:", "Opzioni:", "Opties:", "Opciók:", "Options:", "Asetukset", "Opțiuni"],
+			"TACS Options": ["TACS Seçenekleri", "TACS Optionen", "", "", "", "", "", "", "Opțiuni TACS: "],
+			"Auto display stats" : ["İstatistik penceresini otomatik olarak göster", "Dieses Fenster automatisch öffnen", "Mostrar esta caixa automaticamente", "Apri automaticamente la finestra Strumenti", "Dit venster automatisch weergeven", "Ezen ablak autómatikus megjelenítése", "Affich. Auto. de cette Fenêtre", "Näytä simuloinnin tiedot automaattisesti", "Afișează automat statisticile"], // need to change translations
+			"Show shift buttons" : ["Kaydırma tuşlarını göster", "Bewegungstasten anzeigen", "Mostrar botões de deslocamento", "Mostra i pulsanti di spostamento", "Verschuifknoppen weergeven", "Eltoló gombok megjelenítése", "Affich. Auto. Boutons de Déplacement", "Näytä armeijan siirtopainikkeet", "Afișează butoanele de deplasare"],
+			"Warning!" : ["Uyarı!", "Warnung!", "Aviso!", "Attenzione!", "Waarschuwing!", "Figyelem!", "Attention!", "Varoitus!", "Atenție!"],
+			"Simulate" : ["Simule et", "Simulieren", "Simular", "Simula", "Simuleer", "Szimuláció", "Simuler", "Simuloi", "Simulează"],
+			"Start Combat Simulation" : ["Savaş Simulasyonunu Başlat", "Kampfsimulation starten", "Começar a simalação de combate", "Avvia simulazione", "Start Gevechtssimulatie", "Csata szimuláció elindítása", "Démarrer La Simulation Du Combat", "Aloita taistelun simulaatio", "Începe simularea luptei"],
+			"Setup" : ["Düzen", "Aufstellung", "Configuração", "Setup", "Opzet", "Elrendezés", "Organisation", "Takaisin", "Pregătire"],
+			"Return to Combat Setup" : ["Ordu düzenini göster", "Zurück zur Einheitenaufstellung", "Voltar à configuração de combate", "Ritorna alla configurazione", "Keer terug naar Gevechtsopzet", "Vissza az egységek elrendezéséhez", "Retourner à l'Organisation Des Troupes", "Return to Combat Setup", "Întoarcere la ecranul pentru pregătirea luptei"],
+			"Unlock" : ["Kilidi aç", "Freigabe", "Desbloquear", "Sblocca", "Ontgrendel", "Felold", "Debloquer", "Avaa", "Descuie"],
 			//"Tools" : ["Araçlar", "Extras", "Ferramentas", "Strumenti", "Gereedschap", "Eszközök", "Outils", "Työkalut"],
-			"Open Simulator Tools" : ["Simulatör Araçlarını Göster", "Extras öffnen", "Abrir as ferramentas do simulador", "Apri strumenti", "Open Simulator Gereedschap", "Megnyitja a szimulátor információs ablakát", "Ouvrir Les Réglages Du Simulateur", "Avaa simulaattorin työkalut"],
-			"Shift units left" : ["Birlikleri sola kaydır", "Einheiten nach links bewegen", "Deslocar as unidades para a esquerda", "Spostare le unità a sinistra", "Verschuif eenheden links", "Egységek eltolása balra", "Déplacer Les Unités Vers La Gauche", "Siirtää yksikköjä vasemmalle"],
-			"Shift units right" : ["Birlikleri sağa kaydır", "Einheiten nach rechts bewegen", "Deslocar as unidades para a direita", "Spostare le unità a destra", "Verschuif eenheden rechts", "Egységek eltolása jobbra", "Déplacer Les Unités Vers La Droite", "Siirtää yksikköjä oikealle"],
-			"Shift units up" : ["Birlikleri yukarı kaydır", "Einheiten nach oben bewegen", "Deslocar as unidades para cima", "Spostare le unità in alto", "Verschuif eenheden omhoog", "Egységek eltolása fel", "Déplacer Les Unités Vers Le Haut", "Siirtää yksikköjä ylös"],
-			"Shift units down" : ["Birlikleri aşağı kaydır", "Einheiten nach unten bewegen", "Deslocar as unidades para baixo", "Spostare le unità in basso", "Verschuif eenheden omlaag", "Egységek eltolása le", "Déplacer Les Unités Vers Le Bas", "Siirtää yksikköjä alas"],
+			"Open Simulator Tools" : ["Simulatör Araçlarını Göster", "Extras öffnen", "Abrir as ferramentas do simulador", "Apri strumenti", "Open Simulator Gereedschap", "Megnyitja a szimulátor információs ablakát", "Ouvrir Les Réglages Du Simulateur", "Avaa simulaattorin työkalut", "Deschide opțiunile simulatorului"],
+			"Shift units left" : ["Birlikleri sola kaydır", "Einheiten nach links bewegen", "Deslocar as unidades para a esquerda", "Spostare le unità a sinistra", "Verschuif eenheden links", "Egységek eltolása balra", "Déplacer Les Unités Vers La Gauche", "Siirtää yksikköjä vasemmalle", "Deplasează unitățile la stânga"],
+			"Shift units right" : ["Birlikleri sağa kaydır", "Einheiten nach rechts bewegen", "Deslocar as unidades para a direita", "Spostare le unità a destra", "Verschuif eenheden rechts", "Egységek eltolása jobbra", "Déplacer Les Unités Vers La Droite", "Siirtää yksikköjä oikealle", "Deplasează unitățile la dreapta"],
+			"Shift units up" : ["Birlikleri yukarı kaydır", "Einheiten nach oben bewegen", "Deslocar as unidades para cima", "Spostare le unità in alto", "Verschuif eenheden omhoog", "Egységek eltolása fel", "Déplacer Les Unités Vers Le Haut", "Siirtää yksikköjä ylös", "Deplasează unitățile mai sus"],
+			"Shift units down" : ["Birlikleri aşağı kaydır", "Einheiten nach unten bewegen", "Deslocar as unidades para baixo", "Spostare le unità in basso", "Verschuif eenheden omlaag", "Egységek eltolása le", "Déplacer Les Unités Vers Le Bas", "Siirtää yksikköjä alas", "Deplasează unitățile mai jos"],
 			//"Battle Simulator" : ["Savaş Simulatörü", "Kampfsimulator", "Simulador de Combate", "Simulatore", "Gevechtssimulator", "Csata szimulátor", "Simulateur De Combat", "Taistelusimulaattori"],
-			"Total Victory" : ["Mutlak Zafer", "Gesamtsieg", "Vitória Total", "Vittoria Totale", "Totale Overwinning", "Teljes gyozelem", "Victoire Totale", "Totaalinen Voitto"],
-			"Victory" : ["Zafer", "Sieg", "Vitória", "Vittoria", "Overwinning", "Gyozelem", "Victoire", "Voitto"],
-			"Total Defeat" : ["Mutlak Yenilgi", "Totale Niederlage", "Derrota total", "Sconfitta Totale", "Totale Nederlaag", "Teljes vereség", "Défaite Totale", "Total Tappio"],
-			"Support lvl " : ["Takviye seviyesi ", "Stufe Supportwaffe ", "Nível do Suporte ", "Supporto lvl ", "Ondersteuningsniveau ", '"Support" épület szintje ', "Lvl. Du Support ", "Tukitykistön taso "],
-			"Refresh" : ["Yenile", "Erfrischen", "Actualizar", "Rinfrescare", "Verversen", "Felfrissít", "Actualiser", "Päivitä"], //google translate non-PT langs
-			"Refresh Stats" : ["İstatistikleri Yenile", "Erfrischen Statistik", "Estatística", "Rinfrescare Statistiche", "Verversen Statistieken", "Frissítés Stats", "Actualiser Les Stats", "Päivitä tiedot"], //google translate non-PT langs 'refresh' + statistics label
-			"Side:" : ["Taraf:", "Seite", "Lado:", "", "Zijde", "", "Côté", "Sijainti:"],
-			"Left" : ["Sol", "Links", "Esquerda", "", "Links", "", "Gauche", "Vasen"],
-			"Right" : ["Sağ", "Rechts", "Direita", "", "Rechts", "", "Droite", "Oikea"],
-			"Locks:" : ["Kilitler:", "Freigabe", "Bloquear:", "", "Vergrendelingen:", "", "Vérouiller:", "Varmistimet:"],
-			"Attack" : ["Saldırı", "Angriff", "Atacar", "", "Aanvallen", "", "Attaquer", "Hyökkäys"],
-			"Repair" : ["Onarım", "Reparatur", "Reparar", "", "Repareren", "", "Réparer", "Korjaus"],
-			"Reset" : ["Sıfırla", "", "", "", "", "", "", "Palauta"],
-			"Simulation will be based on most recently refreshed stats!" : ["Simulasyon en son güncellenen istatistiklere göre yapılacaktır!", "Die Simulation basiert auf den zuletzt aktualisierten Stand", "A simulação vai ser baseada na mais recente data!", "", "Simulatie zal gebaseerd worden op meest recentelijke ververste statistieken!", "", "La Simulation sera basée en fonction des dernières stats actualisées !", "Simulaatio suoritetaan viimeisimmän päivityksen tiedoilla!"],
-			"Unlock Attack Button" : ["Saldırı Düğmesinin Kilidini Aç", "Angriffsbutton freigeben", "Desbloquear o botão de ataque", "Sblocca pulsante d'attacco", "Ontgrendel Aanvalsknop", "a Támadás gomb feloldása", "Débloquer Le Bouton d'Attaque", "Poista hyökkäusnapin lukitus"],
-			"Unlock Repair Button" : ["Onarım Düğmesinin Kilidini Aç", "Reparaturbutton freigeben", "Desbloquear botão de reparação", "", "Ontgrendel Repareerknop", "", "Débloquer Le Bouton de Réparation", "Poista korjausnapin lukitus"],
-			"Unlock Reset Button" : ["Sıfırlama Düğmesinin Kilidini Aç", "", "", "", "", "", "", "Avaa Tyhjennä nappi"],
-			"SKIP": ["ATLA", "", "", "", "", "", "", ""],
-			"Skip to end" : ["Simulasyonu atla", "Zum Ende Vorspringen", "", "", "", "", "", "Mene loppuun"],
-			"Reset Formation" : ["Dizilişi Sıfırla", "", "", "", "", "", "", "Palauta armeijan oletusasetelma"],
-			"Flip Horizontal" : ["Yatay Çevir", "Horizontal Spiegeln", "", "", "", "", "", "Käännä vaakasuunnassa"],
-			"Flip Vertical" : ["Dikey Çevir", "Vertikal Spiegeln", "", "", "", "", "", "Käännä pystysuunnassa"],
-			"Activate All" : ["Hepsini Aktifleştir", "Alle Aktivieren", "", "", "", "", "", "Aktivoi kaikki"],
-			"Deactivate All" : ["Hepsini Deaktifleştir", "Alle Deaktivieren", "", "", "", "", "", "Poista kaikki käytöstä"],
-			"Activate Infantry" : ["Piyadeleri Aktifleştir", "Infanterie Aktivieren", "", "", "", "", "", "Aktivoi jalkaväki"],
-			"Deactivate Infantry" : ["Piyadeleri Deaktifleştir", "Infanterie Deaktivieren", "", "", "", "", "", "Poista jalkaväki käytöstä"],
-			"Activate Vehicles" : ["Motorlu Birlikleri Aktifleştir", "Fahrzeuge Aktivieren", "", "", "", "", "", "Aktivoi ajoneuvot"],
-			"Deactivate Vehicles" : ["Motorlu Birlikleri Deaktifleştir", "Fahrzeuge Deaktivieren", "", "", "", "", "", "Poista ajoneuvot käytöstä"],
-			"Activate Air" : ["Hava Araçlarını Aktifleştir", "Flugzeuge Aktivieren", "", "", "", "", "", "Aktivoi lentokoneet"],
-			"Deactivate Air" : ["Hava Araçlarını Deaktifleştir", "Flugzeuge Deaktivieren", "", "", "", "", "", "Poista lentokoneet käytöstä"],
-			"Activate Repair Mode" : ["Onarım Modunu Aç", "Reparatur Modus Aktivieren", "", "", "", "", "", "Aktivoi korjaustila"],
-			"Deactivate Repair Mode" : ["Onarım Modunu Kapat", "Reparatur Modus Deaktivieren", "", "", "", "", "", "Poista korjaustila käytöstä"],
-			"Version: " : ["Sürüm: ", "", "", "", "", "", "", "Versio: "],
-			"Mark saved targets on region map" : ["Kaydedilmiş hedefleri haritada işaretle", "Gespeicherte Ziele auf der Karte Markieren", "", "", "", "", "", "Merkitse tallennetut kohteet alue kartalle"], // region view
-			"Enable 'Double-click to (De)activate units'" : ["Çift-tıklama ile birlikleri (de)aktifleştirmeyi etkinleştir", "Doppel-Klick zum Einheiten (De)-Aktivieren ", "", "", "", "", "", "Tuplaklikkaus aktivoi/deaktivoi yksiköt"],
-			"Show Loot Summary" : ["", "", "", "", "", "", "", ""],
-			"Show Stats During Attack" : ["İstatistikleri saldırı sırasında göster", "", "", "", "", "", "", "Näytä tiedot -ikkuna hyökkäyksen aikana"],
-			"Show Stats During Simulation" : ["İstatistikleri simulasyondayken göster", "", "", "", "", "", "", "Näytä tiedot -ikkuna simuloinnin aikana"],
-			"Skip Victory-Popup After Battle" : ["Savaş Bitiminde Zafer Bildirimini Atla", "", "", "", "", "", "", "Ohita taistelun jälkeinen voittoruutu"],
-			"Stats Window Opacity" : ["İstatistik Penceresi Saydamlığı", "", "", "", "", "", "", "Tiedot -ikkunan läpinäkyvyys"],
-			"Disable Unit Tooltips In Army Formation Manager" : ["Ordu Dizilişi Yöneticisinde Birlik İpuçlarını Gizle", "", "", "", "", "", "", "Poista käytöstä yksiköiden työkaluvihjeet armeijan muodostamisikkunassa"],
-			"Disable Tooltips In Attack Preparation View" : ["Saldırı Hazırlık Görünümünde İpuçlarını Gizle", "", "", "", "", "", "", "Poista työkaluvihjeet käytöstä hyökkäyksen valmisteluikkunassa"],
-			"Undo" : ["Geri Al", "", "", "", "", "", "", "Kumoa"],
-			"Redo" : ["İleri Al", "", "", "", "", "", "", "Tee uudelleen"],
-			"Open Stats Window" : ["İstatistik Penceresini Aç", "", "", "", "", "", "", "Avaa tiedot -ikkuna"]
+			"Total Victory" : ["Mutlak Zafer", "Gesamtsieg", "Vitória Total", "Vittoria Totale", "Totale Overwinning", "Teljes gyozelem", "Victoire Totale", "Totaalinen Voitto","Victorie totală"],
+			"Victory" : ["Zafer", "Sieg", "Vitória", "Vittoria", "Overwinning", "Gyozelem", "Victoire", "Voitto", "Victorie"],
+			"Total Defeat" : ["Mutlak Yenilgi", "Totale Niederlage", "Derrota total", "Sconfitta Totale", "Totale Nederlaag", "Teljes vereség", "Défaite Totale", "Total Tappio", "Înfrângere totală"],
+			"Support lvl " : ["Takviye seviyesi ", "Stufe Supportwaffe ", "Nível do Suporte ", "Supporto lvl ", "Ondersteuningsniveau ", '"Support" épület szintje ', "Lvl. Du Support ", "Tukitykistön taso ", "Nivelul suportului "],
+			"Refresh" : ["Yenile", "Erfrischen", "Actualizar", "Rinfrescare", "Verversen", "Felfrissít", "Actualiser", "Päivitä", "Împrospătează"], //google translate non-PT langs
+			"Refresh Stats" : ["İstatistikleri Yenile", "Erfrischen Statistik", "Estatística", "Rinfrescare Statistiche", "Verversen Statistieken", "Frissítés Stats", "Actualiser Les Stats", "Päivitä tiedot", "Împrospătează statisticile"], //google translate non-PT langs 'refresh' + statistics label
+			"Side:" : ["Taraf:", "Seite", "Lado:", "", "Zijde", "", "Côté", "Sijainti:", "Lateral"],
+			"Left" : ["Sol", "Links", "Esquerda", "", "Links", "", "Gauche", "Vasen", "Stânga"],
+			"Right" : ["Sağ", "Rechts", "Direita", "", "Rechts", "", "Droite", "Oikea", "Dreapta"],
+			"Locks:" : ["Kilitler:", "Freigabe", "Bloquear:", "", "Vergrendelingen:", "", "Vérouiller:", "Varmistimet:", "Blochează:"],
+			"Attack" : ["Saldırı", "Angriff", "Atacar", "", "Aanvallen", "", "Attaquer", "Hyökkäys", "Atacă "],
+			"Repair" : ["Onarım", "Reparatur", "Reparar", "", "Repareren", "", "Réparer", "Korjaus", "Reparare"],
+			"Reset" : ["Sıfırla", "Zurücksetzen", "", "", "", "", "", "Palauta", "Resetare"],
+			"Simulation will be based on most recently refreshed stats!" : ["Simulasyon en son güncellenen istatistiklere göre yapılacaktır!", "Die Simulation basiert auf den zuletzt aktualisierten Stand", "A simulação vai ser baseada na mais recente data!", "", "Simulatie zal gebaseerd worden op meest recentelijke ververste statistieken!", "", "La Simulation sera basée en fonction des dernières stats actualisées !", "Simulaatio suoritetaan viimeisimmän päivityksen tiedoilla!", "Simularea se va baza pe cele mai recente statistici!"],
+			"Unlock Attack Button" : ["Saldırı Düğmesinin Kilidini Aç", "Angriffsbutton freigeben", "Desbloquear o botão de ataque", "Sblocca pulsante d'attacco", "Ontgrendel Aanvalsknop", "a Támadás gomb feloldása", "Débloquer Le Bouton d'Attaque", "Poista hyökkäusnapin lukitus", "Descuie butonul de atac"],
+			"Unlock Repair Button" : ["Onarım Düğmesinin Kilidini Aç", "Reparaturbutton freigeben", "Desbloquear botão de reparação", "", "Ontgrendel Repareerknop", "", "Débloquer Le Bouton de Réparation", "Poista korjausnapin lukitus", "Descuie butonul de reparare"],
+			"Unlock Reset Button" : ["Sıfırlama Düğmesinin Kilidini Aç", "", "", "", "", "", "", "Avaa Tyhjennä nappi", "Descuie butonul de resetare"],
+			"SKIP": ["ATLA", "Überspringen", "", "", "", "", "", "", ""],
+			"Skip to end" : ["Simulasyonu atla", "Zum Ende Vorspringen", "", "", "", "", "", "Mene loppuun", "Sari la final"],
+			"Reset Formation" : ["Dizilişi Sıfırla", "Formation zurücksetzen", "", "", "", "", "", "Palauta armeijan oletusasetelma", "Resetează formația"],
+			"Flip Horizontal" : ["Yatay Çevir", "Horizontal Spiegeln", "", "", "", "", "", "Käännä vaakasuunnassa", "Întoarce orizontal"],
+			"Flip Vertical" : ["Dikey Çevir", "Vertikal Spiegeln", "", "", "", "", "", "Käännä pystysuunnassa", "Întoarce vertical"],
+			"Activate All" : ["Hepsini Aktifleştir", "Alle Aktivieren", "", "", "", "", "", "Aktivoi kaikki", "Activează totul"],
+			"Deactivate All" : ["Hepsini Deaktifleştir", "Alle Deaktivieren", "", "", "", "", "", "Poista kaikki käytöstä", "Dezactivează totul"],
+			"Activate Infantry" : ["Piyadeleri Aktifleştir", "Infanterie Aktivieren", "", "", "", "", "", "Aktivoi jalkaväki", "Activează infanteria"],
+			"Deactivate Infantry" : ["Piyadeleri Deaktifleştir", "Infanterie Deaktivieren", "", "", "", "", "", "Poista jalkaväki käytöstä", "Dezactivează infanteria"],
+			"Activate Vehicles" : ["Motorlu Birlikleri Aktifleştir", "Fahrzeuge Aktivieren", "", "", "", "", "", "Aktivoi ajoneuvot", "Activează vehiculele"],
+			"Deactivate Vehicles" : ["Motorlu Birlikleri Deaktifleştir", "Fahrzeuge Deaktivieren", "", "", "", "", "", "Poista ajoneuvot käytöstä", "Dezactivează vehiculele"],
+			"Activate Air" : ["Hava Araçlarını Aktifleştir", "Flugzeuge Aktivieren", "", "", "", "", "", "Aktivoi lentokoneet", "Activează avioanele"],
+			"Deactivate Air" : ["Hava Araçlarını Deaktifleştir", "Flugzeuge Deaktivieren", "", "", "", "", "", "Poista lentokoneet käytöstä", "Dezactivează avioanele"],
+			"Activate Repair Mode" : ["Onarım Modunu Aç", "Reparatur Modus Aktivieren", "", "", "", "", "", "Aktivoi korjaustila", "Activează modul de reparare"],
+			"Deactivate Repair Mode" : ["Onarım Modunu Kapat", "Reparatur Modus Deaktivieren", "", "", "", "", "", "Poista korjaustila käytöstä", "Dezactivează modul de reparare"],
+			"Version: " : ["Sürüm: ", "", "", "", "", "", "", "Versio: ", "Versiunea: "],
+			"Mark saved targets on region map" : ["Kaydedilmiş hedefleri haritada işaretle", "Gespeicherte Ziele auf der Karte Markieren", "", "", "", "", "", "Merkitse tallennetut kohteet alue kartalle", "Marchează țintele salvate pe harta regiunii"], // region view
+			"Enable 'Double-click to (De)activate units'" : ["Çift-tıklama ile birlikleri (de)aktifleştirmeyi etkinleştir", "Doppel-Klick zum Einheiten (De)-Aktivieren ", "", "", "", "", "", "Tuplaklikkaus aktivoi/deaktivoi yksiköt", "Activează \"Dublu click pentru a (De)activa unitățile\""],
+			"Show Loot Summary" : ["", "Zeige Beute-Zusammenfassung", "", "", "", "", "", "", "Afișează rezumatul prăzii"],
+			"Show Resource Layout Window" : ["", "", "", "", "", "", "", "", ""],
+			"Show Stats During Attack" : ["İstatistikleri saldırı sırasında göster", "Zeige Statistik während des Angriffs", "", "", "", "", "", "Näytä tiedot -ikkuna hyökkäyksen aikana", "Afișează statisticile în timpul atacului"],
+			"Show Stats During Simulation" : ["İstatistikleri simulasyondayken göster", "Zeige Statistik während der Simulation", "", "", "", "", "", "Näytä tiedot -ikkuna simuloinnin aikana", "Afișează statisticile în timpul simulării"],
+			"Skip Victory-Popup After Battle" : ["Savaş Bitiminde Zafer Bildirimini Atla", "Siegesbildschirm überspringen", "", "", "", "", "", "Ohita taistelun jälkeinen voittoruutu", "Sari peste popup-ul victoriei după luptă"],
+			"Stats Window Opacity" : ["İstatistik Penceresi Saydamlığı", "Transparenz des Statistik-Fenster", "", "", "", "", "", "Tiedot -ikkunan läpinäkyvyys", "Opacitatea ferestrei de statistici"],
+			"Disable Unit Tooltips In Army Formation Manager" : ["Ordu Dizilişi Yöneticisinde Birlik İpuçlarını Gizle", "", "", "", "", "", "", "Poista käytöstä yksiköiden työkaluvihjeet armeijan muodostamisikkunassa", "Dezactivează tooltip-urile unităților în managerul formației armatei"],
+			"Disable Tooltips In Attack Preparation View" : ["Saldırı Hazırlık Görünümünde İpuçlarını Gizle", "", "", "", "", "", "", "Poista työkaluvihjeet käytöstä hyökkäyksen valmisteluikkunassa", "Dezactivează tooltip-urile unităților în ecranul preparării armatei"],
+			"Undo" : ["Geri Al", "", "", "", "", "", "", "Kumoa", "Anulează"],
+			"Redo" : ["İleri Al", "", "", "", "", "", "", "Tee uudelleen", "Refă"],
+			"Open Stats Window" : ["İstatistik Penceresini Aç", "Statistik öffnen", "", "", "", "", "", "Avaa tiedot -ikkuna", "Deschide fereastra de statistici"]
 		};
 
 		function lang(text) {
@@ -147,7 +149,6 @@
 				type : "singleton",
 				extend : qx.core.Object,
 				members : {
-					version : "3.21b",
 					// Default settings
 					saveObj : {
 						// section.option
@@ -156,10 +157,13 @@
 						},
 						bounds : {
 							battleResultsBoxLeft : 125,
-							battleResultsBoxTop : 125
+							battleResultsBoxTop : 125,
+							resourceLayoutWindowLeft : 125,
+							resourceLayoutWindowTop : 550
 						},
 						checkbox : {
 							showLootSummary : true,
+							showResourceLayoutWindow : true,
 							showStatsDuringAttack : true,
 							showStatsDuringSimulation : true,
 							skipVictoryPopup : false,
@@ -330,6 +334,7 @@
 						markSavedTargets : null,
 						dblClick2DeActivate : null,
 						showLootSummary : null,
+						showResourceLayoutWindow : null,
 						showStatsDuringAttack : null,
 						showStatsDuringSimulation : null,
 						skipVictoryPopup : null,
@@ -357,6 +362,7 @@
 					resourceSummaryVerticalBox : null,
 					battleResultsBox : null,
 					optionsWindow : null,
+					resourceLayoutWindow : null,
 					statsPage : null,
 					lastSimulation : null,
 					count : null,
@@ -374,7 +380,7 @@
 					TOOL_BAR_LOW : 113, // hidden
 					TOOL_BAR_HIGH : 155, // popped-up
 					TOOL_BAR_WIDTH : 740,
-
+					resourceLayout : null,
 					repairInfo : null,
 					repairButtons : [],
 					repairButtonsRedrawTimer : null,
@@ -425,7 +431,8 @@
 					initialize : function () {
 						try {
 							this.loadData();
-							locale = qx.locale.Manager.getInstance().getLocale();
+							locale = qx.locale.Manager.getInstance().getAvailableLocales()[3];
+							if (locale == undefined) locale = qx.locale.Manager.getInstance().getLocale();
 							this.targetCityId = "0";
 
 							// Store references
@@ -510,8 +517,8 @@
 							// Unlock Button
 							this.buttons.attack.unlock = new qx.ui.form.Button(lang("Unlock"));
 							this.buttons.attack.unlock.set({
-								width : 45,
-								height : 45,
+								width : 54,
+								height : 37,
 								padding : 0,
 								appearance : "button-text-small",
 								toolTipText : lang("Unlock Attack Button")
@@ -527,15 +534,15 @@
 							if (temp) {
 								this._armyBar.add(this.buttons.attack.unlock, {
 									top : 108,
-									right : 9
+									right : 10
 								});
 							}
 
 							// Unlock Repair
 							this.buttons.attack.repair = new qx.ui.form.Button(lang("Unlock"));
 							this.buttons.attack.repair.set({
-								width : 45,
-								height : 45,
+								width : 54,
+								height : 44,
 								padding : 0,
 								appearance : "button-text-small",
 								toolTipText : lang("Unlock Repair Button")
@@ -550,8 +557,8 @@
 							}
 							if (temp) {
 								this._armyBar.add(this.buttons.attack.repair, {
-									top : 16,
-									right : 9
+									top : 23,
+									right : 10
 								});
 							}
 
@@ -619,6 +626,36 @@
 								this.saveData();
 							}, this);
 
+							// Resource Layout Window
+							this.resourceLayoutWindow = new qx.ui.window.Window().set({
+									contentPaddingTop : 1,
+									contentPaddingBottom : 8,
+									contentPaddingRight : 8,
+									contentPaddingLeft : 8,
+									width : 185,
+									showMaximize : false,
+									showMinimize : false,
+									allowMaximize : false,
+									allowMinimize : false,
+									resizable : false
+								});
+							/*this.resourceLayoutWindow.getChildControl("icon").set({
+								scale : true,
+								width : 25,
+								height : 25
+							});*/
+							this.resourceLayoutWindow.setLayout(new qx.ui.layout.HBox());
+							this.resourceLayoutWindow.moveTo(this.saveObj.bounds.resourceLayoutWindowLeft, this.saveObj.bounds.resourceLayoutWindowTop);
+							this.resourceLayoutWindow.addListener("move", function () {
+								this.saveObj.bounds.resourceLayoutWindowLeft = this.resourceLayoutWindow.getBounds().left;
+								this.saveObj.bounds.resourceLayoutWindowTop = this.resourceLayoutWindow.getBounds().top;
+								this.saveData();
+							}, this);
+							this.resourceLayoutWindow.addListener("close", function () {
+								localStorage.ta_sim_layout_top = JSON.stringify(this.resourceLayoutWindow.getLayoutProperties().top);
+								localStorage.ta_sim_layout_left = JSON.stringify(this.resourceLayoutWindow.getLayoutProperties().left);
+							}, this);
+
 							// The Battle Simulator box
 							this.battleResultsBox = new qx.ui.window.Window("TACS", "FactionUI/icons/icon_res_plinfo_command_points.png").set({
 									contentPaddingTop : 0,
@@ -659,9 +696,10 @@
 							this.initializeInfo(tabView);
 							this.initializeOptions();
 							this.setupInterface();
+							this.createHasAttackFormationFunction();
 							this.createBasePlateFunction(ClientLib.Vis.Region.RegionNPCCamp);
 							this.createBasePlateFunction(ClientLib.Vis.Region.RegionNPCBase);
-							//this.createBasePlateFunction(ClientLib.Vis.Region.RegionCity);
+							this.createBasePlateFunction(ClientLib.Vis.Region.RegionCity);
 
 							// Fix armyBar container divs, the mouse has a horrible offset in the armybar when this is enabled
 							// if this worked it would essentially fix a layout bug, shame... using zIndex instead
@@ -1238,7 +1276,7 @@
 							pssVBox.setThemedFont("bold");
 							pssVBox.setThemedBackgroundColor("#eef");
 							options.add(pssVBox);
-							pssVBox.add(new qx.ui.basic.Label(lang("Version: ") + "3.01b"), {
+							pssVBox.add(new qx.ui.basic.Label(lang("Version: ") + window.TACS_version), {
 								row : 0,
 								column : 0,
 								colSpan : 3
@@ -1383,13 +1421,24 @@
 								colSpan : 3
 							});
 							
+							// showResourceLayoutWindow Checkbox
+							this.options.showResourceLayoutWindow = new qx.ui.form.CheckBox(lang("Show Resource Layout Window"));
+							this.options.showResourceLayoutWindow.saveLocation = "showResourceLayoutWindow";
+							this.options.showResourceLayoutWindow.setValue(this.saveObj.checkbox.showResourceLayoutWindow);
+							this.options.showResourceLayoutWindow.addListener("click", this.toggleCheckboxOption, this);
+							pssVBox.add(this.options.showResourceLayoutWindow, {
+								row : 8,
+								column : 0,
+								colSpan : 3
+							});
+							
 							// showStatsDuringAttack Checkbox
 							this.options.showStatsDuringAttack = new qx.ui.form.CheckBox(lang("Show Stats During Attack"));
 							this.options.showStatsDuringAttack.saveLocation = "showStatsDuringAttack";
 							this.options.showStatsDuringAttack.setValue(this.saveObj.checkbox.showStatsDuringAttack);
 							this.options.showStatsDuringAttack.addListener("click", this.toggleCheckboxOption, this);
 							pssVBox.add(this.options.showStatsDuringAttack, {
-								row : 8,
+								row : 9,
 								column : 0,
 								colSpan : 3
 							});
@@ -1400,7 +1449,7 @@
 							this.options.showStatsDuringSimulation.setValue(this.saveObj.checkbox.showStatsDuringSimulation);
 							this.options.showStatsDuringSimulation.addListener("click", this.toggleCheckboxOption, this);
 							pssVBox.add(this.options.showStatsDuringSimulation, {
-								row : 9,
+								row : 10,
 								column : 0,
 								colSpan : 3
 							});
@@ -1411,7 +1460,7 @@
 							this.options.skipVictoryPopup.setValue(this.saveObj.checkbox.skipVictoryPopup);
 							this.options.skipVictoryPopup.addListener("click", this.toggleCheckboxOption, this);
 							pssVBox.add(this.options.skipVictoryPopup, {
-								row : 10,
+								row : 11,
 								column : 0,
 								colSpan : 3
 							});
@@ -1433,7 +1482,7 @@
 							this.options.disableAttackPreparationTooltips.setValue(this.saveObj.checkbox.disableAttackPreparationTooltips);
 							this.options.disableAttackPreparationTooltips.addListener("click", this.toggleCheckboxOption, this);
 							pssVBox.add(this.options.disableAttackPreparationTooltips, {
-								row : 11,
+								row : 12,
 								column : 0,
 								colSpan : 3
 							});
@@ -1444,7 +1493,7 @@
 							this.options.disableArmyFormationManagerTooltips.setValue(this.saveObj.checkbox.disableArmyFormationManagerTooltips);
 							this.options.disableArmyFormationManagerTooltips.addListener("click", this.toggleCheckboxOption, this);
 							pssVBox.add(this.options.disableArmyFormationManagerTooltips, {
-								row : 12,
+								row : 13,
 								column : 0,
 								colSpan : 3
 							});
@@ -1452,14 +1501,14 @@
 							this.options.statsOpacityLabel = new qx.ui.basic.Label(lang("Stats Window Opacity"));
 							this.options.statsOpacityLabel.setMarginTop(10);
 							pssVBox.add(this.options.statsOpacityLabel, {
-								row : 13,
+								row : 14,
 								column : 0,
 								colSpan : 3
 							});
 
 							this.options.statsOpacity = new qx.ui.form.Slider();
 							pssVBox.add(this.options.statsOpacity, {
-								row : 14,
+								row : 15,
 								column : 1,
 								colSpan : 2
 							});
@@ -1467,7 +1516,7 @@
 
 							this.options.statsOpacityOutput = new qx.ui.basic.Label(String(this.saveObj.slider.statsOpacity));
 							pssVBox.add(this.options.statsOpacityOutput, {
-								row : 14,
+								row : 16,
 								column : 0
 							});
 
@@ -1510,88 +1559,76 @@
 								this.statsPage.remove(this.resourceSummaryVerticalBox);
 							}
 						}
+						if (tgt == this.options.showResourceLayoutWindow) {
+							if (this.saveObj.checkbox.showResourceLayoutWindow) {
+								this.resourceLayoutWindow.open();
+							} else {
+								this.resourceLayoutWindow.close();
+							}
+						}
 						this.saveData();
 					},
-					createBasePlateFunction : function (r) {
-						var BPDebug = false;
+					createHasAttackFormationFunction : function () {
 						try {
-							var regionObject = r.prototype;
-							//              regionObject.disu =
-							// if (r === ClientLib.Vis.Region.RegionNPCCamp || r === ClientLib.Vis.Region.RegionNPCBase) {
-							for (var key in regionObject) {
-								if (typeof regionObject[key] === 'function') {
-									strFunction = regionObject[key].toString();
-									if (strFunction.indexOf("region_city_owner") > -1) {
-										if (BPDebug)
-											console.log("1: " + strFunction);
-
-										var re = /[A-Z]{6}\=\(new \$I.[A-Z]{6}\).[A-Z]{6}\(this.[A-Z]{6}\(\)/;
-										//HZNOUV=(new $I.SRJRXT).QBXKKV(this.SMGAYW(),
-
-										//var re = /[A-Z]{6}\=\(new \$I.[A-Z]{6}\).[A-Z]{6}\(\$I.[A-Z]{6}.Black/;
-										//IWZRVB=(new $I.ISZOKO).FDXTHE($I.GIBPLN.Black
-										var strFunction = strFunction.match(re).toString();
-										var basePlate = strFunction.slice(0, 6);
-										if (BPDebug)
-											console.log("2: " + basePlate + " // The obfuscated basePlate location in the visObject");
-
-										if (r === ClientLib.Vis.Region.RegionNPCCamp) {
-											if (BPDebug)
-												console.log("3: " + strFunction + " // The part which creates a new base plate");
-											var toStrFunction = "return " + strFunction.slice(12, 21) + ".prototype." + strFunction.slice(23, 29) + ".toString()" + ";";
-											var fn = Function('', toStrFunction);
-											strFunction = fn();
-											if (BPDebug)
-												console.log("4: " + strFunction + " // (" + toStrFunction + ")");
-
-											//$I.CNDDJD.prototype.ECWGAG
-											re = /.I.[A-Z]{6}.prototype.[A-Z]{6}/;
-
-											//$I.CNDDJD.prototype
-											var re2 = /.I.[A-Z]{6}.prototype/;
-											var newFuncLocation = strFunction.match(re2).toString();
-											if (BPDebug)
-												console.log("5: " + newFuncLocation + " // this is where the new setPlateColor function will be placed");
-
-											strFunction = strFunction.match(re).toString();
-											toStrFunction = "return " + strFunction + ".toString()" + ";";
-											//var strProtos = strFunction.match(re2).toString();
-											fn = Function('', toStrFunction);
-											strFunction = fn();
-											if (BPDebug)
-												console.log("6: " + strFunction + " // (" + toStrFunction + ")");
-
-											//this.QDRXMK=a
-											var re3 = /this.[A-Z]{6}=a/;
-											var plateColor = strFunction.match(re3).toString();
-											plateColor = "this." + plateColor.slice(5, 11) + "=a;";
-											if (BPDebug)
-												console.log("7: " + plateColor + " // this holds the color value (ClientLib.Vis.EBackgroundPlateColor)");
-
-											//this.BFZGMK()
-											var re4 = /this.[A-Z]{6}\(\)/;
-											var update = strFunction.match(re4).toString();
-											update = "this." + update.slice(5, 13) + ";";
-											if (BPDebug)
-												console.log("8: " + update + " // the obfuscated baseplate update function");
-
-											var functionBody = newFuncLocation + ".setPlateColor = function(a){" + plateColor + update + "};regionObject.get_BasePlate = function(){return this." + basePlate + ";}";
-											fn = Function('regionObject', functionBody);
-											if (BPDebug)
-												console.log("9: " + fn.toString() + " // creates a setPlateColor function and a getter function for the base plate");
-											fn(regionObject);
-										} else {
-											var functionBody = "regionObject.get_BasePlate = function(){return this." + basePlate + ";}";
-											fn = Function('regionObject', functionBody);
-											if (BPDebug)
-												console.log("3b: " + fn.toString() + " // a getter function for the base plate");
-											fn(regionObject);
+							ClientLib.Data.City.prototype.HasAttackFormation = function (targetCity) {
+								var $createHelper;
+								var ownCity = this.get_Id();
+								if (TACS.getInstance().layouts.all.hasOwnProperty(targetCity)) {
+									if (TACS.getInstance().layouts.all[targetCity].hasOwnProperty(ownCity)) {
+										var count = 0;
+										for (var key in TACS.getInstance().layouts.all[targetCity][ownCity]) {
+											if (TACS.getInstance().layouts.all[targetCity][ownCity].hasOwnProperty(key)) {
+												count++;
+											}
 										}
-										break;
+									if (count > 0)
+										return true;
+									} else {
+										return false;
 									}
 								}
 							}
-							//\// }
+						} catch (e) {
+							console.log(e);
+						}
+					},
+					createBasePlateFunction : function (r) {
+						try {
+							var regionObject = r.prototype;
+							for (var key in regionObject) {
+								if (typeof regionObject[key] === 'function') {
+									var strFunction = regionObject[key].toString();
+									if (strFunction.indexOf("Blue") > -1 && strFunction.indexOf("Black") > -1 ) {
+										if (r == ClientLib.Vis.Region.RegionNPCCamp || r == ClientLib.Vis.Region.RegionNPCBase) {
+											regionObject[key]=function () {
+												var $createHelper;
+												var basePlateColor = ClientLib.Vis.EBackgroundPlateColor.Black;
+												if ((ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentOwnCity() != null) && ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentOwnCity().HasAttackFormation(this.get_Id())) {
+													var playerFaction = ClientLib.Data.MainData.GetInstance().get_Player().get_Faction();
+													basePlateColor = ((this.get_PlayerFaction() == 1) ? ClientLib.Vis.EBackgroundPlateColor.Orange : ClientLib.Vis.EBackgroundPlateColor.Cyan);
+												}
+												return basePlateColor;
+											}
+											break;
+										} else {
+											regionObject[key]=function () {
+												var $createHelper;
+												var basePlateColor = ClientLib.Vis.EBackgroundPlateColor.Black;
+												if (this.get_Type() == ClientLib.Vis.Region.RegionCity.ERegionCityType.Own) {
+													basePlateColor = ((this.get_PlayerFaction() == 1) ? ClientLib.Vis.EBackgroundPlateColor.Cyan : ClientLib.Vis.EBackgroundPlateColor.Orange);
+												} else {
+													basePlateColor = ClientLib.Vis.EBackgroundPlateColor.Black;
+												}
+												if (((this.get_Type() != ClientLib.Vis.Region.RegionCity.ERegionCityType.Own) && (ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentOwnCity() != null)) && ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentOwnCity().HasAttackFormation(this.get_Id())) {
+													basePlateColor = ((this.get_PlayerFaction() == 1) ? ClientLib.Vis.EBackgroundPlateColor.Orange : ClientLib.Vis.EBackgroundPlateColor.Cyan);
+												}
+												return basePlateColor;
+											}
+											break;
+										}
+									}
+								}
+							}
 						} catch (e) {
 							console.log(e);
 						}
@@ -2143,7 +2180,7 @@
 							if (this.options.rightSide.getValue()) {
 								this._armyBar.add(this.userInterface, {
 									top : 0,
-									right : 53
+									right : 65
 								});
 							} else {
 								this._armyBar.add(this.userInterface, {
@@ -2153,10 +2190,12 @@
 							}
 
 							// Simulate Button
-							this.buttons.attack.simulate = new qx.ui.form.Button(lang("Simulate"));
+							this.buttons.attack.simulate = new qx.ui.form.Button();
 							this.buttons.attack.simulate.set({
 								width : 58,
-								appearance : "button-text-small",
+								height : 37,
+								appearance : "button-baseviews",
+								icon : "FactionUI/icons/icon_play.png",
 								toolTipText : lang("Start Combat Simulation")
 							});
 							this.buttons.attack.simulate.addListener("click", this.startSimulation, this);
@@ -2237,11 +2276,11 @@
 							}
 
 							this.userInterface.add(this.buttons.attack.tools, {
-								top : 77,
+								top : 82,
 								left : buttonsLeftPosition
 							});
 							this.userInterface.add(this.buttons.attack.simulate, {
-								top : 100,
+								top : 108,
 								left : buttonsLeftPosition
 							});
 						} catch (e) {
@@ -2583,6 +2622,10 @@
 							this.buttons.attack.repairMode.execute();
 						if (this.battleResultsBox.isVisible())
 							this.battleResultsBox.close();
+						if (this.resourceLayoutWindow.isVisible())
+							this.resourceLayoutWindow.close();
+						if (this.optionsWindow.isVisible())
+							this.optionsWindow.close();
 						/*if (this.toolBar.isVisible())
 							this.toolBar.hide();
 						if (this.toolBarMouse.isVisible())
@@ -2607,7 +2650,6 @@
 							this.onCityLoadComplete();
 							this.resetDisableButtons();
 						}
-						this.updateSaveMarkers();
 					},
 					//onViewChange
 					viewChangeHandler : function (oldMode, newMode) {
@@ -2670,11 +2712,11 @@
 							var _this = this;
 							//console.log("Running onCityLoadComplete...");
 							if (this._VisMain.GetActiveView().get_VisAreaComplete()) {
-								setTimeout(function () {
-									var cbtSetup = ClientLib.Vis.VisMain.GetInstance().get_CombatSetup();
+								/*setTimeout(function () {
+									var cbtSetup = ClientLib.Vis.VisMain.GetInstance().get_CombatSetup(); // No longer needed. They've fixed the issue in-game. Leaving here just in case.
 									cbtSetup.SetPosition(0, cbtSetup.get_MinYPosition() + cbtSetup.get_DefenseOffsetY() * cbtSetup.get_GridHeight());
 									//qx.core.Init.getApplication().getUIItem(ClientLib.Data.Missions.PATH.OVL_PLAYAREA).getLayoutParent().setZIndex(1);
-								}, 500);
+								}, 500);*/
 
 								this.checkAttackRange();
 								if (this.curPAVM > 3) {
@@ -2683,6 +2725,7 @@
 									var currentcity = this._MainData.get_Cities().get_CurrentCity();
 									if (currentcity != null) {
 										var ownCity = this._MainData.get_Cities().get_CurrentOwnCity();
+										var cityFaction = currentcity.get_CityFaction();
 										this.stats.attacks.attackCost = ownCity.CalculateAttackCommandPointCostToCoord(currentcity.get_PosX(),currentcity.get_PosY());
 										this.getAvailableRepairAndCP();
 										this.calculateLoot();
@@ -2694,7 +2737,6 @@
 											//this.labels.attacks.available.setValue('CP:' + Math.floor(this.stats.attacks.availableCP / this.stats.attacks.attackCost) + ' / F:' + Math.floor(this.stats.repair.available / this.stats.repair.max) + '/ C:-');
 											this.labels.attacks.available.setValue('CP:' + this.stats.attacks.availableAttacksCP + ' / F:' + this.stats.attacks.availableAttacksAtFullStrength + '/ C:-');
 											this.resetDisableButtons();
-											var cityFaction = currentcity.get_CityFaction();
 											this.view.playerCity = cityFaction === ClientLib.Base.EFactionType.GDIFaction || cityFaction === ClientLib.Base.EFactionType.NODFaction;
 											if (this.view.playerCity) {
 												this.view.playerCityDefenseBonus = currentcity.get_AllianceDefenseBonus();
@@ -2704,6 +2746,7 @@
 												}, phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.calculateDefenseBonus), null);*/
 											}
 										}
+										if (cityFaction >= 4 && cityFaction <= 6) this.createLayoutPreview();
 										this.targetCityId = currentcity.get_Id();
 									}
 								}
@@ -2713,6 +2756,75 @@
 							setTimeout(function () {
 								_this.onCityLoadComplete();
 							}, 200);
+						} catch (e) {
+							console.log(e);
+						}
+					},
+					createLayoutPreview : function () {
+						try {
+							var fileManager = ClientLib.File.FileManager.GetInstance();
+							var images = {
+									0 : fileManager.GetPhysicalPath('ui/menues/main_menu/misc_empty_pixel.png'),
+									1 : fileManager.GetPhysicalPath('ui/common/icn_res_chrystal.png'),
+									2 : fileManager.GetPhysicalPath('ui/common/icn_res_tiberium.png')
+								}
+							var currenLayout = this.getLayout();
+							switch (this._MainData.get_Player().get_Faction()) {
+							case ClientLib.Base.EFactionType.GDIFaction:
+								var playerFaction = "G";
+								break;
+							case ClientLib.Base.EFactionType.NODFaction:
+								var playerFaction = "N";
+								break;
+							}
+							var cncOptURL = "http://cncopt.com/?map=2|" + playerFaction + "|" + playerFaction + "||" + this.encodeToCNCOpt(currenLayout) + "....................................|newEconomy";
+							var html = '<table border="2" cellspacing="0" cellpadding="0">';
+
+							for (var i = 0; i < 72; i++) {
+								var row = Math.floor(i / 9);
+								var column = i - Math.floor(i / 9) * 9;
+								if (column == 0) html += '<tr>';
+								html += '<td><img width="14" height="14" src="' + images[currenLayout.charAt(i)] + '"></td>';
+								if (column == 8) html += '</tr>';
+							}
+
+							html += '</table><a href="' + cncOptURL + '" target="_blank" style="color:#FFFFFF;">CNCOpt';
+
+							this.resourceLayout = new qx.ui.basic.Label().set({
+								backgroundColor : "#303030",
+								value : html,
+								padding : 10,
+								rich : true
+							});
+							this.resourceLayoutWindow.removeAll();
+							this.resourceLayoutWindow.add(this.resourceLayout);
+
+						} catch (e) {
+							console.log(e);
+						}
+					},
+					getLayout : function () {
+						try {
+							var resourceLayout = "";
+							for (var y = 0; y < 16; y++) {
+								for (var x = 0; x < 9; x++) {
+									resourceLayout += this._MainData.get_Cities().get_CurrentCity().GetResourceType(x, y);
+								}
+							}
+							return resourceLayout;
+						} catch (e) {
+							console.log(e);
+						}
+					},
+					encodeToCNCOpt : function (data) {
+						try {
+							var str = ".ct-jhlk";
+							for (var i = 0; i < 8; i++) {
+								var re = new RegExp(i, 'g');
+								var char = str.charAt(i);
+								data = data.replace(re, char);
+							}
+							return data;
 						} catch (e) {
 							console.log(e);
 						}
@@ -2730,6 +2842,9 @@
 						case ClientLib.Data.PlayerAreaViewMode.pavmCombatSetupDefense: {
 								if (this.options.autoDisplayStats.getValue()) {
 									this.battleResultsBox.open();
+								}
+								if (this.options.showResourceLayoutWindow.getValue()) {
+									this.resourceLayoutWindow.open();
 								}
 								break;
 							}
@@ -3102,7 +3217,6 @@
 									delete this.layouts.current[lid];
 									this.saveLayouts();
 									this.updateLayoutsList();
-									this.updateSaveMarkers();
 								}
 							}
 						} catch (e) {
@@ -3145,7 +3259,6 @@
 
 							this.saveLayouts();
 							this.updateLayoutsList();
-							this.updateSaveMarkers();
 							this.layouts.label.setValue("");
 						} catch (e) {
 							console.log(e);
@@ -3541,64 +3654,6 @@
 							var _this = window.TACS.getInstance();
 							clearInterval(_this.armybarClearnClickCounter);
 							_this.armybarClickCount = 0;
-						} catch (e) {
-							console.log(e);
-						}
-					},
-					updateSaveMarkers : function () {
-						try {
-							if (this.options.markSavedTargets.getValue()) {
-								var currCity = this._MainData.get_Cities().get_CurrentOwnCity();
-								var base_city = currCity.get_Id();
-								var x = currCity.get_X();
-								var y = currCity.get_Y();
-								var region = this._VisMain.get_Region();
-								var attackDistance = this._MainData.get_Server().get_MaxAttackDistance() + 0.1;
-								var playerFaction = this._MainData.get_Player().get_Faction();
-								switch (playerFaction) {
-								case ClientLib.Base.EFactionType.GDIFaction:
-									var saveColor = ClientLib.Vis.EBackgroundPlateColor.Orange;
-									break;
-								case ClientLib.Base.EFactionType.NODFaction:
-									var saveColor = ClientLib.Vis.EBackgroundPlateColor.Cyan;
-									break;
-								}
-
-								for (var i = x - (attackDistance); i < (x + attackDistance); i++) {
-									for (var j = y - attackDistance; j < (y + attackDistance); j++) {
-										var visObject = region.GetObjectFromPosition(i * region.get_GridWidth(), j * region.get_GridHeight());
-										if (visObject != null) {
-											if (visObject.get_VisObjectType() == ClientLib.Vis.VisObject.EObjectType.RegionNPCCamp ||
-												visObject.get_VisObjectType() == ClientLib.Vis.VisObject.EObjectType.RegionCityType ||
-												visObject.get_VisObjectType() == ClientLib.Vis.VisObject.EObjectType.RegionNPCBase) {
-												if (visObject.get_VisObjectType() == ClientLib.Vis.VisObject.EObjectType.RegionNPCCamp) {
-													if (visObject.get_IsDestroyed())
-														continue;
-												}
-												if (visObject.get_VisObjectType() == ClientLib.Vis.VisObject.EObjectType.RegionCityType) {
-													if (visObject.IsOwnBase())
-														continue;
-												}
-
-												visObject.get_BasePlate().setPlateColor(ClientLib.Vis.EBackgroundPlateColor.Black);
-												var target_city = visObject.get_Id();
-												if (this.layouts.all.hasOwnProperty(target_city)) {
-													if (this.layouts.all[target_city].hasOwnProperty(base_city)) {
-														var count = 0;
-														for (var key in this.layouts.all[target_city][base_city]) {
-															if (this.layouts.all[target_city][base_city].hasOwnProperty(key)) {
-																count++;
-															}
-														}
-														if (count > 0)
-															visObject.get_BasePlate().setPlateColor(saveColor);
-													}
-												}
-											}
-										}
-									}
-								}
-							}
 						} catch (e) {
 							console.log(e);
 						}
