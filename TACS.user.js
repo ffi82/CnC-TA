@@ -3,8 +3,8 @@
 // @description    Allows you to simulate combat before actually attacking.
 // @namespace      https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
 // @include        https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @version        3.41b
-// @author         KRS_L | Contributions/Updates by WildKatana, CodeEcho, PythEch, Matthias Fuchs, Enceladus, TheLuminary, Panavia2, Da Xue, MrHIDEn, TheStriker, JDuarteDJ, null
+// @version        3.46b
+// @author         KRS_L | Contributions/Updates by WildKatana, CodeEcho, PythEch, Matthias Fuchs, Enceladus, TheLuminary, Panavia2, Da Xue, MrHIDEn, TheStriker, JDuarteDJ, null, g3gg0.de
 // @translator     TR: PythEch | DE: Matthias Fuchs, Leafy & sebb912 | PT: JDuarteDJ & Contosbarbudos | IT: Hellcco | NL: SkeeterPan | HU: Mancika | FR: Pyroa & NgXAlex | FI: jipx | RO: MoshicVargur
 // @grant none
 // ==/UserScript==
@@ -112,7 +112,7 @@ window.TACS_version = GM_info.script.version;
 			"Mark saved targets on region map" : ["Kaydedilmiş hedefleri haritada işaretle", "Gespeicherte Ziele auf der Karte Markieren", "", "", "", "", "", "Merkitse tallennetut kohteet alue kartalle", "Marchează țintele salvate pe harta regiunii"], // region view
 			"Enable 'Double-click to (De)activate units'" : ["Çift-tıklama ile birlikleri (de)aktifleştirmeyi etkinleştir", "Doppel-Klick zum Einheiten (De)-Aktivieren ", "", "", "", "", "", "Tuplaklikkaus aktivoi/deaktivoi yksiköt", "Activează \"Dublu click pentru a (De)activa unitățile\""],
 			"Show Loot Summary" : ["", "Zeige Beute-Zusammenfassung", "", "", "", "", "", "", "Afișează rezumatul prăzii"],
-			"Show Resource Layout Window" : ["", "", "", "", "", "", "", "", ""],
+			"Show Resource Layout Window" : ["", "", "", "", "", "", "", "", "Afișează fereastra cu schema resurselor"],
 			"Show Stats During Attack" : ["İstatistikleri saldırı sırasında göster", "Zeige Statistik während des Angriffs", "", "", "", "", "", "Näytä tiedot -ikkuna hyökkäyksen aikana", "Afișează statisticile în timpul atacului"],
 			"Show Stats During Simulation" : ["İstatistikleri simulasyondayken göster", "Zeige Statistik während der Simulation", "", "", "", "", "", "Näytä tiedot -ikkuna simuloinnin aikana", "Afișează statisticile în timpul simulării"],
 			"Skip Victory-Popup After Battle" : ["Savaş Bitiminde Zafer Bildirimini Atla", "Siegesbildschirm überspringen", "", "", "", "", "", "Ohita taistelun jälkeinen voittoruutu", "Sari peste popup-ul victoriei după luptă"],
@@ -431,8 +431,7 @@ window.TACS_version = GM_info.script.version;
 					initialize : function () {
 						try {
 							this.loadData();
-							locale = qx.locale.Manager.getInstance().getAvailableLocales()[3];
-							if (locale == undefined) locale = qx.locale.Manager.getInstance().getLocale();
+							locale = ClientLib.Config.Main.GetInstance().GetConfig(ClientLib.Config.Main.CONFIG_LANGUAGE);
 							this.targetCityId = "0";
 
 							// Store references
@@ -598,7 +597,7 @@ window.TACS_version = GM_info.script.version;
 									contentPaddingBottom : 8,
 									contentPaddingRight : 8,
 									contentPaddingLeft : 8,
-									width : 400,
+									//width : 400,
 									height : 400,
 									showMaximize : false,
 									showMinimize : false,
@@ -2769,6 +2768,7 @@ window.TACS_version = GM_info.script.version;
 									2 : fileManager.GetPhysicalPath('ui/common/icn_res_tiberium.png')
 								}
 							var currenLayout = this.getLayout();
+							var tibCount = currenLayout.match(/2/g).length;
 							switch (this._MainData.get_Player().get_Faction()) {
 							case ClientLib.Base.EFactionType.GDIFaction:
 								var playerFaction = "G";
@@ -2796,6 +2796,12 @@ window.TACS_version = GM_info.script.version;
 								padding : 10,
 								rich : true
 							});
+							if (tibCount == 7) {
+								this.resourceLayout.setBackgroundColor("#202820");
+							}
+							else if (tibCount == 5) {
+								this.resourceLayout.setBackgroundColor("#202028");
+							}
 							this.resourceLayoutWindow.removeAll();
 							this.resourceLayoutWindow.add(this.resourceLayout);
 
@@ -3754,6 +3760,7 @@ window.TACS_version = GM_info.script.version;
 										console.log(temp);
 										strFunction = strFunction.replace(re2, "");
 										strFunction = strFunction.replace("}}", "}}" + temp);
+										strFunction = strFunction.replace("var $createHelper;", "var $createHelper;var offenseData = b.d.a;var baseData = b.d.s;var defenseData = b.d.d;var simResults = b.e;for (var i in offenseData) {simResults[offenseData[i].ci-1].Value.x = offenseData[i].x;simResults[offenseData[i].ci-1].Value.y = offenseData[i].y;}for (var u in baseData) {simResults[baseData[u].ci-1].Value.x = baseData[u].x;simResults[baseData[u].ci-1].Value.y = baseData[u].y;}for (var e in defenseData) {simResults[defenseData[e].ci-1].Value.x = defenseData[e].x;simResults[defenseData[e].ci-1].Value.y = defenseData[e].y;}"); // Add Coords
 										var fn = Function('a,b', strFunction);
 										ClientLib.API.Battleground.prototype[key] = fn;
 										break;
