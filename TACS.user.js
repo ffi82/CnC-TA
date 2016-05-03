@@ -3,7 +3,7 @@
 // @description    Allows you to simulate combat before actually attacking.
 // @namespace      https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
 // @include        https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @version        3.46b
+// @version        3.50b
 // @author         KRS_L | Contributions/Updates by WildKatana, CodeEcho, PythEch, Matthias Fuchs, Enceladus, TheLuminary, Panavia2, Da Xue, MrHIDEn, TheStriker, JDuarteDJ, null, g3gg0.de
 // @translator     TR: PythEch | DE: Matthias Fuchs, Leafy & sebb912 | PT: JDuarteDJ & Contosbarbudos | IT: Hellcco | NL: SkeeterPan | HU: Mancika | FR: Pyroa & NgXAlex | FI: jipx | RO: MoshicVargur
 // @grant none
@@ -445,10 +445,14 @@ window.TACS_version = GM_info.script.version;
 							
 							if (PerforceChangelist >= 443425) { // 16.1 patch
 								for (var i in this._armyBarContainer) {
-									if (typeof this._armyBarContainer[i] == "object" && this._armyBarContainer[i] != null && this._armyBarContainer[i].objid == "btn_disable") {
-										console.log(this._armyBarContainer[i].objid);
-										var nativeSimBarDisableButton = this._armyBarContainer[i];
-										break;
+									if (typeof this._armyBarContainer[i] == "object" && this._armyBarContainer[i] != null) {
+										if (this._armyBarContainer[i].objid == "btn_disable") {
+											console.log(this._armyBarContainer[i].objid);
+											var nativeSimBarDisableButton = this._armyBarContainer[i];
+										}
+										if (this._armyBarContainer[i].objid == "cnt_controls" || this._armyBarContainer[i].objid == "btn_toggle") {
+											this._armyBarContainer[i].setVisibility("excluded");
+										}
 									}
 								}
 								var armyBarChildren = this._armyBar.getChildren();
@@ -2951,7 +2955,12 @@ window.TACS_version = GM_info.script.version;
 					},
 					startSimulation : function () {
 						try {
-							if (Date.now() - this.lastSimulation > 10000) {
+							if (PerforceChangelist >= 448942) {
+								var simTimeLimit = 3000;
+							} else {
+								var simTimeLimit = 10000;
+							}
+							if (Date.now() - this.lastSimulation > simTimeLimit) {
 								var ownCity = this._MainData.get_Cities().get_CurrentOwnCity();
 								if (!this.getAllUnitsDeactivated() && ownCity.GetOffenseConditionInPercent() > 0) {
 									ClientLib.API.Battleground.GetInstance().SimulateBattle();
@@ -3027,7 +3036,12 @@ window.TACS_version = GM_info.script.version;
 							this.stats.repair.aircraft = 0;
 
 							this.lastSimulation = Date.now();
-							if (this.count == 10) this.counter = setInterval(this.countDownToNextSimulation, 1000);
+							if (PerforceChangelist >= 448942) {
+								var countDownInterval = 300;
+							} else {
+								var countDownInterval = 1000;	
+							}
+							if (this.count == 10) this.counter = setInterval(this.countDownToNextSimulation, countDownInterval);
 
 							for (var i = 0; i < data.length; i++) {
 								var unitData = data[i].Value;
@@ -3760,7 +3774,7 @@ window.TACS_version = GM_info.script.version;
 										console.log(temp);
 										strFunction = strFunction.replace(re2, "");
 										strFunction = strFunction.replace("}}", "}}" + temp);
-										strFunction = strFunction.replace("var $createHelper;", "var $createHelper;var offenseData = b.d.a;var baseData = b.d.s;var defenseData = b.d.d;var simResults = b.e;for (var i in offenseData) {simResults[offenseData[i].ci-1].Value.x = offenseData[i].x;simResults[offenseData[i].ci-1].Value.y = offenseData[i].y;}for (var u in baseData) {simResults[baseData[u].ci-1].Value.x = baseData[u].x;simResults[baseData[u].ci-1].Value.y = baseData[u].y;}for (var e in defenseData) {simResults[defenseData[e].ci-1].Value.x = defenseData[e].x;simResults[defenseData[e].ci-1].Value.y = defenseData[e].y;}"); // Add Coords
+										//strFunction = strFunction.replace("var $createHelper;", "var $createHelper;var offenseData = b.d.a;var baseData = b.d.s;var defenseData = b.d.d;var simResults = b.e;for (var i in offenseData) {simResults[offenseData[i].ci-1].Value.x = offenseData[i].x;simResults[offenseData[i].ci-1].Value.y = offenseData[i].y;}for (var u in baseData) {simResults[baseData[u].ci-1].Value.x = baseData[u].x;simResults[baseData[u].ci-1].Value.y = baseData[u].y;}for (var e in defenseData) {simResults[defenseData[e].ci-1].Value.x = defenseData[e].x;simResults[defenseData[e].ci-1].Value.y = defenseData[e].y;}"); // Add Coords
 										var fn = Function('a,b', strFunction);
 										ClientLib.API.Battleground.prototype[key] = fn;
 										break;
