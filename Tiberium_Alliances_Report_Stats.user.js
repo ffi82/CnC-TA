@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name           Tiberium Alliances Report Stats
-// @version        0.5.1
-// @namespace      http://openuserjs.org/users/petui
+// @version        0.5.3
+// @namespace      https://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @author         petui
 // @description    Calculates combined RT and CP costs and loot of multiple combat reports
 // @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
+// @updateURL      https://openuserjs.org/meta/petui/Tiberium_Alliances_Report_Stats.meta.js
 // ==/UserScript==
 'use strict';
 
@@ -131,19 +132,22 @@
 							var initMethodName = source.match(/break;\}\}[a-z]\.([A-Z]{6})\([a-z]\);if/)[1];
 
 							source = ClientLib.Data.Reports.CombatReport.prototype[initMethodName].toString();
+							var setDataMethodName = source.match(/this\.([A-Z]{6})\([A-Za-z]+\);/)[1];
+
+							source = ClientLib.Data.Reports.CombatReport.prototype[setDataMethodName].toString();
 							var matches = source.match(/this\.([A-Z]{6})=([a-z])\.abl;this\.[A-Z]{6}=\2\.abl;/);
 
 							if (matches !== null) {
 								var attackerBaseIdMemberName = matches[1];
-								var original = ClientLib.Data.Reports.CombatReport.prototype[initMethodName];
+								var original = ClientLib.Data.Reports.CombatReport.prototype[setDataMethodName];
 
-								ClientLib.Data.Reports.CombatReport.prototype[initMethodName] = function(data) {
+								ClientLib.Data.Reports.CombatReport.prototype[setDataMethodName] = function(data) {
 									original.call(this, data);
 									this[attackerBaseIdMemberName] = data.d.abi;
 								};
 							}
 							else {
-								console.warn('ReportStats::initializeHacks', 'Unable to patch ClientLib.Data.Reports.CombatReport.prototype.' + initMethodName + '. Its likely already fixed in the game code.');
+								console.warn('ReportStats::initializeHacks', 'Unable to patch ClientLib.Data.Reports.CombatReport.prototype.' + setDataMethodName + '. Its likely already fixed in the game code.');
 							}
 						}
 
