@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name           Tiberium Alliances Real POI Bonus
-// @version        1.0.0
-// @namespace      http://openuserjs.org/users/petui
+// @version        1.0.1
+// @namespace      https://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @author         petui
 // @description    Displays actual gain/loss for POIs by taking rank multiplier properly into account
 // @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @grant          none
+// @updateURL      https://openuserjs.org/meta/petui/Tiberium_Alliances_Real_POI_Bonus.meta.js
 // ==/UserScript==
 'use strict';
 
