@@ -1,18 +1,13 @@
 // ==UserScript==
 // @name           Tiberium Alliances Wavy
-// @version        0.5.1
-// @namespace      http://openuserjs.org/users/petui
+// @version        0.5.4
+// @namespace      https://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @author         petui
 // @description    Displays details about forgotten attack wave zones.
 // @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @grant          none
-// @contributor    mogsy
+// @updateURL      https://openuserjs.org/meta/petui/Tiberium_Alliances_Wavy.meta.js
 // ==/UserScript==
-/* 
-2015-04-29: moded by mogsy - fixed the number of waves.
-*/
-
 'use strict';
 
 (function() {
@@ -114,7 +109,9 @@
 
 						if (typeof webfrontend.gui.region.RegionCityInfo.prototype.getObject !== 'function') {
 							source = webfrontend.gui.region.RegionCityInfo.prototype.setObject.toString();
-							var objectMemberName = source.match(/^function \(([A-Za-z]+)\)\{.+this\.([A-Za-z_]+)=\1;/)[2];
+							var objectMemberName = PerforceChangelist >= 448942 && PerforceChangelist < 451851
+								? source.match(/^function \(([A-Za-z]+)\)\{.+([A-Za-z]+)=\1\.object;[\s\S]+this\.([A-Za-z_]+)=\2;/)[3]
+								: source.match(/^function \(([A-Za-z]+)(?:,[A-Za-z]+)?\)\{.+this\.([A-Za-z_]+)=\1;/)[2];
 
 							/**
 							 * @returns {ClientLib.Vis.Region.RegionObject}
@@ -405,7 +402,7 @@
 					 * @returns {Number}
 					 */
 					getNumberOfWaves: function(baseCount) {
-						return Math.max(1, Math.min(5, Math.floor((baseCount-1) / 10)));
+						return Math.max(1, Math.min(5, Math.floor(baseCount / 10)));
 					}
 				}
 			});
