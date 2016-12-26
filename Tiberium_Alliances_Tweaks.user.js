@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name           Tiberium Alliances Tweaks
-// @version        1.1.6
-// @namespace      http://openuserjs.org/users/petui
+// @version        1.2.0
+// @namespace      https://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @author         petui
 // @description    A collection of more or less useful features that attempt to improve the gaming experience.
 // @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
+// @updateURL      https://openuserjs.org/meta/petui/Tiberium_Alliances_Tweaks.meta.js
 // ==/UserScript==
 'use strict';
 
@@ -1438,6 +1439,53 @@
 						var reports = ClientLib.Data.MainData.GetInstance().get_Reports();
 						reports[this.onResponseReportHeaderDataAllMethodName] = ClientLib.Data.Reports.Reports.prototype[this.onResponseReportHeaderDataAllMethodName];
 						reports[this.onResponseReportHeaderDataBaseMethodName] = ClientLib.Data.Reports.Reports.prototype[this.onResponseReportHeaderDataBaseMethodName];
+					}
+				}
+			});
+
+			qx.Class.define('Tweaks.Feature.PointerEvent', {
+				extend: qx.core.Object,
+				implement: [Tweaks.Feature.IFeature],
+				defer: function(statics, members) {
+					Tweaks.getInstance().registerFeature(members.constructor, {
+						category: Tweaks.Category.Bugfix,
+						name: 'Fix pointer event duplication',
+						description: 'Fixes mouse clicks being handled twice. Most notably allows opening of the Scripts menu. '
+							+ '<a href="http://forum.alliances.commandandconquer.com/showthread.php?tid=49151" style="color:' + webfrontend.gui.util.BBCode.clrLink + ';" target="_blank">Read more</a>',
+						configKey: 'PointerEvent',
+						disabled: statics.isBrowserAffected() ? false : 'Your browser is not affected'
+					});
+				},
+				statics: {
+					isBrowserAffected: function() {
+						return 'PointerEvent' in window && !qx.bom.client.Event.getMsPointer();
+					}
+				},
+				members: {
+					onRender: function(checkbox, label, config) {},
+					onReset: function(config) {},
+					onSaveConfig: function(config) {},
+
+					/** @inheritDoc */
+					activate: function(wasActive) {
+						if (!wasActive) {
+							this.__getPointerEventHandler()._stopObserver();
+						}
+					},
+
+					/** @inheritDoc */
+					deactivate: function(wasActive) {
+						if (wasActive) {
+							var handler = this.__getPointerEventHandler();
+							handler._initObserver(handler._onMouseEvent);
+						}
+					},
+
+					/**
+					 * @returns {qx.event.handler.Pointer}
+					 */
+					__getPointerEventHandler: function() {
+						return qx.event.Registration.getManager(document).getHandler(qx.event.handler.Pointer);
 					}
 				}
 			});
