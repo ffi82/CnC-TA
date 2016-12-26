@@ -2,7 +2,7 @@
 // @name        MaelstromTools Dev
 // @namespace   MaelstromTools
 // @description Just a set of statistics & summaries about repair time and base resources. Mainly for internal use, but you are free to test and comment it.
-// @version     0.1.4.4
+// @version     0.1.4.5
 // @author      Maelstrom, HuffyLuf, KRS_L and Krisan
 // @include     http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
 // ==/UserScript==
@@ -30,6 +30,7 @@
 ClientLib.Data.PlayerResearch get_PlayerResearch ()
 ClientLib.Data.PlayerResearchItem GetResearchItemFomMdbId (System.Int32 _mdbId)
 ClientLib.Data.PlayerResearchItem.System.Object get_NextLevelInfo_Obj ()
+
 var cw=ClientLib.Data.MainData.GetInstance().get_Player().get_Faction();
 var cj=ClientLib.Base.Tech.GetTechIdFromTechNameAndFaction(ClientLib.Base.ETechName.Research_BaseFound,cw);
 var cd=cr.GetResearchItemFomMdbId(cj);
@@ -48,7 +49,7 @@ var cd=cr.GetResearchItemFomMdbId(cj);
           type: "singleton",
           extend: qx.core.Object,
           construct: function (language) {
-            this.Languages = ['de', 'pt', 'fr', 'tr']; // en is default, not needed in here!
+            this.Languages = ['de_DE', 'pt_PT', 'fr_FR', 'tr_TR']; // en is default, not needed in here!
             if (language != null) {
               this.MyLanguage = language;
             }
@@ -193,7 +194,7 @@ var cd=cr.GetResearchItemFomMdbId(cj);
             initialize: function () {
               try {
                 //console.log(qx.locale.Manager.getInstance().getLocale());
-                Lang.loadData(qx.locale.Manager.getInstance().getLocale());
+                Lang.loadData(ClientLib.Config.Main.GetInstance().GetConfig(ClientLib.Config.Main.CONFIG_LANGUAGE));
                 //console.log("Client version: " + MaelstromTools.Wrapper.GetClientVersion());
                 this.itemsOnDesktopCount = [];
                 this.itemsOnDesktop = {};
@@ -1669,6 +1670,7 @@ var cd=cr.GetResearchItemFomMdbId(cj);
               try {
                 if (!this.Table) {
                   this.Widget.setLayout(new qx.ui.layout.HBox());
+
                   this.Model = new qx.ui.table.model.Simple();
                   this.Model.setColumns(["City", "Tib. Storage", "Tiberium", "Full", "Crystal", "Full", "Power", "Storage", "Full"]);
                   this.Table = new qx.ui.table.Table(this.Model);
@@ -1676,20 +1678,25 @@ var cd=cr.GetResearchItemFomMdbId(cj);
                     flex: 1
                   });
                 }
+
                 var Totals = Object();
                 Totals[MaelstromTools.Statics.Tiberium] = 0;
                 Totals[MaelstromTools.Statics.Crystal] = 0;
                 Totals[MaelstromTools.Statics.Power] = 0;
                 Totals[MaelstromTools.Statics.Tiberium + "Max"] = 0;
                 Totals[MaelstromTools.Statics.Power + "Max"] = 0;
+
                 var rowData = [];
+
                 for (var cityName in this.Cache) {
                   var cityCache = this.Cache[cityName];
+
                   Totals[MaelstromTools.Statics.Tiberium] += cityCache[MaelstromTools.Statics.Tiberium];
                   Totals[MaelstromTools.Statics.Crystal] += cityCache[MaelstromTools.Statics.Crystal];
                   Totals[MaelstromTools.Statics.Power] += cityCache[MaelstromTools.Statics.Power];
                   Totals[MaelstromTools.Statics.Tiberium + "Max"] += cityCache[MaelstromTools.Statics.Tiberium + 'Max'];
                   Totals[MaelstromTools.Statics.Power + "Max"] += cityCache[MaelstromTools.Statics.Power + 'Max'];
+
                   rowData.push([
                     cityName,
                     MaelstromTools.Wrapper.FormatNumbersCompact(cityCache[MaelstromTools.Statics.Tiberium + 'Max']),
@@ -1713,11 +1720,13 @@ var cd=cr.GetResearchItemFomMdbId(cj);
                   MaelstromTools.Wrapper.FormatNumbersCompact(Totals[MaelstromTools.Statics.Power + 'Max']),
                   ''
                   ]);
+
                 this.Model.setData(rowData);
               } catch (e) {
                 console.log("MaelstromTools.ResourceOverview.setWidgetLabels: ", e);
               }
             },
+
             */
             setWidgetLabels: function () {
               try {
@@ -1858,10 +1867,12 @@ var cd=cr.GetResearchItemFomMdbId(cj);
                       
                       var mainData = ClientLib.Data.MainData.GetInstance();
                       var visRegion = ClientLib.Vis.VisMain.GetInstance().get_Region();
+
                       var gridW = visRegion.get_GridWidth();
                       var gridH = visRegion.get_GridHeight();
                       //console.log(cname);
                       //console.log("x: " + cityX + " y: " + cityY);
+
                       var worldObj = visRegion.GetObjectFromPosition((this.Cache[cname]["SupportedCityX"]*gridW), (this.Cache[cname]["SupportedCityY"]*gridH));
                       
                       //ClientLib.Vis.Region.RegionCity
@@ -2519,6 +2530,7 @@ var cd=cr.GetResearchItemFomMdbId(cj);
             
             GetCommandCenter: function(ncity) {
               //var techName = ClientLib.Base.Tech.GetTechIdFromTechNameAndFaction(ClientLib.Base.ETechName.Command_Center, ClientLib.Data.MainData.GetInstance().get_Player().get_Faction());
+
               return MaelstromTools.Wrapper.GetBuilding(ncity, ClientLib.Base.ETechName.Command_Center);
             // conyard return this.GetBuildingCondition$0(ClientLib.Base.Tech.GetTechIdFromTechNameAndFaction$0(0, ClientLib.Data.MainData.GetInstance$9().get_Player$2().get_Faction$2()));
             // ClientLib.Data.City.prototype.GetOffenseConditionInPercent=ClientLib.Data.City.prototype.GetOffenseConditionInPercent$0;
@@ -2713,6 +2725,7 @@ var cd=cr.GetResearchItemFomMdbId(cj);
               ToDo:
               - let the user decide to sort by colums he like i.e. timefactor or cost/gain and save it in the configuration
               - integrate buttons to transfer resources ?
+
                */
               try {
                 this.HT_SelectedResourceType = -1;
