@@ -2,7 +2,7 @@
 // @name            c4 - hide targets
 // @description     Hides all Forgotten targets smaller then level 63 in a 16 field radius.
 // @author          c4
-// @version         2015.12.20
+// @version         2017.06.11
 // @namespace       https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
 // @include         https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
 // ==/UserScript==
@@ -18,11 +18,11 @@
 						font : "font_size_11"
 					});
 					var HideTarget = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({
-						decorator : new qx.ui.decoration.Background().set({
+						/*decorator : new qx.ui.decoration.Background().set({
 							backgroundRepeat : "no-repeat",
 							backgroundImage : "webfrontend/ui/menues/notifications/bgr_ticker_container.png",
 							backgroundPositionX : "center"
-						}),
+						}),*/
 						padding : 2,
 						opacity: 0.8,
             margin: 16
