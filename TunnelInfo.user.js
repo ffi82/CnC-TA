@@ -1,13 +1,11 @@
 // ==UserScript==
-// @name Tiberium Alliances Tunnel Info
-// @description Tunnel info
+// @name CnC Tiberium Alliances Tunnel Info v. 2.4
+// @description Tunnel Info
 // @namespace TATI
 // @include http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @version 2.2
-// @updateURL https://userscripts.org/scripts/source/293295.meta.js
-// @downloadURL https://userscripts.org/scripts/source/293295.user.js
-// @author KRS_L
-// @grant none
+// @include         http*://cncapp*.alliances.commandandconquer.com/*/index.aspx*
+// @version 2.4
+// @author KRS_L, Fixed by XDaast
 // ==/UserScript==
 (function () {
 	var TATI_main = function () {
@@ -114,7 +112,7 @@
 								tir = tir.toString();
 								this.tunnelInfluenceRange = parseInt(tir.substring(tir.indexOf("]") + 1, tir.lastIndexOf("[")));
 							} else {
-								this.tunnelInfluenceRange = 6;
+								this.tunnelInfluenceRange = 4;
 							}
 							this.getRegionZoomFactorAndSetMarkerSize();
 							this.currentCityOffenseLevel = this._MainData.get_Cities().get_CurrentOwnCity().get_LvlOffense();
@@ -211,9 +209,9 @@
 					addTunnelMarker : function (tunnelX, tunnelY, color) {
 						try {
 							var tunnelMarker = new qx.ui.container.Composite(new qx.ui.layout.HBox(5)).set({
-									decorator : new qx.ui.decoration.Single(1, "solid", "#000000").set({
-										backgroundColor : color
-									}),
+										
+										backgroundColor : color,
+									
 									width : this.tunnelMarkerWidth,
 									height : this.tunnelMarkerHeight,
 									opacity : 0.5
