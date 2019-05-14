@@ -1,17 +1,15 @@
 // ==UserScript==
 // @name Tiberium Alliances Attack Range
-// @description Attack range
+// @description Helps to see what bases come in attack range when you select to "move base".The bases in range will become highlighted... Forgotten bases in green colour and player bases in orange colour
 // @namespace TAAT
 // @include http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @version 2
-// @updateURL https://userscripts.org/scripts/source/482069.meta.js
-// @downloadURL https://userscripts.org/scripts/source/482069.user.js
-// @author Napali
-// @grant          none
+// @include         http*://cncapp*.alliances.commandandconquer.com/*/index.aspx*
+// @version 2.2
+// @author Napali, XDaast
 // ==/UserScript==
 (function () {
 	var TATI_main = function () {
-		console.log('Tunnel Info loaded');
+		console.log('ATTACK RANGE LOADED');
 		function CreateTATI() {
 			qx.Class.define("TATI", {
 				type : "singleton",
@@ -73,7 +71,7 @@
 							});
 
 						} catch (e) {
-							console.log(e);
+							
 						}
 					},
 
@@ -178,9 +176,10 @@
 					addTunnelMarker : function (tunnelX, tunnelY, color) {
 						try {
 							var tunnelMarker = new qx.ui.container.Composite(new qx.ui.layout.HBox(5)).set({
-									decorator : new qx.ui.decoration.Single(1, "solid", "#000000").set({
-										backgroundColor : color
-									}),
+									/*decorator : new qx.ui.decoration.Single(1, "solid", "#000000").set({
+										
+									}),*/
+									backgroundColor : color,
 									width : this.tunnelMarkerWidth,
 									height : this.tunnelMarkerHeight,
 									opacity : 0.5
