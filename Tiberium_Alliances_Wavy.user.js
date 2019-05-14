@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name           Tiberium Alliances Wavy
-// @version        0.5.4
+// @version        0.5.5
 // @namespace      https://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
-// @author         petui
+// @author         petui, chertosha
 // @description    Displays details about forgotten attack wave zones.
 // @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @updateURL      https://openuserjs.org/meta/petui/Tiberium_Alliances_Wavy.meta.js
+// @include        http*://cncapp*.alliances.commandandconquer.com/*/index.aspx*
 // ==/UserScript==
 'use strict';
 
@@ -109,6 +109,7 @@
 
 						if (typeof webfrontend.gui.region.RegionCityInfo.prototype.getObject !== 'function') {
 							source = webfrontend.gui.region.RegionCityInfo.prototype.setObject.toString();
+              source=source.replace("function(","function (");
 							var objectMemberName = PerforceChangelist >= 448942 && PerforceChangelist < 451851
 								? source.match(/^function \(([A-Za-z]+)\)\{.+([A-Za-z]+)=\1\.object;[\s\S]+this\.([A-Za-z_]+)=\2;/)[3]
 								: source.match(/^function \(([A-Za-z]+)(?:,[A-Za-z]+)?\)\{.+this\.([A-Za-z_]+)=\1;/)[2];
