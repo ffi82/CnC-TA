@@ -1,12 +1,11 @@
 // ==UserScript==
 // @name           Tiberium Alliances ReplayShare
-// @version        0.4.1
+// @version        0.4.1b
 // @namespace      https://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @author         petui
 // @description    Share combat reports with your friends in other alliances and worlds
-// @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @updateURL      https://openuserjs.org/meta/petui/Tiberium_Alliances_ReplayShare.meta.js
+// @include        http*://*.alliances.commandandconquer.com/*
 // ==/UserScript==
 'use strict';
 
