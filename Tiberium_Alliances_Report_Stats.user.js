@@ -1,12 +1,11 @@
 // ==UserScript==
 // @name           Tiberium Alliances Report Stats
-// @version        0.5.3
+// @version        0.5.3b
 // @namespace      https://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @author         petui
 // @description    Calculates combined RT and CP costs and loot of multiple combat reports
-// @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @updateURL      https://openuserjs.org/meta/petui/Tiberium_Alliances_Report_Stats.meta.js
+// @include        http*://*.alliances.commandandconquer.com/*
 // ==/UserScript==
 'use strict';
 
