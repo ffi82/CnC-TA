@@ -2,8 +2,8 @@
 // @name infernal wrapper
 // @description Supplies some wrapper functions for public use 
 // @namespace infernal_wrapper
-// @include https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @version 0.390737.6
+// @include https://*.alliances.commandandconquer.com/*/index.aspx*
+// @version 0.390737.7
 // @author infernal_me, KRS_L, krisan
 // ==/UserScript==
 (function () {
@@ -47,6 +47,7 @@
                         }
                     }
                 }
+
                 // ClientLib.Data.CityRepair.prototype.UpdateCachedFullRepairAllCost
                 for (var key in ClientLib.Data.CityRepair.prototype) {
                     if (typeof ClientLib.Data.CityRepair.prototype[key] === 'function') {
@@ -127,4 +128,3 @@
         console.log("CCTAWrapper: init error: ", e);
     }
 })();
-
