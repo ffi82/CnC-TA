@@ -1,15 +1,11 @@
 // ==UserScript==
 // @name           Tiberium Alliances The Movement
-// @version        1.0.3.3
+// @version        1.0.3.19.4
+// @namespace      https://openuserjs.org/users/petui
 // @license        GPL version 3 or any later version; http://www.gnu.org/copyleft/gpl.html
 // @author         petui
-// @contributor    leo7044 (https://github.com/leo7044)
-// @contributor    AlkalyneD4 (https://github.com/SebHeuze) Patch 19.3 Fix
 // @description    Strategical territory simulator
-// @downloadURL    https://raw.githubusercontent.com/leo7044/CnC_TA/master/TheMovement.user.js
-// @updateURL      https://raw.githubusercontent.com/leo7044/CnC_TA/master/TheMovement.user.js
-// @include        http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @include        http*://cncapp*.alliances.commandandconquer.com/*/index.aspx*
+// @include        http*://*.alliances.commandandconquer.com/*
 // ==/UserScript==
 'use strict';
 
@@ -144,7 +140,7 @@
 					TheMovement.Entrypoint.Abstract.call(this, history);
 
 					this.selectedObjectMemberName = webfrontend.gui.region.RegionCityMenu.prototype.onTick.toString()
-						.match(/if\(this\.([A-Za-z0-9_]+)!==null\){this\.[A-Za-z0-9_]+\(\);}/)[1];
+						.match(/if\(this\.([A-Za-z0-9_]+)!==null\)this\.[A-Za-z0-9_]+\(\);/)[1];
 
 					this.actionButtons = {};
 					this.blankMenu = new qx.ui.container.Composite(new qx.ui.layout.VBox(0)).set({
@@ -361,7 +357,7 @@
 					this.dirtySectors = {};
 
 					var matches = ClientLib.Data.WorldSector.prototype.SetDetails.toString()
-						.match(/case \$I\.[A-Z]{6}\.City:.+?this\.([A-Z]{6})\.[A-Z]{6}\(\(\(e<<16\)\|d\),g\);.+?var h=this\.([A-Z]{6})\.d\[g\.[A-Z]{6}\];if\(h==null\){return false;}var i=\(\(h\.([A-Z]{6})!=0\)\?this\.([A-Z]{6})\.d\[h\.\3\]:null\);/);
+						.match(/case \$I\.[A-Z]{6}\.City:{.+?this\.([A-Z]{6})\.[A-Z]{6}\(\(\(e<<0x10\)\|d\),g\);.+?var h=this\.([A-Z]{6})\.d\[g\.[A-Z]{6}\];if\(h==null\){return false;}var i=\(\(h\.([A-Z]{6})!=0\) \? this\.([A-Z]{6})\.d\[h\.\3\] : null\);/);
 					this.worldSectorObjectsMemberName = matches[1];
 					this.worldSectorPlayersMemberName = matches[2];
 					this.playerAllianceDataIndexMemberName = matches[3];
@@ -650,14 +646,14 @@
 					var updateSectorsMethodName = ClientLib.Vis.Region.Region.prototype.SetActive.toString()
 						.match(/this\.([A-Z]{6})\(\);/)[1];
 					var matches = ClientLib.Vis.Region.Region.prototype[updateSectorsMethodName].toString()
-						.match(/if\(\(([a-z])\.\$r=this\.([A-Z]{6})\.([A-Z]{6})\([a-z],\1\),([a-z])=\1\.b,\1\.\$r\)\)\{.+\4=\(new \$I\.([A-Z]{6})\)\.([A-Z]{6})\(this,\(([a-z])\.[A-Z]{6}\(\)\*32\),\(\7\.[A-Z]{6}\(\)\*32\)\);/);
+						.match(/if \(\(([a-z])\.\$r=this\.([A-Z]{6})\.([A-Z]{6})\([a-z],\1\),([a-z])=\1\.b,\1\.\$r\)\)\{.+\4=\(new \$I\.([A-Z]{6})\)\.([A-Z]{6})\(this, \(([a-z])\.[A-Z]{6}\(\)\*0x20\), \(\7\.[A-Z]{6}\(\)\*0x20\)\);/);
 					this.regionSectorsMemberName = matches[2];
 					this.regionSectorsTryGetValueMethodName = matches[3];
 					var regionSectorClassName = matches[5];
 					var regionSector$ctorMethodName = matches[6];
 
 					this.regionSectorObjectsMemberName = $I[regionSectorClassName].prototype[regionSector$ctorMethodName].toString()
-						.match(/this\.([A-Z]{6})=\$I\.[A-Z]{12}\.[A-Z]{6}\(\$I\.[A-Z]{6},32,32\);/)[1];
+						.match(/this\.([A-Z]{6})=\$I\.[A-Z]{6}\.[A-Z]{6}\(\$I\.[A-Z]{6},0x20, 0x20\);/)[1];
 				},
 				members: {
 					worldObjectWrapper: null,
@@ -809,8 +805,8 @@
 					this.visObjectTypeNameMap[ClientLib.Vis.VisObject.EObjectType.RegionNPCBase] = ClientLib.Vis.Region.RegionNPCBase.prototype.get_BaseLevel.toString().match(/return this\.([A-Z]{6})\.[A-Z]{6};/)[1];
 
 					this.territoryRadiusMemberNameMap = {};
-					this.territoryRadiusMemberNameMap[ClientLib.Data.WorldSector.ObjectType.City] = ClientLib.Data.WorldSector.WorldObjectCity.prototype.$ctor.toString().match(/this\.([A-Z]{6})=\(\([a-z]>>17\)&15\);/)[1];
-					this.territoryRadiusMemberNameMap[ClientLib.Data.WorldSector.ObjectType.NPCBase] = ClientLib.Data.WorldSector.WorldObjectNPCBase.prototype.$ctor.toString().match(/this\.([A-Z]{6})=\(\([a-z]>>18\)&15\);/)[1];
+					this.territoryRadiusMemberNameMap[ClientLib.Data.WorldSector.ObjectType.City] = ClientLib.Data.WorldSector.WorldObjectCity.prototype.$ctor.toString().match(/this\.([A-Z]{6})=\(\([a-z]>>0x\d+\)&15\);/)[1];
+					this.territoryRadiusMemberNameMap[ClientLib.Data.WorldSector.ObjectType.NPCBase] = ClientLib.Data.WorldSector.WorldObjectNPCBase.prototype.$ctor.toString().match(/this\.([A-Z]{6})=\(\([a-z]>>0x12\)&15\);/)[1];
 					this.territoryRadiusMemberNameMap[ClientLib.Data.WorldSector.ObjectType.Ruin] = ClientLib.Data.WorldSector.WorldObjectRuin.prototype.$ctor.toString().match(/this\.([A-Z]{6})=\(\(g>>9\)&15\);/)[1];
 
 					this.baseLevelMemberNameMap = {};
@@ -819,8 +815,8 @@
 					this.baseLevelMemberNameMap[ClientLib.Data.WorldSector.ObjectType.Ruin] = ClientLib.Vis.Region.RegionRuin.prototype.get_BaseLevel.toString().match(/return this\.[A-Z]{6}\.([A-Z]{6});/)[1];
 
 					this.playerDataIndexMemberNameMap = {};
-					this.playerDataIndexMemberNameMap[ClientLib.Data.WorldSector.ObjectType.City] = ClientLib.Data.WorldSector.prototype.SetDetails.toString().match(/ \$I\.[A-Z]{6}\.City:.+?var ([A-Za-z]+)=this\.[A-Z]{6}\.d\[[A-Za-z]+\.([A-Z]{6})\];if\(\1==null\){return false;}/)[2];
-					this.playerDataIndexMemberNameMap[ClientLib.Data.WorldSector.ObjectType.Ruin] = ClientLib.Data.WorldSector.prototype.SetDetails.toString().match(/case \$I\.[A-Z]{6}\.Ruin:.+?var ([A-Za-z]+)=this\.[A-Z]{6}\.d\[[A-Za-z]+\.([A-Z]{6})\];if\(\1==null\){return false;}/)[2];
+					this.playerDataIndexMemberNameMap[ClientLib.Data.WorldSector.ObjectType.City] = ClientLib.Data.WorldSector.prototype.SetDetails.toString().match(/case \$I\.[A-Z]{6}\.City:{.+?var ([A-Za-z]+)=this\.[A-Z]{6}\.d\[[A-Za-z]+\.([A-Z]{6})\];if\(\1==null\){return false;}/)[2];
+					this.playerDataIndexMemberNameMap[ClientLib.Data.WorldSector.ObjectType.Ruin] = ClientLib.Data.WorldSector.prototype.SetDetails.toString().match(/case \$I\.[A-Z]{6}\.Ruin:{.+?var ([A-Za-z]+)=this\.[A-Z]{6}\.d\[[A-Za-z]+\.([A-Z]{6})\];if\(\1==null\){return false;}/)[2];
 				},
 				members: {
 					visObjectTypeNameMap: null,
@@ -920,7 +916,7 @@
 				extend: Object,
 				construct: function() {
 					this.GetTerritoryTypeByCoordinatesMethodName = ClientLib.Data.World.prototype.CheckFoundBase.toString()
-						.match(/switch\(this\.([A-Z]{6})\([a-z],[a-z]\)\)/)[1];
+						.match(/switch \(this\.([A-Z]{6})\([a-z],[a-z]\)\)/)[1];
 
 					var rewrittenFunctionBody = ClientLib.Data.World.prototype.GetTerritoryTypeByCoordinates.toString().replace(
 						/^(function\s*\()/,
@@ -991,7 +987,7 @@
 				extend: Object,
 				construct: function() {
 					var matches = ClientLib.Data.AllianceSupportState.prototype.Update.toString()
-						.match(/switch\(\$I\.([A-Z]{6})\.([A-Z]{6})\([a-z]\.c\[[a-z]\]\.charCodeAt\(0\)\)\)\{/);
+						.match(/switch \(\$I\.([A-Z]{6})\.([A-Z]{6})\([a-z]\.c\[[a-z]\]\.charCodeAt\(0\)\)\)\{/);
 					var hashEncoderClassname = matches[1];
 					var decodeCharCodeMethodName = matches[2];
 
