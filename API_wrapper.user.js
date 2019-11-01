@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name infernal wrapper
-// @description Supplies some wrapper functions for public use 
-// @namespace infernal_wrapper
-// @include https://*.alliances.commandandconquer.com/*/index.aspx*
-// @version 0.390737.7
-// @author infernal_me, KRS_L, krisan
+// @description Supplies some wrapper functions for public use
+// @include https://*.alliances.commandandconquer.com/*
+// @version 0.390737.6.3
+// @author infernal_me
+// @contributor KRS-L ( https://github.com/KRS-L/ ), krisan, leo7044 ( https://github.com/leo7044 ), Netquik ( https://github.com/netquik/ )
 // ==/UserScript==
 (function () {
     var CCTAWrapper_main = function () {
@@ -21,7 +21,7 @@
                 System = $I;
                 SharedLib = $I;
                 var strFunction;
-                
+
                 // SharedLib.Combat.CbtSimulation.prototype.DoStep
                 for (var x in $I) {
                     for (var key in $I[x].prototype) {
@@ -47,7 +47,6 @@
                         }
                     }
                 }
-
                 // ClientLib.Data.CityRepair.prototype.UpdateCachedFullRepairAllCost
                 for (var key in ClientLib.Data.CityRepair.prototype) {
                     if (typeof ClientLib.Data.CityRepair.prototype[key] === 'function') {
@@ -60,31 +59,35 @@
                     }
                 }*/
 
-                // ClientLib.Data.CityUnits.prototype.get_OffenseUnits
+                // ClientLib.Data.CityUnits.prototype.get_OffenseUnits edited by Netquik
                 strFunction = ClientLib.Data.CityUnits.prototype.HasUnitMdbId.toString();
-                var searchString = "for (var b in {d:this.";
+                /*var searchString = "for(var b in {d:this.";
                 var startPos = strFunction.indexOf(searchString) + searchString.length;
-                var fn_name = strFunction.slice(startPos, startPos + 6);
+                var fn_name = strFunction.slice(startPos, startPos + 6);*/
+                var fn_name = strFunction.match(/for {0,1}\(var b in {d:this.([A-Z]{6})/)[1];
                 strFunction = "var $createHelper;return this." + fn_name + ";";
                 var fn = Function('', strFunction);
                 ClientLib.Data.CityUnits.prototype.get_OffenseUnits = fn;
                 console.log("ClientLib.Data.CityUnits.prototype.get_OffenseUnits = function(){var $createHelper;return this." + fn_name + ";}");
 
-                // ClientLib.Data.CityUnits.prototype.get_DefenseUnits
+                // ClientLib.Data.CityUnits.prototype.get_DefenseUnits edited by Netquik
                 strFunction = ClientLib.Data.CityUnits.prototype.HasUnitMdbId.toString();
-                searchString = "for (var c in {d:this.";
+                /*searchString = "for(var c in {d:this.";
                 startPos = strFunction.indexOf(searchString) + searchString.length;
-                fn_name = strFunction.slice(startPos, startPos + 6);
+                fn_name = strFunction.slice(startPos, startPos + 6);*/
+                fn_name = strFunction.match(/for {0,1}\(var c in {d:this.([A-Z]{6})/)[1];
                 strFunction = "var $createHelper;return this." + fn_name + ";";
                 fn = Function('', strFunction);
                 ClientLib.Data.CityUnits.prototype.get_DefenseUnits = fn;
                 console.log("ClientLib.Data.CityUnits.prototype.get_DefenseUnits = function(){var $createHelper;return this." + fn_name + ";}");
 
-                // ClientLib.Vis.Battleground.Battleground.prototype.get_Simulation
+                // ClientLib.Vis.Battleground.Battleground.prototype.get_Simulation edited by Netquik
                 strFunction = ClientLib.Vis.Battleground.Battleground.prototype.StartBattle.toString();
-                searchString = "=0;for(var a=0; (a<9); a++){this.";
+                /*searchString = "=0;for(var a=0;(a<9);a++){this.";
                 startPos = strFunction.indexOf(searchString) + searchString.length;
-                fn_name = strFunction.slice(startPos, startPos + 6);
+                fn_name = strFunction.slice(startPos, startPos + 6);*/
+                var regee = new RegExp(/=0;for\(var a=0; {0,1}\(a<9\); {0,1}a\+\+\){this.([A-Z]{6})/);
+                fn_name = strFunction.match(regee)[1];
                 strFunction = "return this." + fn_name + ";";
                 fn = Function('', strFunction);
                 ClientLib.Vis.Battleground.Battleground.prototype.get_Simulation = fn;
