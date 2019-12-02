@@ -1,10 +1,10 @@
 // ==UserScript==
-// @version       1.7.7b
+// @version       1.7.8b
 // @name          C&C:TA CNCOpt Link Button for SC
 // @namespace     http://cncopt.com/
 // @icon          http://cncopt.com/favicon.ico
 // @description   Creates a "CNCOpt" button when selecting a base in Command & Conquer: Tiberium Alliances. The share button takes you to http://cncopt.com/ and fills in the selected base information so you can analyze or share the base.
-// @include       http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
+// @include       http*://*.alliances.commandandconquer.com/*
 // @include       http*://*.cncopt.com/*
 // @include       http*://cncopt.com/*
 // @grant         GM_log
