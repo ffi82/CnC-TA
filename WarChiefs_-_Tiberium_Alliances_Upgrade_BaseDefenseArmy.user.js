@@ -1,13 +1,10 @@
 // ==UserScript==
 // @name            WarChiefs - Tiberium Alliances Upgrade Base/Defense/Army
-// @description     Upgrade your Base,Defense Army to a specific Level.
+// @description     Upgrade your Base, Defense or Army to a specific Level.
 // @author          Eistee
-// @version         13.11.11
-// @namespace       https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @include         https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
+// @version         2017.06.06
+// @include         http*://*.alliances.commandandconquer.com/*
 // @icon            http://eistee82.github.io/ta_simv2/icon.png
-// @updateURL       https://github.com/Eistee82/CNCTA/raw/master/WarChiefs_-_Tiberium_Alliances_Upgrade_BaseDefenseArmy.user.js
-// @downloadURL     https://github.com/Eistee82/CNCTA/raw/master/WarChiefs_-_Tiberium_Alliances_Upgrade_BaseDefenseArmy.user.js
 // ==/UserScript==
 /**
  *  License: CC-BY-NC-SA 3.0
