@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name           TACS (Tiberium Alliances Combat Simulator)
 // @description    Allows you to simulate combat before actually attacking.
-// @namespace      https://*.alliances.commandandconquer.com/*/index.aspx*
-// @include        https://*.alliances.commandandconquer.com/*/index.aspx*
-// @version        3.53b
+// @namespace      http*://*.alliances.commandandconquer.com/*
+// @include        http*://*.alliances.commandandconquer.com/*
+// @version        3.5.19.5
 // @author         KRS_L | Contributions/Updates by WildKatana, CodeEcho, PythEch, Matthias Fuchs, Enceladus, TheLuminary, Panavia2, Da Xue, MrHIDEn, TheStriker, JDuarteDJ, null, g3gg0.de
 // @translator     TR: PythEch | DE: Matthias Fuchs, Leafy & sebb912 | PT: JDuarteDJ & Contosbarbudos | IT: Hellcco | NL: SkeeterPan | HU: Mancika | FR: Pyroa & NgXAlex | FI: jipx | RO: MoshicVargur
 // @grant none
@@ -68,7 +68,7 @@ window.TACS_version = GM_info.script.version;
 			"Start Combat Simulation" : ["Savaş Simulasyonunu Başlat", "Kampfsimulation starten", "Começar a simalação de combate", "Avvia simulazione", "Start Gevechtssimulatie", "Csata szimuláció elindítása", "Démarrer La Simulation Du Combat", "Aloita taistelun simulaatio", "Începe simularea luptei"],
 			"Setup" : ["Düzen", "Aufstellung", "Configuração", "Setup", "Opzet", "Elrendezés", "Organisation", "Takaisin", "Pregătire"],
 			"Return to Combat Setup" : ["Ordu düzenini göster", "Zurück zur Einheitenaufstellung", "Voltar à configuração de combate", "Ritorna alla configurazione", "Keer terug naar Gevechtsopzet", "Vissza az egységek elrendezéséhez", "Retourner à l'Organisation Des Troupes", "Return to Combat Setup", "Întoarcere la ecranul pentru pregătirea luptei"],
-			"Unlock" : ["Kilidi aç", "Freigabe", "Desbloquear", "Sblocca", "Ontgrendel", "Felold", "Debloquer", "Avaa", "Descuie"],905595
+			"Unlock" : ["Kilidi aç", "Freigabe", "Desbloquear", "Sblocca", "Ontgrendel", "Felold", "Debloquer", "Avaa", "Descuie"],
 			//"Tools" : ["Araçlar", "Extras", "Ferramentas", "Strumenti", "Gereedschap", "Eszközök", "Outils", "Työkalut"],
 			"Open Simulator Tools" : ["Simulatör Araçlarını Göster", "Extras öffnen", "Abrir as ferramentas do simulador", "Apri strumenti", "Open Simulator Gereedschap", "Megnyitja a szimulátor információs ablakát", "Ouvrir Les Réglages Du Simulateur", "Avaa simulaattorin työkalut", "Deschide opțiunile simulatorului"],
 			"Shift units left" : ["Birlikleri sola kaydır", "Einheiten nach links bewegen", "Deslocar as unidades para a esquerda", "Spostare le unità a sinistra", "Verschuif eenheden links", "Egységek eltolása balra", "Déplacer Les Unités Vers La Gauche", "Siirtää yksikköjä vasemmalle", "Deplasează unitățile la stânga"],
@@ -521,13 +521,13 @@ window.TACS_version = GM_info.script.version;
 							this.buttons.attack.unlock = new qx.ui.form.Button(lang("Unlock"));
 							this.buttons.attack.unlock.set({
 								width : 54,
-								height : 37,
+								height : 44,
 								padding : 0,
 								appearance : "button-text-small",
 								toolTipText : lang("Unlock Attack Button")
 							});
 							this.buttons.attack.unlock.addListener("click", this.unlockAttacks, this);
-							this.buttons.attack.unlock.setOpacity(0.5);
+							this.buttons.attack.unlock.setOpacity(0.8);
 							var temp = localStorage.ta_sim_attackLock;
 							if (temp) {
 								temp = JSON.parse(localStorage.ta_sim_attackLock);
@@ -536,7 +536,7 @@ window.TACS_version = GM_info.script.version;
 							}
 							if (temp) {
 								this._armyBar.add(this.buttons.attack.unlock, {
-									top : 108,
+									top : 144,
 									right : 10
 								});
 							}
@@ -551,7 +551,7 @@ window.TACS_version = GM_info.script.version;
 								toolTipText : lang("Unlock Repair Button")
 							});
 							this.buttons.attack.repair.addListener("click", this.unlockRepairs, this);
-							this.buttons.attack.repair.setOpacity(0.5);
+							this.buttons.attack.repair.setOpacity(0.8);
 							var temp = localStorage.ta_sim_repairLock;
 							if (temp) {
 								temp = JSON.parse(localStorage.ta_sim_repairLock);
@@ -560,7 +560,7 @@ window.TACS_version = GM_info.script.version;
 							}
 							if (temp) {
 								this._armyBar.add(this.buttons.attack.repair, {
-									top : 23,
+									top : 62,
 									right : 10
 								});
 							}
