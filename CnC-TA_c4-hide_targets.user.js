@@ -2,9 +2,9 @@
 // @name            c4 - hide targets
 // @description     Hides all Forgotten targets smaller then level 63 in a 16 field radius.
 // @author          c4
-// @version         2017.06.11
-// @namespace       https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @include         https://prodgame*.alliances.commandandconquer.com/*/index.aspx*
+// @version         2020.01.01
+// @namespace       https://*.alliances.commandandconquer.com/*
+// @include         https://*.alliances.commandandconquer.com/*
 // ==/UserScript==
 (function () {
 	var injectFunction = function () {
