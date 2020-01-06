@@ -1,15 +1,12 @@
 // ==UserScript==
-// @name          CnC: MHTools Tiberium Alliances Available Loot Summary + Info
+// @name          C&C:TA MHTools - Available Loot Summary + Info
 // @namespace     MHTools.Loot
 // @description   CROSS SERVERS Loot & troops & bases & distance info.
 // @author        MrHIDEn based on Yaeger & Panavia code. Totaly recoded.
 // @grant         none
-// @include       http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @version       1.8.3
+// @include       http*://*.alliances.commandandconquer.com/*
+// @version       1.8.3.1
 // ==/UserScript==
-
- 
-
 (function () {
   var MHLootMain = function () {    
     function MHToolsLootCreate() {        
