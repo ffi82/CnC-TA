@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          CnC: MHTools Tiberium Alliances Available Loot Summary + Info
-// @description   CROSS SERVERS Loot & troops & bases & distance info.
+// @description   CROSS SERVERS production, Loot, troops, bases & distance info.
 // @include       http*://*.alliances.commandandconquer.com/*
 // @author        MrHIDEn based on Yaeger & Panavia code. Totaly recoded.
 // @contributor   leo7044 (https://github.com/leo7044)
@@ -312,7 +312,7 @@
                 // for(var i=0;i<l.max;i++) {
                   // if(typeof(l[i])=='undefined') continue;
                   // if(l[i]===null) continue;
-                  // if(l[i].id == id) 
+                  // if(l[i].id == id)
                   // {
                     // // found
                     // l[i] = c;
@@ -326,7 +326,7 @@
                 // l[l.idx] = c;
                 // if(++l.idx >= l.max) l.idx = 0;
                 // // JSON
-                // if (S.get_IsSupported()) S.SetItem(this.listStoreName, l);   
+                // if (S.get_IsSupported()) S.SetItem(this.listStoreName, l);
               // } catch (e) {
                 // console.warn("save: ", e);
               // }
@@ -340,7 +340,7 @@
                   // if(l[i]===null) continue;
                   // if(l[i].id == id) return l[i];
                 // }
-                // return {id:id,Data:{}};     
+                // return {id:id,Data:{}};
               // } catch (e) {
                 // console.warn("load: ", e);
               // }
@@ -349,7 +349,7 @@
               // try {
                 // var mem = this.load().Data;
                 // mem[k] = d;
-                // this.save(mem);        
+                // this.save(mem);
               // } catch (e) {
                 // console.warn("store: ", e);
               // }
@@ -358,7 +358,7 @@
               // try {
                 // var mem = this.load().Data;
                 // if(typeof(mem[k])=='undefined') return 'undefined';
-                // return mem[k];    
+                // return mem[k];
               // } catch (e) {
                 // console.warn("restore: ", e);
               // }
@@ -1023,7 +1023,7 @@
                     RegionRuin
                     RegionGhostCity
                     RegionNewPlayerSpot
-                    RegionHub  */               
+                    RegionHub  */
                                         case ClientLib.Vis.VisObject.EObjectType.RegionCityType:
                                         case ClientLib.Vis.VisObject.EObjectType.RegionNPCBase:
                                         case ClientLib.Vis.VisObject.EObjectType.RegionNPCCamp:
@@ -1133,7 +1133,7 @@
                     RegionRuin
                     RegionGhostCity
                     RegionNewPlayerSpot
-                    RegionHub  */               
+                    RegionHub  */
                                             // case ClientLib.Vis.VisObject.EObjectType.RegionCityType:
                                             // case ClientLib.Vis.VisObject.EObjectType.RegionNPCBase:
                                             // case ClientLib.Vis.VisObject.EObjectType.RegionNPCCamp:
@@ -1408,7 +1408,7 @@
             RegionCityStatusInfoAlliance
             RegionCityMoveInfo
             RegionNPCCampStatusInfo
-            */            
+            */
                         extendOwnBase: function() {// BASE - Own
                             var self = this;
                             if (!webfrontend.gui.region.RegionCityStatusInfoOwn.prototype.__mhloot_showLootOwnBase) {
