@@ -1,10 +1,9 @@
 // ==UserScript==
-// @name Tiberium Alliances Attack Range
+// @name C&C:TA Attack Range
 // @description Helps to see what bases come in attack range when you select to "move base".The bases in range will become highlighted... Forgotten bases in green colour and player bases in orange colour
 // @namespace TAAT
-// @include http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @include         http*://cncapp*.alliances.commandandconquer.com/*/index.aspx*
-// @version 2.2
+// @include http*://*.alliances.commandandconquer.com/*
+// @version 2.3
 // @author Napali, XDaast
 // ==/UserScript==
 (function () {
