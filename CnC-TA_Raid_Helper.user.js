@@ -41,7 +41,7 @@ function initHideCampsButton(){
                 {
                     if (visObject.get_VisObjectType() == ClientLib.Vis.VisObject.EObjectType.RegionNPCCamp)
                     {
-                        var lvl = Math.floor(currCity.get_LvlOffense()) - 2;
+                        var lvl = Math.round(visObject.get_BaseLevelFloat()) + 1;
                         if ( lvl < minimumlevel || lvl > maximumlevel )
                         {
                             if( active)
