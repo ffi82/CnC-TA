@@ -1,11 +1,9 @@
 // ==UserScript==
 // @name CENTER DRIVEN POI Manager
 // @description Makes managing POIs easier and includes a tier simulator. 
-// @include http*://prodgame*.alliances.commandandconquer.com/*/index.aspx*
-// @include http*://cncapp*.alliances.commandandconquer.com/*/index.aspx*
-// @version 2.4
+// @include https://*.alliances.commandandconquer.com/*/index.aspx*
+// @version 2.4.1
 // @author Zdoom, Bluepix, Debitosphere, REWRITE by XDaast
-// @namespace https://greasyfork.org/users/4306
 // ==/UserScript==
 (function()
 {	
@@ -73,7 +71,7 @@
 						var poiInfo = phe.cnc.gui.util.Text.getPoiInfosByType;
 						
 						var tiersData = [], scoreData = [], bonusData = [], tiers = [];
-						for (var i = 0; i < 50; i++)
+						for (var i = 0; i < 55; i++)
 						{
 							var multiplier = ClientLib.Data.MainData.GetInstance().get_Server().get_POIGlobalBonusFactor();
 							var previousScore = (i === 0) ? 0 : bonusData[i - 1][1];
