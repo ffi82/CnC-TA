@@ -1,6 +1,7 @@
 // ==UserScript==
 // @name CENTER DRIVEN POI Manager
-// @description Makes managing POIs easier and includes a tier simulator. 
+// @description Makes managing POIs easier and includes a tier simulator.
+// @namespace https://*.alliances.commandandconquer.com/*/index.aspx*
 // @include https://*.alliances.commandandconquer.com/*/index.aspx*
 // @version 2.4.1
 // @author Zdoom, Bluepix, Debitosphere, REWRITE by XDaast
