@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name           ToolBox_Addon_POI_List
 // @author         Lars
-// @description    Daten runterladen
+// @description    Zoom Out and Export POI Data
 // @include        https://cncapp*.alliances.commandandconquer.com/*/index.aspx*
-// @version        0.2
+// @version        0.3
 // @contributor    ffi82
 // @grant          none
 // ==/UserScript==
@@ -36,8 +36,8 @@
 											var x = ClientLib.Data.MainData.GetInstance().get_World().get_WorldWidth();
 											var y = ClientLib.Data.MainData.GetInstance().get_World().get_WorldHeight();
 											var region = ClientLib.Vis.VisMain.GetInstance().get_Region();
-											var POIScore = new Array(0,0,0,0,0,0,0,0,0,0,0,0,1,3,6,10,15,25,40,65,100,150,250,400,650,1000,1500,2500,4000,6500,10000,15000,25000,40000,65000,100000,150000,250000,400000,650000,1000000,1500000,2500000,4000000,6500000,10000000,15000000,25000000);
-											var Reactor  = new Array();
+											var POIScore = []; for (var i = 0; i <= ClientLib.Data.MainData.GetInstance().get_Server().get_MaxCenterLevel(); i++) {POIScore [i] = ClientLib.Base.PointOfInterestTypes.GetScoreByLevel(i);}
+                                        	var Reactor  = new Array();
 											var Tiberium = new Array();
 											var Crystal = new Array();
 											var Tungsten = new Array();
