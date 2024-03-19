@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           ToolBox_Addon_POI_List
 // @author         Lars
-// @description    Zoom Out and Export POI Data
+// @description    Zoom out to Export POI Data while in world view.
 // @include        https://cncapp*.alliances.commandandconquer.com/*/index.aspx*
 // @version        0.3
 // @contributor    ffi82
@@ -24,7 +24,7 @@
 								var ToolBoxMainFenster = window.ToolBoxMain.getInstance().ToolBoxFenster;
 								var POIButton = new qx.ui.form.Button("POI List").set(
 									{
-										toolTipText: "Export the World POI List. Zoom out max to include all POIs.",
+										toolTipText: "Export the World POI List. While in World View, zoom out (Tiberium Alliance Zoom userscript needed) to include all POIs.",
 										width: 140,
 										height: 25,
 										maxWidth: 140,
