@@ -24,7 +24,7 @@
 								var ToolBoxMainFenster = window.ToolBoxMain.getInstance().ToolBoxFenster;
 								var POIButton = new qx.ui.form.Button("POI List").set(
 									{
-										toolTipText: "Export the World POI List. While in World View, zoom out (Tiberium Alliance Zoom userscript needed) to include all POIs.",
+										toolTipText: "Exports the World POI List to a csv file. While in World View, zoom out (Tiberium Alliance Zoom userscript needed) to include all POIs.",
 										width: 140,
 										height: 25,
 										maxWidth: 140,
