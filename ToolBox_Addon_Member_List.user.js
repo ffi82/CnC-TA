@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           ToolBox_Addon_Member_List
 // @author         Lars
-// @description    Daten runterladen
+// @description    Export the Alliance Roster.
 // @include        https://cncapp*.alliances.commandandconquer.com/*/index.aspx*
 // @version        0.2
 // @contributor    ffi82
@@ -20,8 +20,8 @@
                     try
                     {
                         var ToolBoxMainFenster = window.ToolBoxMain.getInstance().ToolBoxFenster;
-                        var MemberListButton = new qx.ui.form.Button("MemberList").set({
-                            toolTipText: "Export the Alliance Members List",
+                        var MemberListButton = new qx.ui.form.Button("Member List").set({
+                            toolTipText: "Exports the Alliance Roster to a csv file.",
                             width: 140,
                             height: 25,
                             maxWidth: 140,
