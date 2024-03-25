@@ -3,7 +3,7 @@
 // @author         Lars
 // @description    Zoom out to Export POI Data while in world view.
 // @include        https://cncapp*.alliances.commandandconquer.com/*/index.aspx*
-// @version        0.3
+// @version        0.4
 // @contributor    ffi82
 // @grant          none
 // ==/UserScript==
@@ -32,12 +32,13 @@
 									});
 									POIButton.addListener("click", function (e)
 										{
-											var range = ClientLib.Data.MainData.GetInstance().get_World().get_WorldHeight();
-											var x = ClientLib.Data.MainData.GetInstance().get_World().get_WorldWidth();
-											var y = ClientLib.Data.MainData.GetInstance().get_World().get_WorldHeight();
+											var range = ClientLib.Data.MainData.GetInstance().get_Server().get_ContinentWidth();
+											var x = ClientLib.Data.MainData.GetInstance().get_Server().get_ContinentWidth();
+											var y = ClientLib.Data.MainData.GetInstance().get_Server().get_ContinentHeight();
 											var region = ClientLib.Vis.VisMain.GetInstance().get_Region();
-											var POIScore = []; for (var i = 0; i <= ClientLib.Data.MainData.GetInstance().get_Server().get_MaxCenterLevel(); i++) {POIScore [i] = ClientLib.Base.PointOfInterestTypes.GetScoreByLevel(i);}
-                                        	var Reactor  = new Array();
+											var POIScore = []; for (var a = 0; a <= ClientLib.Data.MainData.GetInstance().get_Server().get_MaxCenterLevel(); a++) {POIScore [a] = ClientLib.Base.PointOfInterestTypes.GetScoreByLevel(a);}
+											//var POIRank = []; for (var b = 0; b < 42; b++) {POIRank [b] = ClientLib.Base.PointOfInterestTypes.GetBoostModifierByRank();}
+											var Reactor  = new Array();
 											var Tiberium = new Array();
 											var Crystal = new Array();
 											var Tungsten = new Array();
@@ -46,8 +47,8 @@
 											var Resonator = new Array();
 											var AllPOIs = new Array();
 											var output = "";
-											output += "level,name,coord_x,coord_y,alliance,score\r\n"
-
+											//output += ClientLib.Data.MainData.GetInstance().get_Server().get_Name() + "," + new Date().toLocaleString() + "\n"
+											output += "level,name,coord_x,coord_y,alliance,score,type\r\n"
 											for (var i = x - (range); i < (x+range); i++)
 											{
 												for (var j = y - range; j < (y+range); j++)
@@ -57,18 +58,17 @@
 													{
 														try
 														{
-															if (visObject.get_VisObjectType() ==
-
-															ClientLib.Vis.VisObject.EObjectType.RegionPointOfInterest)
+															if (visObject.get_VisObjectType() == ClientLib.Vis.VisObject.EObjectType.RegionPointOfInterest)
 															{
 																var visObjectName = visObject.get_Name();
 																if(visObjectName == 'Tunnel exit') {}
 																else
 																{
 																	var POIlevel = visObject.get_Level();
+																	var POItype = visObject.get_Type();
 																	var Alliance = visObject.get_OwnerAllianceName();
 																	var visObjectShortName = visObjectName.split(' ')[0];
-																	var POIdata = POIlevel + ',' + visObjectShortName + ',' + i + ',' + j + ',' + Alliance + ',' + POIScore[POIlevel];
+																	var POIdata = POIlevel + ',' + visObjectShortName + ',' + i + ',' + j + ',' + Alliance + ',' + POIScore[POIlevel] + ',' + POItype;
 																	AllPOIs.push(POIdata);
 																	if(visObjectShortName == "Aircraft") { Aircraft.push(POIdata); }
 																	if(visObjectShortName == "Uranium") { Uranium.push(POIdata); }
@@ -84,7 +84,6 @@
 													}
 												}
 											}
-
 											Aircraft.sort();
 											Uranium.sort();
 											Tungsten.sort();
@@ -92,14 +91,13 @@
 											Reactor.sort();
 											Crystal.sort();
 											Resonator.sort();
-
 											for (var key in Aircraft) { output += Aircraft[key] + "\n"}
-											for (var key in Uranium) { output += Uranium[key] + "\n"}
-											for (var key in Tungsten) { output += Tungsten[key] + "\n"}
-											for (var key in Tiberium) { output += Tiberium[key] + "\n"}
-											for (var key in Reactor) { output += Reactor[key] + "\n"}
-											for (var key in Crystal) { output += Crystal[key] + "\n"}
-											for (var key in Resonator) { output += Resonator[key] + "\n"}
+											for (key in Uranium) { output += Uranium[key] + "\n"}
+											for (key in Tungsten) { output += Tungsten[key] + "\n"}
+											for (key in Tiberium) { output += Tiberium[key] + "\n"}
+											for (key in Reactor) { output += Reactor[key] + "\n"}
+											for (key in Crystal) { output += Crystal[key] + "\n"}
+											for (key in Resonator) { output += Resonator[key] + "\n"}
 											var elLink = document.createElement("a");
 											var oBlob = new Blob([ output ], { type: "text/plain" });
 											elLink.download = "/POI_list.csv";
@@ -114,66 +112,66 @@
 							}
 							catch (e)
 							{
-							console.log("POI list Error: ");
-							console.log(e.toString());
-						}
-						console.log("POI list loaded successfully");
-					},
-					destruct: function() {},
-					members: {}
-				});
-		}
-		function waitForGame()
-		{
-			try
+								console.log("POI list Error: ");
+								console.log(e.toString());
+							}
+							console.log("POI list loaded successfully");
+						},
+						destruct: function() {},
+						members: {}
+					});
+			}
+			function waitForGame()
 			{
-				if (typeof qx != 'undefined' && typeof qx.core != 'undefined' && typeof qx.core.Init != 'undefined' && qx.core.Init.getApplication() !== null && typeof window.ToolBoxMain != 'undefined')
+				try
 				{
-					var app = qx.core.Init.getApplication();
-					if (app.initDone === true && typeof window.ToolBoxMain != 'undefined')
+					if (typeof qx != 'undefined' && typeof qx.core != 'undefined' && typeof qx.core.Init != 'undefined' && qx.core.Init.getApplication() !== null && typeof window.ToolBoxMain != 'undefined')
 					{
-						try
+						var app = qx.core.Init.getApplication();
+						if (app.initDone === true && typeof window.ToolBoxMain != 'undefined')
 						{
-							createClass();
-							//console.log("Creating phe.cnc function wraps");
-							if (typeof phe.cnc.Util.attachNetEvent == 'undefined')
+							try
 							{
-								ToolBox_POI.attachNetEvent = webfrontend.gui.Util.attachNetEvent;
-								ToolBox_POI.detachNetEvent = webfrontend.gui.Util.detachNetEvent;
+								createClass();
+								//console.log("Creating phe.cnc function wraps");
+								if (typeof phe.cnc.Util.attachNetEvent == 'undefined')
+								{
+									ToolBox_POI.attachNetEvent = webfrontend.gui.Util.attachNetEvent;
+									ToolBox_POI.detachNetEvent = webfrontend.gui.Util.detachNetEvent;
+								}
+								else
+								{
+									ToolBox_POI.attachNetEvent = phe.cnc.Util.attachNetEvent;
+									ToolBox_POI.detachNetEvent = phe.cnc.Util.detachNetEvent;
+								}
+								if (typeof phe.cnc.gui.util == 'undefined')
+								ToolBox_POI.getInstance().formatNumbersCompact = webfrontend.gui.Util.formatNumbersCompact;
+								else
+								ToolBox_POI.getInstance().formatNumbersCompact = phe.cnc.gui.util.Numbers.formatNumbersCompact;
+								ToolBox_POI.getInstance();
 							}
-							else
+							catch(e)
 							{
-								ToolBox_POI.attachNetEvent = phe.cnc.Util.attachNetEvent;
-								ToolBox_POI.detachNetEvent = phe.cnc.Util.detachNetEvent;
+								console.log("ToolBox_Addon_POI_List waitforgame Error:");
+								console.log(e);
 							}
-							if (typeof phe.cnc.gui.util == 'undefined')
-							ToolBox_POI.getInstance().formatNumbersCompact = webfrontend.gui.Util.formatNumbersCompact;
-							else
-							ToolBox_POI.getInstance().formatNumbersCompact = phe.cnc.gui.util.Numbers.formatNumbersCompact;
-							ToolBox_POI.getInstance();
 						}
-						catch(e)
-						{
-							console.log("ToolBox_Addon_POI_List waitforgame Error:");
-							console.log(e);
-						}
+						else window.setTimeout(waitForGame, 1000);
 					}
-					else window.setTimeout(waitForGame, 1000);
+					else { window.setTimeout(waitForGame, 1000); }
 				}
-				else { window.setTimeout(waitForGame, 1000); }
+				catch (e)
+				{
+					if (typeof console != 'undefined') console.log(e);
+					else if (window.opera) opera.postError(e);
+					else GM_log(e);
+				}
 			}
-			catch (e)
-			{
-				if (typeof console != 'undefined') console.log(e);
-				else if (window.opera) opera.postError(e);
-				else GM_log(e);
-			}
-		}
-		window.setTimeout(waitForGame, 1000);
-	};
-	var script = document.createElement("script");
-	var txt = injectFunction.toString();
-	script.innerHTML = "(" + txt + ")();";
-	script.type = "text/javascript";
-	document.getElementsByTagName("head")[0].appendChild(script);
-})();
+			window.setTimeout(waitForGame, 1000);
+		};
+		var script = document.createElement("script");
+		var txt = injectFunction.toString();
+		script.innerHTML = "(" + txt + ")();";
+		script.type = "text/javascript";
+		document.getElementsByTagName("head")[0].appendChild(script);
+	})();	
