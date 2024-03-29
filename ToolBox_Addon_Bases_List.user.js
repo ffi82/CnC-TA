@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name           ToolBox_Addon_Bases_List
 // @author         Lars
-// @description    Zoom out to Export Bases Data while in World View.
+// @description    Zoom out to export visible player bases data while in region/world view.
 // @include        https://cncapp*.alliances.commandandconquer.com/*/index.aspx*
 // @version        0.5
 // @contributor    ffi82
@@ -24,7 +24,7 @@
 								var ToolBoxMainFenster = window.ToolBoxMain.getInstance().ToolBoxFenster;
 								var POIButton = new qx.ui.form.Button("Player Bases List").set(
 									{
-										toolTipText: "Exports the World Player Bases List to a csv file. While in World View, zoom out (Tiberium Alliance Zoom userscript needed) to include all Player Bases.",
+										toolTipText: "Exports the World Player Bases List to a csv file. Will zoom out max... decent hardware needed. Click a 2nd time after the zooming is done if it fails to grab the proper list the 1st time.",
 										width: 140,
 										height: 25,
 										maxWidth: 140,
@@ -32,6 +32,8 @@
 									});
 									POIButton.addListener("click", function (e)
 										{
+											ClientLib.API.Util.SetPlayAreaView(9);
+											ClientLib.Vis.VisMain.GetInstance().get_Region().set_ZoomFactor(0.01);
 											var range = ClientLib.Data.MainData.GetInstance().get_World().get_WorldHeight();
 											var x = ClientLib.Data.MainData.GetInstance().get_World().get_WorldWidth();
 											var y = ClientLib.Data.MainData.GetInstance().get_World().get_WorldHeight();
