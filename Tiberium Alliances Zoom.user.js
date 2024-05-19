@@ -1,13 +1,17 @@
 // ==UserScript==
-// @name        Tiberium Alliances Zoom
-// @description Allows you to zoom out further
-// @namespace   https://cncapp*.alliances.commandandconquer.com/*/index.aspx*
-// @match       https://*.alliances.commandandconquer.com/*/index.aspx*
-// @version     1.0.5.1
-// @author      Original: Panavia -- Updated By: Gryphon -- New code by NetquiK (https://github.com/netquik)
+// @name          Tiberium Alliances Zoom
+// @author        Panavia
+// @description   Allows you to zoom out further. (max zoom mod)
+// @namespace     https://*.alliances.commandandconquer.com/*/index.aspx*
+// @match         https://*.alliances.commandandconquer.com/*/index.aspx*
+// @version       1.0.5.2
+// @contributor   Gryphon, NetquiK (https://github.com/netquik), ffi82
+// @downloadURL   https://raw.githubusercontent.com/netquik/CnCTA-SoO-SCRIPT-PACK/master/TA_Zoom.user.js
+// @updateURL     https://raw.githubusercontent.com/netquik/CnCTA-SoO-SCRIPT-PACK/master/TA_Zoom.user.js
+
 // ==/UserScript==
 
-/* 
+/*
 codes by NetquiK
 ----------------
 - New Code
