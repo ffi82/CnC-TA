@@ -9,8 +9,7 @@ Customize the way C&C-TA (http://tiberiumalliances.com.) displays or behaves, by
 ## Browsers:
  - <img src="https://www.mozilla.org/media/protocol/img/logos/firefox/browser/logo.eb1324e44442.svg" height="20"/> [**Mozilla Firefox**](https://mozilla.org/firefox/all/) -  Gecko/Quantum engine
  - <img src="https://www.google.com/chrome/static/images/chrome-logo-m100.svg" height="20"/> [**Google Chrome**](https://www.google.com/chrome/) - Blink engine
- - <img src="https://cdn-production-opera-website.operacdn.com/staticfiles/assets/images/logo/logo-flat.724a32ec0873.svg" height="20"/> [**Opera**](https://www.opera.com/) 
-- Blink engine
+ - <img src="https://cdn-production-opera-website.operacdn.com/staticfiles/assets/images/logo/logo-flat.724a32ec0873.svg" height="20"/> [**Opera**](https://www.opera.com/) - Blink engine
  - <img src="https://edgestatic.azureedge.net/shared/cms/lrs1c69a1j/section-images/2c3f3c46bd764335beec466a0acfde0e.png" height="20"/> [**Microsoft Edge**](https://www.microsoft.com/edge/) - Blink engine
  - <img src="https://www.waterfox.net/images/waterfox-icon.svg" height="20"/> [**Waterfox**](http://www.waterfoxproject.org/) (browser for x64 systems, speed and privacy oriented, based on the Mozilla platform) - Gecko/Quantum engine
  - <img src="https://support.apple.com/content/dam/edam/applecare/images/en_US/psp/psp_heroes/mini-hero-safari.png" height="20"/> [**Safari**](https://www.apple.com/safari/) - WebKit engine
