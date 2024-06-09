@@ -17,7 +17,7 @@ Browsers:
 
 Userscript managers:
   1. <img src="https://www.tampermonkey.net/images/ape.svg" height="20"/> [Tampermonkey](https://www.tampermonkey.net/) (Available for Chrome, Microsoft Edge, Safari, Opera Next, and Firefox.)
-  2. <img src="[https://www.tampermonkey.net/images/ape.svg](https://violentmonkey.github.io/static/vm-6437e4e5a400c6eff1c23ead4d549b0a.png)" height="20"/> [Violentmonkey](https://violentmonkey.github.io/) (Built with WebExtension APIs. It supports a lot of browsers. You can either install it from web stores or build from source code.)
+  2. <img src="https://violentmonkey.github.io/static/vm-6437e4e5a400c6eff1c23ead4d549b0a.png" height="20"/> [Violentmonkey](https://violentmonkey.github.io/) (Built with WebExtension APIs. It supports a lot of browsers. You can either install it from web stores or build from source code.)
   3.  <img src="https://addons.mozilla.org/user-media/addon_icons/0/748-64.png" height="20"/> [Greasemonkey](https://www.greasespot.net/) (Available for Firefox / Waterfox )
   4.  <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/60/80/51/60805145-b1d7-ada7-774e-5baeb7055b15/AppIcon-85-220-4-2x.png/246x0w.webp" height="20"/> [Userscripts](https://github.com/quoid/userscripts) (for [Safari](https://apps.apple.com/us/app/userscripts/id1463298887))
   
