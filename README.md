@@ -1,5 +1,4 @@
 # ![Image](https://media.contentapi.ea.com/content/dam/eacom/en-us/common/hero-cncta-logo.png)
-***
 Customize the way C&C-TA (http://tiberiumalliances.com.) displays or behaves, by using small bits of JavaScript.
 ***
 ## How to get them:
