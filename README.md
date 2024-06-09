@@ -8,7 +8,7 @@ How to get them:
   3. Install the scripts that you want.
 
 Browsers:
-  1. ![Image]([https://www.mozilla.org/media/protocol/img/logos/firefox/logo.fedb52c912d6.svg](https://github.com/alrra/browser-logos/blob/main/src/firefox/firefox_24x24.png))[Mozilla Firefox](https://mozilla.org/firefox/all/) -  Gecko/Quantum engine
+  1. ![Image](https://github.com/alrra/browser-logos/blob/main/src/firefox/firefox_24x24.png)[Mozilla Firefox](https://mozilla.org/firefox/all/) -  Gecko/Quantum engine
   2. [Google Chrome](https://www.google.com/chrome/) - Blink engine
   3. [Opera](https://www.opera.com/) - Blink engine
   4. [Microsoft Edge](https://www.microsoft.com/edge/) - Blink engine
