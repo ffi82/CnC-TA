@@ -2,12 +2,12 @@
 
 Customize the way C&C-TA (http://tiberiumalliances.com.) displays or behaves, by using small bits of JavaScript.
 
-<h2>How to get them:</h2>
- 1. Install a browser.
+## How to get them:
+	1. Install a browser.
  2. Install an addon depending on which browser you use.
  3. Install the userscripts that you want.
 
-<h2>Browsers:</h2>
+## Browsers:
  - <img src="https://www.mozilla.org/media/protocol/img/logos/firefox/browser/logo.eb1324e44442.svg" height="20"/> [**Mozilla Firefox**](https://mozilla.org/firefox/all/) -  Gecko/Quantum engine
  - <img src="https://www.google.com/chrome/static/images/chrome-logo-m100.svg" height="20"/> [**Google Chrome**](https://www.google.com/chrome/) - Blink engine
  - <img src="https://cdn-production-opera-website.operacdn.com/staticfiles/assets/images/logo/logo-flat.724a32ec0873.svg" height="20"/> [**Opera**](https://www.opera.com/) 
@@ -17,7 +17,7 @@ Customize the way C&C-TA (http://tiberiumalliances.com.) displays or behaves, by
  - <img src="https://support.apple.com/content/dam/edam/applecare/images/en_US/psp/psp_heroes/mini-hero-safari.png" height="20"/> [**Safari**](https://www.apple.com/safari/) - WebKit engine
  - etc.
 
-<h2>Userscript managers:</h2>
+## Userscript managers:
  - <img src="https://www.tampermonkey.net/images/ape.svg" height="20"/> [**Tampermonkey**](https://www.tampermonkey.net/) (available for Chrome, Microsoft Edge, Safari, Opera Next, and Firefox.)
  - <img src="https://violentmonkey.github.io/static/vm-6437e4e5a400c6eff1c23ead4d549b0a.png" height="20"/> [**Violentmonkey**](https://violentmonkey.github.io/) (Built with WebExtension APIs. It supports a lot of browsers. You can either install it from web stores or build from source code.)
  - <img src="https://addons.mozilla.org/user-media/addon_icons/0/748-64.png" height="20"/> [**Greasemonkey**](https://www.greasespot.net/) (available for Firefox / Waterfox )
