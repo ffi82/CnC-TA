@@ -12,7 +12,7 @@ Browsers:
   2. ![Image]([https://github.com/alrra/browser-logos/blob/main/src/firefox/firefox_16x16.png](https://github.com/alrra/browser-logos/blob/main/src/chrome/chrome_16x16.png)) [Google Chrome](https://www.google.com/chrome/) - Blink engine
   3. ![Image](https://github.com/alrra/browser-logos/blob/main/src/opera/opera_16x16.png) [Opera](https://www.opera.com/) - Blink engine
   4. ![Image](https://github.com/alrra/browser-logos/blob/main/src/edge/edge_16x16.png) [Microsoft Edge](https://www.microsoft.com/edge/) - Blink engine
-  5. ![Image](https://www.waterfox.net/images/waterfox-icon.svg =20x) [Waterfox](http://www.waterfoxproject.org/) (browser for x64 systems, speed and privacy oriented, based on the Mozilla platform) - Gecko/Quantum engine
+  5. ![Image](https://www.waterfox.net/images/waterfox-icon.svg =20x16) [Waterfox](http://www.waterfoxproject.org/) (browser for x64 systems, speed and privacy oriented, based on the Mozilla platform) - Gecko/Quantum engine
   6. ![Image](https://github.com/alrra/browser-logos/blob/main/src/safari/safari_16x16.png) [Safari](https://www.apple.com/safari/) - WebKit engine
 
 Userscript managers:
