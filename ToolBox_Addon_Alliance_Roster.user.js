@@ -2,7 +2,7 @@
 // @name           ToolBox_Addon_Alliance_Roster
 // @author         ffi82
 // @description    Export the Alliance Roster.
-// @version        0.3
+// @version        0.4
 // @namespace      https://cncapp*.alliances.commandandconquer.com/*/index.aspx*
 // @include        https://cncapp*.alliances.commandandconquer.com/*/index.aspx*
 // @icon           https://eaassets-a.akamaihd.net/cncalliancesgame/cdn/data/254d274a83ddd44d9bea525f6c4010d1.png
@@ -34,28 +34,28 @@
                             var allmembers = ClientLib.Data.MainData.GetInstance().get_Alliance().get_MemberDataAsArray();
                             var membercount = ClientLib.Data.MainData.GetInstance().get_Alliance().get_NumMembers();
                             var dateitext = "";
-                            dateitext += "ActiveState;AvgDefenseLvl;AvgOffenseLvl;Bases;BestDefenseLvl;BestOffenseLvl;Faction;HasControlHubCode;Id;JoinStep;LastSeen;Level;Name;OnlineState;Points;Rank;Role;RoleName;VeteranPointContribution\r\n"
+                            dateitext += "ActiveState,AvgDefenseLvl,AvgOffenseLvl,Bases,BestDefenseLvl,BestOffenseLvl,Faction,HasControlHubCode,Id,JoinStep,LastSeen,Level,Name,OnlineState,Points,Rank,Role,RoleName,VeteranPointContribution\r\n"
                             for (var l = membercount - 1; l >= 0; l--) {
                                 var tempmember = allmembers[l];
                                 dateitext +=
-                                    tempmember.ActiveState + ";" +
-                                    tempmember.AvgDefenseLvl + ";" +
-                                    tempmember.AvgOffenseLvl + ";" +
-                                    tempmember.Bases + ";" +
-                                    tempmember.BestDefenseLvl + ";" +
-                                    tempmember.BestOffenseLvl + ";" +
-                                    tempmember.Faction + ";" +
-                                    tempmember.HasControlHubCode + ";" +
-                                    tempmember.Id + ";" +
-                                    tempmember.JoinStep + ";" +
-                                    tempmember.LastSeen + ";" +
-                                    tempmember.Level + ";" +
-                                    tempmember.Name + ";" +
-                                    tempmember.OnlineState + ";" +
-                                    tempmember.Points + ";" +
-                                    tempmember.Rank + ";" +
-                                    tempmember.Role + ";" +
-                                    tempmember.RoleName + ";" +
+                                    tempmember.ActiveState + "," +
+                                    tempmember.AvgDefenseLvl + "," +
+                                    tempmember.AvgOffenseLvl + "," +
+                                    tempmember.Bases + "," +
+                                    tempmember.BestDefenseLvl + "," +
+                                    tempmember.BestOffenseLvl + "," +
+                                    tempmember.Faction + "," +
+                                    tempmember.HasControlHubCode + "," +
+                                    tempmember.Id + "," +
+                                    tempmember.JoinStep + "," +
+                                    tempmember.LastSeen + "," +
+                                    tempmember.Level + "," +
+                                    tempmember.Name + "," +
+                                    tempmember.OnlineState + "," +
+                                    tempmember.Points + "," +
+                                    tempmember.Rank + "," +
+                                    tempmember.Role + "," +
+                                    tempmember.RoleName + "," +
                                     tempmember.VeteranPointContribution + "\r\n"
                             }
                             var elLink = document.createElement("a");
