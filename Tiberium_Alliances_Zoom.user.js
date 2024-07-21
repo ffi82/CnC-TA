@@ -7,7 +7,7 @@
 // @contributor Gryphon, NetquiK (https://github.com/netquik), ffi82
 // @downloadURL https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
 // @updateURL   https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
-// @match       https://*.alliances.commandandconquer.com/*/index.aspx*
+// @match       https://*.alliances.commandandconquer.com/*/*
 // ==/UserScript==
 (function() {
     var tazoom_main = function() {
