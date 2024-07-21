@@ -1,15 +1,15 @@
 // ==UserScript==
-// @name		ToolBox_Addon_Player_Bases_List
-// @author		ffi82
+// @name	ToolBox_Addon_Player_Bases_List
+// @author	ffi82
 // @description	Exports all visible (no ghost) Player Bases list to a .csv file. (Requires the "Tiberium Alliances Zoom" userscript.)
-// @version		2024.07.21
-// @match		https://*.alliances.commandandconquer.com/*/*
-// @icon		https://eaassets-a.akamaihd.net/cncalliancesgame/cdn/data/d5e540d5859558e8c5b6aafd00d8462a.png
+// @version	2024.07.21
+// @match	https://*.alliances.commandandconquer.com/*/*
+// @icon	https://eaassets-a.akamaihd.net/cncalliancesgame/cdn/data/d5e540d5859558e8c5b6aafd00d8462a.png
 // @homepage    https://github.com/ffi82/CnC-TA
 // @downloadURL	https://github.com/ffi82/CnC-TA/raw/master/ToolBox_Addon_Player_Bases_List.user.js
 // @updateURL	https://github.com/ffi82/CnC-TA/raw/master/ToolBox_Addon_Player_Bases_List.user.js
-// @require		https://github.com/ffi82/CnC-TA/raw/master/Tiberium%20Alliances%20Zoom.user.js
-// @grant		none
+// @require	https://github.com/ffi82/CnC-TA/raw/master/Tiberium%20Alliances%20Zoom.user.js
+// @grant	none
 // ==/UserScript==
 (function() {
     var injectFunction = function() {
