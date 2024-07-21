@@ -1,16 +1,16 @@
 // ==UserScript==
-// @name	ToolBox_Addon_POI_List
-// @namespace	https://github.com/ffi82/CnC-TA
-// @version	2024.07.21
-// @description	Exports all world POI list to a .csv file.
-// @author	ffi82
-// @contributor	Lars (Sral214)
-// @match	https://*.alliances.commandandconquer.com/*/*
-// @icon	https://eaassets-a.akamaihd.net/cncalliancesgame/cdn/data/239cf2e67b8ceffc9956c76050a16af2.png
-// @downloadURL	https://github.com/ffi82/CnC-TA/raw/master/ToolBox_Addon_POI_List.user.js
-// @updateURL	https://github.com/ffi82/CnC-TA/raw/master/ToolBox_Addon_POI_List.user.js
-// @require	https://github.com/ffi82/CnC-TA/raw/master/Tiberium%20Alliances%20Zoom.user.js
-// @grant	none
+// @name        ToolBox_Addon_POI_List
+// @namespace   https://github.com/ffi82/CnC-TA
+// @version     2024.07.21
+// @description Exports all world POI list to a .csv file.
+// @author      ffi82
+// @contributor Lars (Sral214)
+// @match       https://*.alliances.commandandconquer.com/*/*
+// @icon        https://eaassets-a.akamaihd.net/cncalliancesgame/cdn/data/239cf2e67b8ceffc9956c76050a16af2.png
+// @downloadURL https://github.com/ffi82/CnC-TA/raw/master/ToolBox_Addon_POI_List.user.js
+// @updateURL   https://github.com/ffi82/CnC-TA/raw/master/ToolBox_Addon_POI_List.user.js
+// @require     https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
+// @grant       none
 // ==/UserScript==
 (function() {
     var injectFunction = function() {
