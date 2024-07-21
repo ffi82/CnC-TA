@@ -1,13 +1,13 @@
 // ==UserScript==
-// @name		Tiberium Alliances Zoom (Max)
-// @namespace	https://www.tiberiumalliances.com
-// @version		1.0.5.3
-// @description	Allows you to zoom out further.
-// @author		Panavia
-// @contributor	Gryphon, NetquiK (https://github.com/netquik), ffi82
-// @downloadURL	https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
-// @updateURL	https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
-// @match		https://*.alliances.commandandconquer.com/*/index.aspx*
+// @name        Tiberium Alliances Zoom (Max)
+// @namespace   https://www.tiberiumalliances.com
+// @version     1.0.5.3
+// @description Allows you to zoom out further.
+// @author      Panavia
+// @contributor Gryphon, NetquiK (https://github.com/netquik), ffi82
+// @downloadURL https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
+// @updateURL   https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
+// @match       https://*.alliances.commandandconquer.com/*/index.aspx*
 // ==/UserScript==
 (function() {
     var tazoom_main = function() {
