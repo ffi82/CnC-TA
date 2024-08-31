@@ -1,13 +1,13 @@
 "use strict";
 // ==UserScript==
-// @name         C&C-TA Lister
+// @name         CnC-TA Lister
 // @namespace    https://github.com/ffi82/CnC-TA/
 // @version      2024-08-31
 // @description  Under "scripts" menu, click to download CSV files containing Alliances, Playes, Cities, Alliance Roster and POIs data. Click (---> confirm prompts for POIs list <- uses ClientLib.Vis) ---> wait ---> check your downloads folder for new .csv file/s ---> check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox
 // @author       ffi82
 // @contributor  leo7044 (https://github.com/leo7044/CnC_TA), bloofi (https://github.com/bloofi), c4l10s <== i took pieces of code from... indirect contribution :P
-// @downloadURL  https://github.com/ffi82/CnC-TA/raw/master/C&C-TA_Lister.user.js
-// @updateURL    https://github.com/ffi82/CnC-TA/raw/master/C&C-TA_Lister.user.js
+// @downloadURL  https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
+// @updateURL    https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
 // @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=
 // @grant        none
