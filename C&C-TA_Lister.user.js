@@ -5,6 +5,7 @@
 // @version      2024-08-31
 // @description  Under "scripts" menu, click to download CSV files containing Alliances, Playes, Cities, Alliance Roster and POIs data. Click (---> confirm prompts for POIs list <- uses ClientLib.Vis) ---> wait ---> check your downloads folder for new .csv file/s ---> check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox
 // @author       ffi82
+// @contributor  leo7044 (https://github.com/leo7044/CnC_TA), bloofi (https://github.com/bloofi), c4l10s <== i took pieces of code from... indirect contribution :P
 // @downloadURL  https://github.com/ffi82/CnC-TA/raw/master/C&C-TA_Lister.user.js
 // @updateURL    https://github.com/ffi82/CnC-TA/raw/master/C&C-TA_Lister.user.js
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
@@ -18,11 +19,12 @@
         function init() {
             const ScriptsButton = qx.core.Init.getApplication().getMenuBar().getScriptsButton();
             const children = ScriptsButton.getMenu().getChildren();
-            ScriptsButton.Add('Alliances', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=');
-            ScriptsButton.Add('Players and Cities', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=');
-            ScriptsButton.Add('Player Hall of Fame', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=');
-            ScriptsButton.Add('Alliance Roster', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=');
-            ScriptsButton.Add('Points of Interest', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=');
+            const icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=';
+            ScriptsButton.Add('Alliances', icon);
+            ScriptsButton.Add('Players and Cities', icon);
+            ScriptsButton.Add('Player Hall of Fame', icon);
+            ScriptsButton.Add('Alliance Roster', icon);
+            ScriptsButton.Add('Points of Interest', icon);
             children[children.length - 5].addListener('execute', getAlliances, this);
             children[children.length - 4].addListener('execute', getPlayersAndCities, this);
             children[children.length - 3].addListener('execute', getPlayerHallOfFame, this);
