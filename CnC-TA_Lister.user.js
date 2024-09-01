@@ -1,16 +1,17 @@
 "use strict";
 // ==UserScript==
-// @name         CnC-TA Lister
-// @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2024-08-31
-// @description  Under "scripts" menu, click to download CSV files containing Alliances, Playes, Cities, Alliance Roster and POIs data. Click (---> confirm prompts for POIs list <- uses ClientLib.Vis) ---> wait ---> check your downloads folder for new .csv file/s ---> check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox
-// @author       ffi82
-// @contributor  leo7044 (https://github.com/leo7044/CnC_TA), bloofi (https://github.com/bloofi), c4l10s <== i took pieces of code from... indirect contribution :P
-// @downloadURL  https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
-// @updateURL    https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
-// @match        https://*.alliances.commandandconquer.com/*/index.aspx*
-// @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=
-// @grant        none
+// @name        CnC-TA Lister
+// @namespace   https://github.com/ffi82/CnC-TA/
+// @version     2024-09-01
+// @description Under "scripts" menu, click to download CSV files containing Alliances, Playes, Cities, Alliance Roster and POIs data. Click (---> confirm prompts for POIs list <- uses ClientLib.Vis) ---> wait ---> check your downloads folder for new .csv file/s ---> check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox
+// @author      ffi82
+// @contributor leo7044 (https://github.com/leo7044/CnC_TA), bloofi (https://github.com/bloofi), c4l10s <== i took pieces of code from... indirect contribution :P
+// @downloadURL https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
+// @updateURL   https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
+// @match       https://*.alliances.commandandconquer.com/*/index.aspx*
+// @icon        data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=
+// @require     https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
+// @grant       none
 // ==/UserScript==
 
 (function () {
@@ -49,7 +50,7 @@
 
         //get Alliances list
         var timestamp = performance.now();
-        var Alliances = "Ranking,Alliance Id,Alliance Name,Alliance Has Won,Member Count,Base Count,Top 40 scores,Average Score,Total Score,Event Rank,Event Score,fac,Abbreviation,CiC Player Id,Bases destroyed,PvE,PvP,POI Count,ii,EndGame Won Rank,EndGame Won Step,Description\n";
+        var Alliances = "Ranking,Alliance Id,Alliance Name,Alliance Has Won,Member Count,Base Count,Top 40 scores,Average Score,Total Score,Event Rank,Event Score,Average Faction,Abbreviation,CiC Player Id,Bases destroyed,PvE,PvP,POI Count,Is Inactive,EndGame Won Rank,EndGame Won Step,Description\n";
         var AlliancesArr = [];
         var AlliancesArr2 = [];
         function getAlliances() {
@@ -92,7 +93,7 @@
         }
 
         //get Players and Cities lists
-        var Players = "Ranking,Player Id,Player Name,Faction,Score,Alliance Id,Alliance Name,Bases,Bases destroyed,PvE,PvP,Has Code,Fortresses annihilated,Challange achievements,Other achievements,Distance to Center,Is Inactive,lr,mv,np,nr,sli.length,vp,World,Rank,Alliance,Timestamp,Member Role,Faction,is,iv\n";
+        var Players = "Ranking,Player Id,Player Name,Faction,Score,Alliance Id,Alliance Name,Bases,Bases destroyed,PvE,PvP,Has Code,Fortresses annihilated,Challange achievements,Other achievements,Distance to Center,Is Inactive,lr,mv,np,nr,sli.length,Veteran Points,World,Rank,Alliance,Timestamp,Member Role,Faction,is,iv\n";
         var Cities = "Alliance Name,Alliance Id,Player Name,Player Id,Base Name,Base Id,Player Faction,Base is Ghost,Player has Won,Base Score,Coord X,Coord Y\n";
         var PlayersArr = [];
         var PlayersArr2 = [];
@@ -155,7 +156,7 @@
             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicCityInfoById', {
                 id: n
             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
-                CitiesArr.push(String([data.an, data.a, data.pn, data.p, data.n, data.i, data.f, data.w, data.g, data.po, data.x, data.y]));
+                CitiesArr.push(String([data.an, data.a, data.pn, data.p, data.n, data.i, data.f, data.g, data.w, data.po, data.x, data.y]));
                 if (CitiesArr.length === BaseCount) {
                     for (let c = 0; c < CitiesArr.length; c++) {
                         Cities += String(CitiesArr.at(c)) + "\n";
