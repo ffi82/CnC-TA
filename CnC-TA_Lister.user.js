@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name        CnC-TA Lister
 // @namespace   https://github.com/ffi82/CnC-TA/
-// @version     2024-09-01
+// @version     2024-09-02
 // @description Under "scripts" menu, click to download CSV files containing Alliances, Playes, Cities, Alliance Roster and POIs data. Click (---> confirm prompts for POIs list <- uses ClientLib.Vis) ---> wait ---> check your downloads folder for new .csv file/s ---> check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox
 // @author      ffi82
 // @contributor leo7044 (https://github.com/leo7044/CnC_TA), bloofi (https://github.com/bloofi), c4l10s <== i took pieces of code from... indirect contribution :P
@@ -17,6 +17,8 @@
 (function () {
     const script = () => {
         const scriptName = 'C&C-TA Lister';
+        var timestamp, Alliances, AlliancesArr, AlliancesArr2, Players, PlayersArr, PlayersArr2, CitiesArr, CitiesCount;
+
         function init() {
             const ScriptsButton = qx.core.Init.getApplication().getMenuBar().getScriptsButton();
             const children = ScriptsButton.getMenu().getChildren();
@@ -49,12 +51,9 @@
         }
 
         //get Alliances list
-        var timestamp = performance.now();
-        var Alliances = "Ranking,Alliance Id,Alliance Name,Alliance Has Won,Member Count,Base Count,Top 40 scores,Average Score,Total Score,Event Rank,Event Score,Average Faction,Abbreviation,CiC Player Id,Bases destroyed,PvE,PvP,POI Count,Is Inactive,EndGame Won Rank,EndGame Won Step,Description\n";
-        var AlliancesArr = [];
-        var AlliancesArr2 = [];
         function getAlliances() {
             timestamp = performance.now();
+            Alliances = "Ranking,Alliance Id,Alliance Name,Alliance Has Won,Member Count,Base Count,Top 40 scores,Average Score,Total Score,Event Rank,Event Score,Average Faction,Abbreviation,CiC Player Id,Bases destroyed,PvE,PvP,POI Count,Is Inactive,EndGame Won Rank,EndGame Won Step,Description\n";
             AlliancesArr = [];
             AlliancesArr2 = [];
             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand("RankingGetCount", {
@@ -93,18 +92,14 @@
         }
 
         //get Players and Cities lists
-        var Players = "Ranking,Player Id,Player Name,Faction,Score,Alliance Id,Alliance Name,Bases,Bases destroyed,PvE,PvP,Has Code,Fortresses annihilated,Challange achievements,Other achievements,Distance to Center,Is Inactive,lr,mv,np,nr,sli.length,Veteran Points,World,Rank,Alliance,Timestamp,Member Role,Faction,is,iv\n";
-        var Cities = "Alliance Name,Alliance Id,Player Name,Player Id,Base Name,Base Id,Player Faction,Base is Ghost,Player has Won,Base Score,Coord X,Coord Y\n";
-        var PlayersArr = [];
-        var PlayersArr2 = [];
-        var CitiesArr = [];
-        var BaseCount = 0;
         function getPlayersAndCities() {
             timestamp = performance.now();
+            Players = "Ranking,Player Id,Player Name,Faction,Score,Alliance Id,Alliance Name,Bases,Bases destroyed,PvE,PvP,Has Code,Fortresses annihilated,Challange achievements,Other achievements,Distance to Center,Is Inactive,lr,mv,np,nr,sli.length,Veteran Points,World,Rank,Alliance,Timestamp,Member Role,Faction,is,iv\n";
+            Cities = "Alliance Name,Alliance Id,Player Name,Player Id,Base Name,Base Id,Player Faction,Base is Ghost,Player has Won,Base Score,Coord X,Coord Y\n";
             PlayersArr = [];
             PlayersArr2 = [];
             CitiesArr = [];
-            BaseCount = 0;
+            CitiesCount = 0;
             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand("RankingGetCount", {
                 view: 0 // console.log(Object.entries(ClientLib.Data.Ranking.EViewType).sort(values));
             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, countof) => {
@@ -121,7 +116,7 @@
         function onPlayerRankingGetData(context, data) {
             for (const getPlayer of data.p) {
                 PlayersArr.push(getPlayer);
-                BaseCount += getPlayer.bc;
+                CitiesCount += getPlayer.bc;
                 getPublicPlayerInfoById(getPlayer.p);
             }
         }
@@ -157,7 +152,7 @@
                 id: n
             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
                 CitiesArr.push(String([data.an, data.a, data.pn, data.p, data.n, data.i, data.f, data.g, data.w, data.po, data.x, data.y]));
-                if (CitiesArr.length === BaseCount) {
+                if (CitiesArr.length === CitiesCount) {
                     for (let c = 0; c < CitiesArr.length; c++) {
                         Cities += String(CitiesArr.at(c)) + "\n";
                     }
