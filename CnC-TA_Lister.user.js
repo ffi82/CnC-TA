@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name        CnC-TA Lister
 // @namespace   https://github.com/ffi82/CnC-TA/
-// @version     2024-09-02
+// @version     2024-09-07
 // @description Under "scripts" menu, click to download CSV files containing Alliances, Playes, Cities, Alliance Roster and POIs data. Click (---> confirm prompts for POIs list <- uses ClientLib.Vis) ---> wait ---> check your downloads folder for new .csv file/s ---> check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox
 // @author      ffi82
 // @contributor leo7044 (https://github.com/leo7044/CnC_TA), bloofi (https://github.com/bloofi), c4l10s <== i took pieces of code from... indirect contribution :P
@@ -95,7 +95,7 @@
         function getPlayersAndCities() {
             timestamp = performance.now();
             Players = "Ranking,Player Id,Player Name,Faction,Score,Alliance Id,Alliance Name,Bases,Bases destroyed,PvE,PvP,Has Code,Fortresses annihilated,Challange achievements,Other achievements,Distance to Center,Is Inactive,lr,mv,np,nr,sli.length,Veteran Points,World,Rank,Alliance,Timestamp,Member Role,Faction,is,iv\n";
-            Cities = "Alliance Name,Alliance Id,Player Name,Player Id,Base Name,Base Id,Player Faction,Base is Ghost,Player has Won,Base Score,Coord X,Coord Y\n";
+            Cities = "Ranking,Alliance Name,Alliance Id,Player Name,Player Id,Base Name,Base Id,Player Faction,Base is Ghost,Player has Won,Base Score,Coord X,Coord Y\n";
             PlayersArr = [];
             PlayersArr2 = [];
             CitiesArr = [];
@@ -151,12 +151,14 @@
             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicCityInfoById', {
                 id: n
             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
-                CitiesArr.push(String([data.an, data.a, data.pn, data.p, data.n, data.i, data.f, data.g, data.w, data.po, data.x, data.y]));
+                CitiesArr.push({"Ranking":0,"Alliance_Name":data.an,"Alliance_Id":data.a,"Player_Name":data.pn,"Player_Id":data.p,"Base_Name":data.n,"Base_Id":data.i,"Player_Faction":data.f,"Base_is_Ghost":data.g,"Player_has_Won":data.w,"Base_Score":data.po,"Coord_X":data.x,"Coord_Y":data.y});
                 if (CitiesArr.length === CitiesCount) {
+                    CitiesArr.sort((a, b) => Number(b.Base_Score) - Number(a.Base_Score)); //Sort cities by score
                     for (let c = 0; c < CitiesArr.length; c++) {
-                        Cities += String(CitiesArr.at(c)) + "\n";
+                        CitiesArr.at(c).Ranking = c+1; //fill City Ranking by score
+                        Cities += Object.values(CitiesArr.at(c)) + "\n";
                     }
-                    console.log(JSON.stringify(CitiesArr, undefined, 4));
+                    console.table(CitiesArr);
                     getCSV(Cities, "Cities");
                     console.log(`%cCities (${CitiesArr.length}) list done in ${((performance.now() - timestamp) / 1000).toFixed(2)} seconds.`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
                 }
