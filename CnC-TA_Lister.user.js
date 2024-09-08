@@ -2,24 +2,25 @@
 // ==UserScript==
 // @name        CnC-TA Lister
 // @namespace   https://github.com/ffi82/CnC-TA/
-// @version     2024-09-07
-// @description Under "scripts" menu, click to download CSV files containing Alliances, Playes, Cities, Alliance Roster and POIs data. Click (---> confirm prompts for POIs list <- uses ClientLib.Vis) ---> wait ---> check your downloads folder for new .csv file/s ---> check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox
+// @version     2024-09-08
+// @description Under 'Scripts' menu, click to download CSV files containing Alliances, Players and Cities, Player Hall Of Fame, Alliance Roster or POIs data. How to: Click --> wait --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
 // @author      ffi82
 // @contributor leo7044 (https://github.com/leo7044/CnC_TA), bloofi (https://github.com/bloofi), c4l10s <== i took pieces of code from... indirect contribution :P
 // @downloadURL https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
 // @updateURL   https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
 // @match       https://*.alliances.commandandconquer.com/*/index.aspx*
-// @icon        data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=
+// @icon        data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAk5JREFUeF7tWctxwjAQlStIC1RAAxlmyDFpJWfOIWfOaSU5hhkqSAfpxEExGDBa7a5XljX244ok73v7tD9Vbua/aub4HQiAAmbOAK7AzAWAIDjaFdgdXt6u1bdZfb6PocZRCNgdnr+dq9a3gOv9ZvX1lJuE7AScPL8lgG5zKwEE5JYcFNAEP1wBxIAwAwiCyAKZCyKkQaTBzAygDkAdgEIIlSBKYfQCaIbQDaIbnFI3qJnwWipBzXekBa65GQoDoie8fQkIT5KdeX6QgIDQiNvzHyahDwEEePIbUu/7dSYCGDBBA7UE0OBbmCYVmAjwJvAG3ipBQwB/9j8J4xKgJUFKgAy8/TXJrICzEHmDG2MlBPBn0TFGc/9FMaCbevwmanDJG17vj2+C+1gzdAye6/t3wy4sNsu0G7gha1QBEW+R944joarcb127RchTsf8u61nw3TI7GiOSEyCLCVqhntfH7zzhsPwEDEMCH/CKIiAtCTz45nvBcds4CpBnB+46yMAXS4BNCXLwRROgJ6FJl1wK62qnyCtwbSSXIpu1Oq/fnl9gDLj3EtU92sAXfwV4JfT3PBNwh8gCqY1NcR754tSfAM/s68fjz2L5sLxPVsmMJnsLLkFePO/Bkz2EjYB499Y2N1JbB1gXa554J4naYVn0HgCb/Uh2WCIkIPqiazdzkBN47/vPigjQFzKDIFIcKgOvIuCSZyUDC4WtSZfqK0ixAgIVV1LTUxymLZ3VCkhhZGln9FJAaSAs9oAAC3tT2AsFTMGLFgxQgIW9Kez9A8eY4FA22gNKAAAAAElFTkSuQmCC
 // @require     https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
 // @grant       none
 // ==/UserScript==
 
 (function () {
     const script = () => {
-        const scriptName = 'C&C-TA Lister';
+        const scriptName = 'CnC-TA Lister';
         var timestamp, Alliances, AlliancesArr, AlliancesArr2, Players, PlayersArr, PlayersArr2, CitiesArr, CitiesCount;
 
         function init() {
+            console.log(`%c${scriptName} loaded`);
             const ScriptsButton = qx.core.Init.getApplication().getMenuBar().getScriptsButton();
             const children = ScriptsButton.getMenu().getChildren();
             const icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=';
