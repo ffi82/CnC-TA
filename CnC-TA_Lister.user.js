@@ -1,8 +1,7 @@
-"use strict";
 // ==UserScript==
 // @name        CnC-TA Lister
 // @namespace   https://github.com/ffi82/CnC-TA/
-// @version     2024-09-08
+// @version     2024-09-15
 // @description Under 'Scripts' menu, click to download CSV files containing Alliances, Players and Cities, Player Hall Of Fame, Alliance Roster or POIs data. How to: Click --> wait --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
 // @author      ffi82
 // @contributor leo7044 (https://github.com/leo7044/CnC_TA), bloofi (https://github.com/bloofi), c4l10s <== i took pieces of code from... indirect contribution :P
@@ -13,17 +12,37 @@
 // @require     https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
 // @grant       none
 // ==/UserScript==
-
 (function () {
+    'use strict';
     const script = () => {
         const scriptName = 'CnC-TA Lister';
-        var timestamp, Alliances, AlliancesArr, AlliancesArr2, Players, PlayersArr, PlayersArr2, CitiesArr, CitiesCount;
+        var timestamp,
+            Alliances,
+            AlliancesArr,
+            AlliancesArr2,
+            Players,
+            PlayersArr,
+            PlayersArr2,
+            CitiesArr,
+            CitiesCount,
+            pbContainer;
 
         function init() {
-            console.log(`%c${scriptName} loaded`);
+            console.log(`${scriptName} loaded`);
             const ScriptsButton = qx.core.Init.getApplication().getMenuBar().getScriptsButton();
             const children = ScriptsButton.getMenu().getChildren();
             const icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=';
+            pbContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({
+                padding: 0,
+                width: 115,
+                decorator: new qx.ui.decoration.Decorator().set({
+                    width: 1,
+                    style: "solid",
+                    color: "green"
+                }),
+                opacity: 0.8,
+            });
+            qx.core.Init.getApplication().getOptionsBar().getLayoutParent().getChildren()[0].getChildren()[2].addAt(pbContainer, 1);
             ScriptsButton.Add('Alliances', icon);
             ScriptsButton.Add('Players and Cities', icon);
             ScriptsButton.Add('Player Hall of Fame', icon);
@@ -35,7 +54,6 @@
             children[children.length - 2].addListener('execute', getAllianceRoster, this);
             children[children.length - 1].addListener('execute', getPOIs, this);
         }
-
         //list to .csv
         function getCSV(data, name) {
             var elLink = document.createElement("a");
@@ -50,7 +68,24 @@
             document.body.removeChild(elLink);
             elLink = null;
         }
-
+        //progress bar for the lists
+        function progressBar(pbIndex, pbLength, pbName) {
+            const pb = new qx.ui.basic.Label();
+            pb.set({
+                value: pbIndex + " / " + pbLength + " " + pbName,
+                width: 0,
+                height: 11,
+                textColor: "white",
+                font: qx.bom.Font.fromString("8px tahoma"),
+                backgroundColor: "black",
+                decorator: "main",
+                opacity: 0.8,
+            });
+            pbContainer.removeAll();
+            pbContainer.add(pb);
+            pb.setWidth(pbIndex / pbLength * 113);
+            if (pbIndex === pbLength) pbContainer.removeAll();
+        }
         //get Alliances list
         function getAlliances() {
             timestamp = performance.now();
@@ -70,17 +105,21 @@
                 }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, onAllianceRankingGetData), null);
             }), null);
         }
+
         function onAllianceRankingGetData(context, data) {
             for (const getAlliance of data.a) {
                 AlliancesArr.push(String([getAlliance.r, getAlliance.a, getAlliance.an, getAlliance.aw, getAlliance.pc, getAlliance.bc, getAlliance.s, getAlliance.sa, getAlliance.sc, getAlliance.er, getAlliance.es, getAlliance.fac]));
+                console.log(data.a.length);
                 getPublicAllianceInfoById(getAlliance.a);
             }
         }
+
         function getPublicAllianceInfoById(n) {
             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand("GetPublicAllianceInfo", {
                 id: n
             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
                 AlliancesArr2.push(String([data.a, data.cic, data.bd, data.bde, data.bdp, data.poi, data.ii, data.egwr, data.egws, '"' + data.d + '"']));
+                progressBar(AlliancesArr2.length, AlliancesArr.length, "Alliances");
                 if (AlliancesArr.length === AlliancesArr2.length) {
                     for (let i = 0; i < AlliancesArr.length; i++) {
                         Alliances += String([AlliancesArr.at(i), AlliancesArr2.at(i)]) + "\n";
@@ -89,9 +128,8 @@
                     getCSV(Alliances, "Alliances");
                     console.log(`%cAlliances (${AlliancesArr.length}) list done in ${((performance.now() - timestamp) / 1000).toFixed(2)} seconds.`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
                 }
-            }),null)
+            }), null)
         }
-
         //get Players and Cities lists
         function getPlayersAndCities() {
             timestamp = performance.now();
@@ -114,6 +152,7 @@
                 }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, onPlayerRankingGetData), null);
             }), null);
         }
+
         function onPlayerRankingGetData(context, data) {
             for (const getPlayer of data.p) {
                 PlayersArr.push(getPlayer);
@@ -121,6 +160,7 @@
                 getPublicPlayerInfoById(getPlayer.p);
             }
         }
+
         function getPublicPlayerInfoById(n) {
             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {
                 id: n
@@ -133,6 +173,7 @@
                     }
                 }
                 PlayersArr2.push(String([data.r, data.i, data.n, data.f, data.p, data.a, data.an, data.c.length, data.bd, data.bde, data.d, data.hchc, data.ew.length, data.cw.length, data.mw.length, data.dccc, data.ii, data.lr, data.mv, data.np, data.nr, data.sli.length, data.vp, hasBadge]));
+                progressBar(PlayersArr2.length, PlayersArr.length, "Players");
                 if (PlayersArr.length === PlayersArr2.length) {
                     for (let p = 0; p < PlayersArr2.length; p++) {
                         Players += String(PlayersArr2.at(p)) + "\n";
@@ -148,16 +189,32 @@
                 }
             }), null);
         }
+
         function getPublicCityInfoById(n) {
             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicCityInfoById', {
                 id: n
             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
-                CitiesArr.push({"Ranking":0,"Alliance_Name":data.an,"Alliance_Id":data.a,"Player_Name":data.pn,"Player_Id":data.p,"Base_Name":data.n,"Base_Id":data.i,"Player_Faction":data.f,"Base_is_Ghost":data.g,"Player_has_Won":data.w,"Base_Score":data.po,"Coord_X":data.x,"Coord_Y":data.y});
-                if (CitiesArr.length === CitiesCount) {
+                CitiesArr.push({
+                    "Ranking": 0,
+                    "Alliance_Name": data.an,
+                    "Alliance_Id": data.a,
+                    "Player_Name": data.pn,
+                    "Player_Id": data.p,
+                    "Base_Name": data.n,
+                    "Base_Id": data.i,
+                    "Player_Faction": data.f,
+                    "Base_is_Ghost": data.g,
+                    "Player_has_Won": data.w,
+                    "Base_Score": data.po,
+                    "Coord_X": data.x,
+                    "Coord_Y": data.y
+                });
+                progressBar(CitiesArr.length, CitiesCount, "Cities");
+                if (CitiesArr.length === CitiesCount) { //when CitiesArr ready, start to build the list
                     CitiesArr.sort((a, b) => Number(b.Base_Score) - Number(a.Base_Score)); //Sort cities by score
                     for (let c = 0; c < CitiesArr.length; c++) {
-                        CitiesArr.at(c).Ranking = c+1; //fill City Ranking by score
-                        Cities += Object.values(CitiesArr.at(c)) + "\n";
+                        CitiesArr.at(c).Ranking = c + 1; //fill City Ranking by score
+                        Cities += Object.values(CitiesArr.at(c)) + "\n"; //Add to Cities list
                     }
                     console.table(CitiesArr);
                     getCSV(Cities, "Cities");
@@ -165,7 +222,6 @@
                 }
             }), null)
         }
-
         //get Player Hall Of Fame list
         function getPlayerHallOfFame() {
             timestamp = performance.now();
@@ -180,31 +236,39 @@
                     sortColumn: 0,
                     view: 2
                 }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
-                    let PlayerHallOfFame = "Ranking,Player Id,Player Name,Season Won,Total Veteran Points\n";
+                    let PlayerHallOfFame = "Ranking,Player Id,Player Name,Season Won,Total Veteran Points\n",
+                        phofArr = [];
                     for (const getPHOF of data.phof) {
-                        PlayerHallOfFame += String([getPHOF.r, getPHOF.p, getPHOF.pn, getPHOF.sw, getPHOF.tvp]) + "\n";
+                        phofArr.push({
+                            "Ranking": getPHOF.r,
+                            "Player Id": getPHOF.p,
+                            "Player Name": getPHOF.pn,
+                            "Season Won": getPHOF.sw,
+                            "Total Veteran Points": getPHOF.tvp
+                        });
+                        progressBar(phofArr.length, data.phof.length, "Player Hall of Fame");
+                        PlayerHallOfFame += Object.values(getPHOF) + "\n";
+                        //progressBar([...PlayerHallOfFame].reduce((a, c) => a + (c === '\n' ? 1 : 0), 0) - 1,data.phof.length," Player Hall of Fame"); //slow... makes phofArr redundant though
                     }
-                    console.table(data.phof);
+                    console.table(phofArr); //phofArr <=> data.phof
                     getCSV(PlayerHallOfFame, "PlayerHallOfFame");
                     console.log(`%cPlayer Hall Of Fame (${Object.values(data.phof).length}) list done in ${((performance.now() - timestamp) / 1000).toFixed(2)} seconds.`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
                 }), null);
             }), null);
         }
-
         //get Alliance Roster
         function getAllianceRoster() {
             timestamp = performance.now();
-            const roster = ClientLib.Data.MainData.GetInstance().get_Alliance().get_MemberDataAsArray(),
-                  memberCount = ClientLib.Data.MainData.GetInstance().get_Alliance().get_NumMembers();
+            const roster = ClientLib.Data.MainData.GetInstance().get_Alliance().get_MemberDataAsArray();
             var AllianceRoster = "Id,Name,Role,Rank,Points,Bases,OnlineState,LastSeen,ActiveState,Level,Faction,JoinStep,HasControlHubCode,VeteranPointContribution,AvgDefenseLvl,AvgOffenseLvl,BestOffenseLvl,BestDefenseLvl,RoleName\n";
             for (const member of roster) {
-                AllianceRoster += String(Object.values(member)) + "\n"
+                AllianceRoster += Object.values(member) + "\n";
+                progressBar([...AllianceRoster].reduce((a, c) => a + (c === '\n' ? 1 : 0), 0) - 1, roster.length, "Alliance Roster");
             }
             console.table(roster);
             getCSV(AllianceRoster, "AllianceRoster");
-            console.log(`%cAlliance Roster (${memberCount}) list done in ${((performance.now() - timestamp) / 1000).toFixed(2)} seconds.`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
+            console.log(`%cAlliance Roster (${roster.length}) list done in ${((performance.now() - timestamp) / 1000).toFixed(2)} seconds.`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
         }
-
         //get Points Of Interest List
         function getPOIs(e) {
             timestamp = performance.now();
@@ -253,14 +317,14 @@
                                     try {
                                         if (visObject.get_VisObjectType() == ClientLib.Vis.VisObject.EObjectType.RegionPointOfInterest) {
                                             var visObjectName = visObject.get_Name();
-                                            if (visObjectName == 'Tunnel exit') {}
-                                            else {
+                                            if (visObjectName == 'Tunnel exit') {} else {
                                                 var POIlevel = visObject.get_Level();
                                                 var POItype = visObject.get_Type();
                                                 var Alliance = visObject.get_OwnerAllianceName();
                                                 var visObjectShortName = visObjectName.split(' ')[0];
                                                 var POIdata = String([POIlevel, visObjectShortName, i, j, Alliance, POIScore[POIlevel], POItype]);
                                                 AllPOIs.push(POIdata);
+                                                progressBar(AllPOIs.length, AllPOIs.length, "Points of Interest");
                                                 if (visObjectShortName == "Aircraft") {
                                                     Aircraft.push(POIdata);
                                                 }
@@ -328,24 +392,18 @@
                             'Resonator Network Tower': Resonator
                         });
                         getCSV(POIs, "POIs");
-                        console.log(`%cPoints of Interest (${[...POIs].reduce((a, c) => a + (c === '\n' ? 1 : 0), 0) - 1}) list done in ${((performance.now() - timestamp) / 1000).toFixed(2)} seconds.`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');                        if (confirm("Done. World POI list was downloaded.\nReset zoom factor?")) {
+                        console.log(`%cPoints of Interest (${[...POIs].reduce((a, c) => a + (c === '\n' ? 1 : 0), 0) - 1}) list done in ${((performance.now() - timestamp) / 1000).toFixed(2)} seconds.`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
+                        if (confirm("Done. World POI list was downloaded.\nReset zoom factor?")) {
                             ClientLib.Vis.VisMain.GetInstance().get_Region().set_ZoomFactor(1)
                         }
                     }
                 }
             }
         }
-
         //wait for game
         function checkForInit() {
             try {
-                if (typeof qx !== 'undefined' &&
-                    qx &&
-                    qx.core &&
-                    qx.core.Init &&
-                    qx.core.Init.getApplication &&
-                    qx.core.Init.getApplication() &&
-                    qx.core.Init.getApplication().initDone) {
+                if (typeof qx !== 'undefined' && qx && qx.core && qx.core.Init && qx.core.Init.getApplication && qx.core.Init.getApplication() && qx.core.Init.getApplication().initDone) {
                     init();
                 } else {
                     window.setTimeout(checkForInit, 1000);
