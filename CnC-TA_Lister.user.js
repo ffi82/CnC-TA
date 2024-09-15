@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CnC-TA Lister
 // @namespace   https://github.com/ffi82/CnC-TA/
-// @version     2024-09-15
+// @version     2024-09-15.1
 // @description Under 'Scripts' menu, click to download CSV files containing Alliances, Players and Cities, Player Hall Of Fame, Alliance Roster or POIs data. How to: Click --> wait --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
 // @author      ffi82
 // @contributor leo7044 (https://github.com/leo7044/CnC_TA), bloofi (https://github.com/bloofi), c4l10s <== i took pieces of code from... indirect contribution :P
