@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name        CnC-TA Lister
 // @namespace   https://github.com/ffi82/CnC-TA/
-// @version     2024-09-15.1
+// @version     2024-09-21
 // @description Under 'Scripts' menu, click to download CSV files containing Alliances, Players and Cities, Player Hall Of Fame, Alliance Roster or POIs data. How to: Click --> wait --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
 // @author      ffi82
-// @contributor leo7044 (https://github.com/leo7044/CnC_TA), bloofi (https://github.com/bloofi), c4l10s <== i took pieces of code from... indirect contribution :P
+// @contributor leo7044, bloofi, c4l10s <== i took and adjusted pieces of code... indirect contribution (what license :P)
 // @downloadURL https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
 // @updateURL   https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
 // @match       https://*.alliances.commandandconquer.com/*/index.aspx*
@@ -38,9 +38,10 @@
                 decorator: new qx.ui.decoration.Decorator().set({
                     width: 1,
                     style: "solid",
-                    color: "green"
+                    color: "black",
+                    backgroundColor: "transparrent",
                 }),
-                opacity: 0.8,
+                //opacity: 0.8,
             });
             qx.core.Init.getApplication().getOptionsBar().getLayoutParent().getChildren()[0].getChildren()[2].addAt(pbContainer, 1);
             ScriptsButton.Add('Alliances', icon);
@@ -75,11 +76,11 @@
                 value: pbIndex + " / " + pbLength + " " + pbName,
                 width: 0,
                 height: 11,
-                textColor: "white",
-                font: qx.bom.Font.fromString("8px tahoma"),
-                backgroundColor: "black",
+                textColor: "black",
+                font: qx.bom.Font.fromString("9px tahoma"),
+                backgroundColor: "white",
                 decorator: "main",
-                opacity: 0.8,
+                //opacity: 0.8
             });
             pbContainer.removeAll();
             pbContainer.add(pb);
@@ -108,8 +109,20 @@
 
         function onAllianceRankingGetData(context, data) {
             for (const getAlliance of data.a) {
-                AlliancesArr.push(String([getAlliance.r, getAlliance.a, getAlliance.an, getAlliance.aw, getAlliance.pc, getAlliance.bc, getAlliance.s, getAlliance.sa, getAlliance.sc, getAlliance.er, getAlliance.es, getAlliance.fac]));
-                console.log(data.a.length);
+                AlliancesArr.push({
+                    "Ranking": getAlliance.r,
+                    "Alliance Id": getAlliance.a,
+                    "Alliance Name": getAlliance.an,
+                    "Alliance Has Won": getAlliance.aw,
+                    "Member Count": getAlliance.pc,
+                    "Base Count": getAlliance.bc,
+                    "Top 40 scores": getAlliance.s,
+                    "Average Score": getAlliance.sa,
+                    "Total Score": getAlliance.sc,
+                    "Event Rank": getAlliance.er,
+                    "Event Score": getAlliance.es,
+                    "Average Faction": getAlliance.fac
+                });
                 getPublicAllianceInfoById(getAlliance.a);
             }
         }
@@ -118,13 +131,24 @@
             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand("GetPublicAllianceInfo", {
                 id: n
             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
-                AlliancesArr2.push(String([data.a, data.cic, data.bd, data.bde, data.bdp, data.poi, data.ii, data.egwr, data.egws, '"' + data.d + '"']));
+                AlliancesArr2.push({
+                    "Abbreviation": data.a,
+                    "CiC Player Id": data.cic,
+                    "Bases destroyed": data.bd,
+                    "PvE": data.bde,
+                    "PvP": data.bdp,
+                    "POI Count:": data.poi,
+                    "Is Inactive": data.ii,
+                    "EndGame Won Rank": data.egwr,
+                    "EndGame Won Step": data.egws,
+                    "Description": '"' + data.d + '"'
+                });
                 progressBar(AlliancesArr2.length, AlliancesArr.length, "Alliances");
                 if (AlliancesArr.length === AlliancesArr2.length) {
                     for (let i = 0; i < AlliancesArr.length; i++) {
-                        Alliances += String([AlliancesArr.at(i), AlliancesArr2.at(i)]) + "\n";
+                        Alliances += String([Object.values(AlliancesArr.at(i)), Object.values(AlliancesArr2.at(i))]) + "\n";
                     }
-                    console.log(JSON.stringify(AlliancesArr.map((data, index) => String(data, AlliancesArr2[index])), undefined, 4));
+                    console.log(Alliances);
                     getCSV(Alliances, "Alliances");
                     console.log(`%cAlliances (${AlliancesArr.length}) list done in ${((performance.now() - timestamp) / 1000).toFixed(2)} seconds.`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
                 }
@@ -133,7 +157,7 @@
         //get Players and Cities lists
         function getPlayersAndCities() {
             timestamp = performance.now();
-            Players = "Ranking,Player Id,Player Name,Faction,Score,Alliance Id,Alliance Name,Bases,Bases destroyed,PvE,PvP,Has Code,Fortresses annihilated,Challange achievements,Other achievements,Distance to Center,Is Inactive,lr,mv,np,nr,sli.length,Veteran Points,World,Rank,Alliance,Timestamp,Member Role,Faction,is,iv\n";
+            Players = "Ranking,Player Id,Player Name,Faction,Score,Alliance Id,Alliance Name,Bases,Bases destroyed,PvE,PvP,Has Code,Fortresses annihilated,Challange achievements,Other achievements,Distance to Center,Is Inactive,lr,mv,np,nr,sli.length,Veteran Points,BWorld,BRank,BAlliance,BTimestamp,BMember Role,BFaction,Bis,Biv\n";
             Cities = "Ranking,Alliance Name,Alliance Id,Player Name,Player Id,Base Name,Base Id,Player Faction,Base is Ghost,Player has Won,Base Score,Coord X,Coord Y\n";
             PlayersArr = [];
             PlayersArr2 = [];
@@ -295,7 +319,15 @@
                         for (var a = 0; a <= ClientLib.Data.MainData.GetInstance().get_Server().get_MaxCenterLevel(); a++) {
                             POIScore[a] = ClientLib.Base.PointOfInterestTypes.GetScoreByLevel(a);
                         }
-                        //var POIRank = []; for (var b = 0; b < 42; b++) {POIRank [b] = ClientLib.Base.PointOfInterestTypes.GetBoostModifierByRank();}
+                        /*
+                        var POIRank = []; for (var b = 0; b < 41; b++) {
+                            POIRank[b] = {
+                                "Rank": b,
+                                "Multiplier": ClientLib.Base.PointOfInterestTypes.GetBoostModifierByRank(b)
+                            }
+                        }
+                        console.table(Object.values(POIRank));
+                        */
                         var Reactor = new Array();
                         var Tiberium = new Array();
                         var Crystal = new Array();
@@ -305,10 +337,6 @@
                         var Resonator = new Array();
                         var AllPOIs = new Array();
                         var POIs = "";
-                        /*
-                        Add world name and timestamp on the first row of the.csv file if needed...
-                        POIs += String([ClientLib.Data.MainData.GetInstance().get_Server().get_Name(),new Date().toISOString()])+"\n";
-                         */
                         POIs += "Level,Name,coord_x,coord_y,Alliance,Score,Type\r\n"
                         for (var i = x - (range); i < (x + range); i++) {
                             for (var j = y - range; j < (y + range); j++) {
