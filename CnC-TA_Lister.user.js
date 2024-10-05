@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name        CnC-TA Lister
 // @namespace   https://github.com/ffi82/CnC-TA/
-// @version     2024-10-02
+// @version     2024-10-05
 // @description Under 'Scripts' menu, click to download CSV files containing Alliances, Players and Cities, Player Hall Of Fame / Challenge ranking, Alliance Roster or POIs data. How to: Click --> See progress bar above game options --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
 // @author      ffi82
 // @contributor leo7044, bloofi, c4l10s <== i took and adjusted pieces of code... indirect contribution (what license :P)
+// @updateURL   https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.meta.js
 // @downloadURL https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
-// @updateURL   https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
 // @match       https://*.alliances.commandandconquer.com/*/index.aspx*
 // @icon        data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAk5JREFUeF7tWctxwjAQlStIC1RAAxlmyDFpJWfOIWfOaSU5hhkqSAfpxEExGDBa7a5XljX244ok73v7tD9Vbua/aub4HQiAAmbOAK7AzAWAIDjaFdgdXt6u1bdZfb6PocZRCNgdnr+dq9a3gOv9ZvX1lJuE7AScPL8lgG5zKwEE5JYcFNAEP1wBxIAwAwiCyAKZCyKkQaTBzAygDkAdgEIIlSBKYfQCaIbQDaIbnFI3qJnwWipBzXekBa65GQoDoie8fQkIT5KdeX6QgIDQiNvzHyahDwEEePIbUu/7dSYCGDBBA7UE0OBbmCYVmAjwJvAG3ipBQwB/9j8J4xKgJUFKgAy8/TXJrICzEHmDG2MlBPBn0TFGc/9FMaCbevwmanDJG17vj2+C+1gzdAye6/t3wy4sNsu0G7gha1QBEW+R944joarcb127RchTsf8u61nw3TI7GiOSEyCLCVqhntfH7zzhsPwEDEMCH/CKIiAtCTz45nvBcds4CpBnB+46yMAXS4BNCXLwRROgJ6FJl1wK62qnyCtwbSSXIpu1Oq/fnl9gDLj3EtU92sAXfwV4JfT3PBNwh8gCqY1NcR754tSfAM/s68fjz2L5sLxPVsmMJnsLLkFePO/Bkz2EjYB499Y2N1JbB1gXa554J4naYVn0HgCb/Uh2WCIkIPqiazdzkBN47/vPigjQFzKDIFIcKgOvIuCSZyUDC4WtSZfqK0ixAgIVV1LTUxymLZ3VCkhhZGln9FJAaSAs9oAAC3tT2AsFTMGLFgxQgIW9Kez9A8eY4FA22gNKAAAAAElFTkSuQmCC
 // @require     https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
@@ -30,8 +30,8 @@
         function init() {
             console.log(`${scriptName} loaded`);
             const ScriptsButton = qx.core.Init.getApplication().getMenuBar().getScriptsButton(),
-                children = ScriptsButton.getMenu().getChildren(),
-                icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=';
+                  children = ScriptsButton.getMenu().getChildren(),
+                  icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=';
             pbContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({
                 padding: 0,
                 width: 115,
@@ -84,6 +84,43 @@
             pbContainer.add(pb);
             pb.setWidth(pbIndex / pbLength * 113);
             if (pbIndex === pbLength) pbContainer.removeAll();
+        }
+        //get world sector abbreviation by coords
+        function getSector(x,y) {
+            var qxApp = qx.core.Init.getApplication(),
+                WorldWidth2 = Math.floor(ClientLib.Data.MainData.GetInstance().get_Server().get_WorldWidth() / 2),
+                WorldHeight2 = Math.floor(ClientLib.Data.MainData.GetInstance().get_Server().get_WorldHeight() / 2),
+                SectorCount = ClientLib.Data.MainData.GetInstance().get_Server().get_SectorCount(),
+                WorldCX = (WorldWidth2 - x),
+                WorldCY = (y - WorldHeight2),
+                WorldCa = ((Math.atan2(WorldCX, WorldCY) * SectorCount) / (2 * Math.PI)) + (SectorCount + 0.5),
+                SectorNo = Math.floor(WorldCa) % SectorCount;
+            switch (SectorNo) {
+                case 0:
+                    return qxApp.tr("tnf:south abbr");
+                case 1:
+                    return qxApp.tr("tnf:southwest abbr");
+                case 2:
+                    return qxApp.tr("tnf:west abbr");
+                case 3:
+                    return qxApp.tr("tnf:northwest abbr");
+                case 4:
+                    return qxApp.tr("tnf:north abbr");
+                case 5:
+                    return qxApp.tr("tnf:northeast abbr");
+                case 6:
+                    return qxApp.tr("tnf:east abbr");
+                case 7:
+                    return qxApp.tr("tnf:southeast abbr");
+            }
+        }
+        //get distance from center by coords
+        function getDistanceFromCenter(x,y) {
+            var Fortress = ClientLib.Data.MainData.GetInstance().get_EndGame().get_Hubs().d[1],
+                fx = Fortress.get_X()+Fortress.get_SizeX()/2,
+                fy = Fortress.get_Y()+Fortress.get_SizeY()/2;
+            //return ((ClientLib.Data.MainData.GetInstance().get_Server().get_WorldWidth() / 2 - x) ** 2 + (ClientLib.Data.MainData.GetInstance().get_Server().get_WorldHeight() / 2 - y) ** 2) ** .5;
+            return ((fx - x) ** 2 + (fx - y) ** 2) ** .5; //distance formula in cartesian coordinates : d = √[(x₂ - x₁)² + (y₂ - y₁)² + (z₂ - z₁)²] (z1=0 ,z2=0 in 2D spaces)
         }
         //get Alliances list
         function getAlliances() {
@@ -156,7 +193,7 @@
         function getPlayersAndCities() {
             timestamp = performance.now();
             Players = "Ranking,Player Id,Player Name,Faction,Score,Alliance Id,Alliance Name,Bases,Bases destroyed,PvE,PvP,Has Code,Fortresses annihilated,Challange achievements,Other achievements,Distance to Center,Is Inactive,lr,mv,np,nr,sli.length,Veteran Points,BWorld,BRank,BAlliance,BTimestamp,BMember Role,BFaction,Bis,Biv\r\n";
-            Cities = "Ranking,Alliance Name,Alliance Id,Player Name,Player Id,Base Name,Base Id,Player Faction,Base is Ghost,Player has Won,Base Score,Coord X,Coord Y\r\n";
+            Cities = "Ranking,Alliance Name,Alliance Id,Player Name,Player Id,Base Name,Base Id,Player Faction,Base is Ghost,Player has Won,Base Score,Coord X,Coord Y,Sector,Distance from Center\r\n";
             PlayersArr = [];
             PlayersArr2 = [];
             CitiesArr = [];
@@ -229,11 +266,13 @@
                     "Player_has_Won": data.w,
                     "Base_Score": data.po,
                     "Coord_X": data.x,
-                    "Coord_Y": data.y
+                    "Coord_Y": data.y,
+                    "Sector": getSector(data.x,data.y),
+                    "Distance_From_Center": getDistanceFromCenter(data.x,data.y)
                 });
                 progressBar(CitiesArr.length, CitiesCount, "Cities");
                 if (CitiesArr.length === CitiesCount) { //when CitiesArr ready, start to build the list
-                    CitiesArr.sort((a, b) => Number(b.Base_Score) - Number(a.Base_Score)); //Sort cities by score
+                    CitiesArr.sort((a, b) => b.Base_Score - a.Base_Score); //Sort cities by score descending
                     for (let c = 0; c < CitiesArr.length; c++) {
                         CitiesArr.at(c).Ranking = c + 1; //fill City Ranking by score
                         Cities += Object.values(CitiesArr.at(c)) + "\r\n"; //Add to Cities list
@@ -294,62 +333,43 @@
         //get Points Of Interest List
         function getPOIs() {
             timestamp = performance.now();
-            if (ClientLib.Vis.VisMain.GetInstance().get_Region().get_MinZoomFactor() != 0.01) {
-                if (confirm("Get 'Tiberium Alliances Zoom' userscript to enable true max zoom out in Region View. May reduce performance.\r\nAlso make sure the 'Allow max zoom out' in game Options -> Audio/Video tab is unchecked.")) {
-                    open("https://github.com/ffi82/CnC-TA/raw/master/Tiberium%20Alliances%20Zoom.user.js")
-                }
+            if (ClientLib.Vis.VisMain.GetInstance().get_Region().get_ZoomFactor() != 0.01 && confirm("Switch to region view and set zoom factor @ 0.01 to be able to capture all POIs.\r\nYour current zoom factor: " + ClientLib.Vis.VisMain.GetInstance().get_Region().get_ZoomFactor() + "\r\n\r\nClick 'Points of Interest' again once region view has loaded.")) {
+                ClientLib.Vis.VisMain.GetInstance().get_Region().set_ZoomFactor(0.01);
+                qx.core.Init.getApplication().showMainOverlay(!1);
             } else {
-                if (ClientLib.Vis.VisMain.GetInstance().get_Region().get_ZoomFactor() != 0.01) {
-                    if (confirm("Set zoom factor @ 0.01 to be able to see the entire world... zoom out max.\r\nYour current zoom factor: " + ClientLib.Vis.VisMain.GetInstance().get_Region().get_ZoomFactor())) {
-                        ClientLib.Vis.VisMain.GetInstance().get_Region().set_ZoomFactor(0.01)
-                    };
-                } else {
-                    if (qx.core.Init.getApplication().getPlayArea().getViewMode() != 0) {
-                        if (confirm("Switch to Region View.")) {
-                            qx.core.Init.getApplication().showMainOverlay(!1)
-                        }
-                    } else {
-                        var range = ClientLib.Data.MainData.GetInstance().get_Server().get_ContinentWidth(),
-                            x = ClientLib.Data.MainData.GetInstance().get_Server().get_ContinentWidth(),
-                            y = ClientLib.Data.MainData.GetInstance().get_Server().get_ContinentHeight(),
-                            region = ClientLib.Vis.VisMain.GetInstance().get_Region(),
-                            POIScore = [],
-                            AllPOIs = [],
-                            POIs = "Level,Name,coord_x,coord_y,Alliance,Score,Type\r\n";
-                        for (var a = 0; a <= ClientLib.Data.MainData.GetInstance().get_Server().get_MaxCenterLevel(); a++) POIScore[a] = ClientLib.Base.PointOfInterestTypes.GetScoreByLevel(a);
-                        for (var i = x - (range); i < (x + range); i++) {
-                            for (var j = y - range; j < (y + range); j++) {
-                                var visObject = region.GetObjectFromPosition(i * region.get_GridWidth(), j * region.get_GridHeight());
-                                if (visObject != null) {
-                                    if (visObject.get_VisObjectType() == ClientLib.Vis.VisObject.EObjectType.RegionPointOfInterest) {
-                                        var visObjectName = visObject.get_Name();
-                                        if (visObjectName == 'Tunnel exit') {} else {
-                                            AllPOIs.push({
-                                                "Level": visObject.get_Level(),
-                                                "Name": visObjectName.split(' ')[0],
-                                                "coord_x": i,
-                                                "coord_y": j,
-                                                "Alliance": visObject.get_OwnerAllianceName(),
-                                                "Score": POIScore[visObject.get_Level()],
-                                                "Type": visObject.get_Type()
-                                            });
-                                            progressBar(AllPOIs.length, AllPOIs.length, "Points of Interest");
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        AllPOIs.sort((a, b) => b.Level - a.Level);
-                        AllPOIs.sort((a, b) => a.Type - b.Type);
-                        for (const poi of AllPOIs) POIs += Object.values(poi) + "\r\n";
-                        console.table(AllPOIs);
-                        getCSV(POIs, "POIs");
-                        console.log(`%cPoints of Interest (${AllPOIs.length}) list done in ${((performance.now() - timestamp) / 1000).toFixed(2)} seconds.`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
-                        if (confirm("Done. World POI list was downloaded.\r\nReset zoom factor?")) {
-                            ClientLib.Vis.VisMain.GetInstance().get_Region().set_ZoomFactor(1)
+                var range = ClientLib.Data.MainData.GetInstance().get_Server().get_ContinentWidth(),
+                    x = ClientLib.Data.MainData.GetInstance().get_Server().get_ContinentWidth(),
+                    y = ClientLib.Data.MainData.GetInstance().get_Server().get_ContinentHeight(),
+                    region = ClientLib.Vis.VisMain.GetInstance().get_Region(),
+                    POIScore = [],
+                    AllPOIs = [],
+                    POIs = "Level,Name,coord_x,coord_y,Alliance,Score,Type,Sector\r\n";
+                for (var a = 0; a <= ClientLib.Data.MainData.GetInstance().get_Server().get_MaxCenterLevel(); a++) POIScore[a] = ClientLib.Base.PointOfInterestTypes.GetScoreByLevel(a);
+                for (var i = x - (range); i < (x + range); i++) {
+                    for (var j = y - range; j < (y + range); j++) {
+                        var visObject = region.GetObjectFromPosition(i * region.get_GridWidth(), j * region.get_GridHeight());
+                        if (visObject != null && visObject.get_VisObjectType() == ClientLib.Vis.VisObject.EObjectType.RegionPointOfInterest && visObject.get_Name() != 'Tunnel exit') {
+                            AllPOIs.push({
+                                "Level": visObject.get_Level(),
+                                "Name": visObject.get_Name().split(' ')[0],
+                                "coord_x": i,
+                                "coord_y": j,
+                                "Alliance": visObject.get_OwnerAllianceName(),
+                                "Score": POIScore[visObject.get_Level()],
+                                "Type": visObject.get_Type(),
+                                "Sector": getSector(i, j)
+                            });
+                            progressBar(AllPOIs.length, AllPOIs.length, "Points of Interest");
                         }
                     }
                 }
+                AllPOIs.sort((a, b) => b.Level - a.Level);
+                AllPOIs.sort((a, b) => a.Type - b.Type);
+                for (const poi of AllPOIs) POIs += Object.values(poi) + "\r\n";
+                console.table(AllPOIs);
+                getCSV(POIs, "POIs");
+                console.log(`%cPoints of Interest (${AllPOIs.length}) list done in ${((performance.now() - timestamp) / 1000).toFixed(2)} seconds.`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
+                confirm("Done. World POI list was downloaded.\r\nReset zoom factor?") ? ClientLib.Vis.VisMain.GetInstance().get_Region().set_ZoomFactor(1) : null;
             }
         }
         //wait for game
