@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name        CnC-TA Lister
 // @namespace   https://github.com/ffi82/CnC-TA/
-// @version     2024-10-05
-// @description Under 'Scripts' menu, click to download CSV files containing Alliances, Players and Cities, Player Hall Of Fame / Challenge ranking, Alliance Roster or POIs data. How to: Click --> See progress bar above game options --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
+// @version     2024-10-13
+// @description Under 'Scripts' menu, click to download CSV files containing Alliance Cities, Alliances, Players and Cities, Player Hall Of Fame / Challenge ranking, Alliance Roster or POIs data. How to: Click --> See progress bar above game options --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
 // @author      ffi82
 // @contributor leo7044, bloofi, c4l10s <== i took and adjusted pieces of code... indirect contribution (what license :P)
 // @updateURL   https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.meta.js
@@ -25,13 +25,14 @@
             PlayersArr2,
             CitiesArr,
             CitiesCount,
+            cities,
             pbContainer;
 
         function init() {
             console.log(`${scriptName} loaded`);
             const ScriptsButton = qx.core.Init.getApplication().getMenuBar().getScriptsButton(),
-                  children = ScriptsButton.getMenu().getChildren(),
-                  icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=';
+                children = ScriptsButton.getMenu().getChildren(),
+                icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=';
             pbContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({
                 padding: 0,
                 width: 115,
@@ -43,11 +44,13 @@
                 }),
             });
             qx.core.Init.getApplication().getOptionsBar().getLayoutParent().getChildren()[0].getChildren()[2].addAt(pbContainer, 1);
+            ScriptsButton.Add('Alliance Cities', icon);
             ScriptsButton.Add('Alliances', icon);
             ScriptsButton.Add('Players and Cities', icon);
             ScriptsButton.Add('Player Hall of Fame', icon);
             ScriptsButton.Add('Alliance Roster', icon);
             ScriptsButton.Add('Points of Interest', icon);
+            children[children.length - 6].addListener('execute', getAllianceCities, this);
             children[children.length - 5].addListener('execute', getAlliances, this);
             children[children.length - 4].addListener('execute', getPlayersAndCities, this);
             children[children.length - 3].addListener('execute', getPlayerHallOfFame, this);
@@ -86,7 +89,7 @@
             if (pbIndex === pbLength) pbContainer.removeAll();
         }
         //get world sector abbreviation by coords
-        function getSector(x,y) {
+        function getSector(x, y) {
             var qxApp = qx.core.Init.getApplication(),
                 WorldWidth2 = Math.floor(ClientLib.Data.MainData.GetInstance().get_Server().get_WorldWidth() / 2),
                 WorldHeight2 = Math.floor(ClientLib.Data.MainData.GetInstance().get_Server().get_WorldHeight() / 2),
@@ -115,10 +118,10 @@
             }
         }
         //get distance from center by coords
-        function getDistanceFromCenter(x,y) {
+        function getDistanceFromCenter(x, y) {
             var Fortress = ClientLib.Data.MainData.GetInstance().get_EndGame().get_Hubs().d[1],
-                fx = Fortress.get_X()+Fortress.get_SizeX()/2,
-                fy = Fortress.get_Y()+Fortress.get_SizeY()/2;
+                fx = Fortress.get_X() + Fortress.get_SizeX() / 2,
+                fy = Fortress.get_Y() + Fortress.get_SizeY() / 2;
             //return ((ClientLib.Data.MainData.GetInstance().get_Server().get_WorldWidth() / 2 - x) ** 2 + (ClientLib.Data.MainData.GetInstance().get_Server().get_WorldHeight() / 2 - y) ** 2) ** .5;
             return ((fx - x) ** 2 + (fx - y) ** 2) ** .5; //distance formula in cartesian coordinates : d = √[(x₂ - x₁)² + (y₂ - y₁)² + (z₂ - z₁)²] (z1=0 ,z2=0 in 2D spaces)
         }
@@ -267,8 +270,8 @@
                     "Base_Score": data.po,
                     "Coord_X": data.x,
                     "Coord_Y": data.y,
-                    "Sector": getSector(data.x,data.y),
-                    "Distance_From_Center": getDistanceFromCenter(data.x,data.y)
+                    "Sector": getSector(data.x, data.y),
+                    "Distance_From_Center": getDistanceFromCenter(data.x, data.y)
                 });
                 progressBar(CitiesArr.length, CitiesCount, "Cities");
                 if (CitiesArr.length === CitiesCount) { //when CitiesArr ready, start to build the list
@@ -370,6 +373,111 @@
                 getCSV(POIs, "POIs");
                 console.log(`%cPoints of Interest (${AllPOIs.length}) list done in ${((performance.now() - timestamp) / 1000).toFixed(2)} seconds.`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
                 confirm("Done. World POI list was downloaded.\r\nReset zoom factor?") ? ClientLib.Vis.VisMain.GetInstance().get_Region().set_ZoomFactor(1) : null;
+            }
+        }
+        //get alliance cities list
+        function getAllianceCities() {
+            const memberDataAsArray = ClientLib.Data.MainData.GetInstance().get_Alliance().get_MemberDataAsArray();
+            timestamp = performance.now();
+            cities = [];
+
+            function getPublicPlayerInfoById(n) {
+                ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {
+                    id: n
+                }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
+                    const s = ClientLib.Data.MainData.GetInstance().get_Server().get_Name();
+                    for (const getCity of data.c) {
+                        cities.push({
+                            "Alliance_Name": data.an,
+                            "Alliance_Id": data.a,
+                            "Player_Name": data.n,
+                            "Player_Id": data.i,
+                            "Player_Faction": data.f,
+                            "Player_Ranking": data.r,
+                            "Player_Score": data.p,
+                            "Player_Bases_Count": data.c.length,
+                            "Bases destroyed": data.bd,
+                            "PvE": data.bde,
+                            "PvP": data.d,
+                            "Player_Distance_to_Center": data.dccc,
+                            "Player_is_Inactive": data.ii,
+                            "Player_has_Code": data.hchc,
+                            "Fortresses annihilated": data.ew.length,
+                            "Challange achievements": data.cw.length,
+                            "Other achievements": data.mw.length,
+                            "Endgame_Won_Server_Name": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).n : '',
+                            "Endgame_Won_Rank": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).r : '0',
+                            "Endgame_Won_Alliance": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).an : '',
+                            "Endgame_Won_Timestamp": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).ws : '',
+                            "Endgame_Won_Member_Role": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).mr : '',
+                            "Base_Name": getCity.n,
+                            "Base_Id": getCity.i,
+                            "Base_Score": getCity.p,
+                            "Coord_X": getCity.x,
+                            "Coord_Y": getCity.y,
+                            "Base_Sector": getSector(getCity.x, getCity.y),
+                            "Base_Distance_from_Center": getDistanceFromCenter(getCity.x, getCity.y),
+                        });
+                    }
+                }), null);
+            }
+            for (const member of memberDataAsArray) getPublicPlayerInfoById(member.Id);
+            setTimeout(function() {
+                cities.sort((a, b) => b.Base_Score - a.Base_Score);
+                cities.sort((a, b) => a.Player_Id - b.Player_Id);
+                console.table(cities);
+                processCityIDs(cities.map(item => item.Base_Id));
+            }, 1000); // Adjust the timeout as needed
+        }
+
+        function loadCity(id) {
+            return new Promise((resolve) => {
+                // Set the play area view for the City ID
+                ClientLib.API.Util.SetPlayAreaView(ClientLib.Data.PlayerAreaViewMode.pavmNone, id, 0, 0);
+                // Check if the current city matches the loaded object ID
+                const checkLoading = setInterval(() => {
+                    const loadedCity = ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentCity();
+                    if (loadedCity && loadedCity.get_Id() === id && loadedCity.get_FoundStep()) {
+                        clearInterval(checkLoading);
+                        resolve(loadedCity);
+                    }
+                }, 200); // Check every 200 ms
+            });
+        }
+
+        async function processCityIDs(objectIds) {
+            let a = 0;
+            let output = "Alliance_Name,Alliance_Id,Player_Name,Player_Id,Player_Faction,Player_Ranking,Player_Score,Player_Bases_Count,Bases destroyed,PvE,PvP,Player_Distance_to_Center,Player_is_Inactive,Player_has_Code,Fortresses annihilated,Challange achievements,Other achievements,Endgame_Won_Server_Name,Endgame_Won_Rank,Endgame_Won_Alliance,Endgame_Won_Timestamp,Endgame_Won_Member_Role,Base_Name,Base_Id,Base_Score,Coord_X,Coord_Y,Base_Sector,Base_Distance_from_Center,FoundStep,Base_is_Ghost,ConstructionYardLevel,CommandCenterLevel,LvlBase,LvlDefense,LvlOffense,Tiberium,Crystal,Power,Credits\r\n";
+            qx.core.Init.getApplication().showMainOverlay(!1);
+            for (const cityId of objectIds) {
+                try {
+                    const loadedCity = await loadCity(cityId);
+                    const cityData = {
+                        ...cities.find(city => city.Base_Id === cityId),
+                        "FoundStep": loadedCity.get_FoundStep(),
+                        "Base_is_Ghost": loadedCity.get_IsGhostMode(),
+                        "ConstructionYardLevel": loadedCity.get_ConstructionYardLevel(),
+                        "CommandCenterLevel": loadedCity.get_CommandCenterLevel(),
+                        "LvlBase": loadedCity.get_LvlBase(),
+                        "LvlDefense": loadedCity.get_LvlDefense(),
+                        "LvlOffense": loadedCity.get_LvlOffense(),
+                        "Tiberium": loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Tiberium, true, true),
+                        "Crystal": loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Crystal, true, true),
+                        "Power": loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Power, true, true),
+                        "Credits": (loadedCity.get_CityCreditsProduction().Delta + loadedCity.get_CityCreditsProduction().ExtraBonusDelta) * 3600,
+                    };
+                    a++;
+                    output += Object.values(cityData) + "\r\n";
+                    progressBar(a, objectIds.length, "Alliance Cities");
+                    if (a === objectIds.length) {
+                        console.log(output);
+                        getCSV(output, "AllianceCities");
+                        console.log(`%cAlliance Cities (${objectIds.length}) list done in ${((performance.now() - timestamp) / 1000).toFixed(2)} seconds.`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
+                    }
+                    console.log(a + " / " + objectIds.length + " : " + Object.values(cityData));
+                } catch (error) {
+                    console.error(`Error loading City ID ${cityId}:`, error);
+                }
             }
         }
         //wait for game
