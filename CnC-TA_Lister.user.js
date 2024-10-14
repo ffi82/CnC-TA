@@ -4,6 +4,7 @@
 // @version     2024-10-14
 // @description Under 'Scripts' menu, click to download CSV files containing Alliance Cities, Alliances, Players and Cities, Player Hall Of Fame / Challenge ranking, Alliance Roster or POIs data. How to: Click --> See progress bar above game options --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
 // @author      ffi82
+// @contributor leo7044, bloofi, c4l10s <== i took and adjusted pieces of code... indirect contribution (what license :P)
 // @updateURL   https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.meta.js
 // @downloadURL https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
 // @match       https://*.alliances.commandandconquer.com/*/index.aspx*
@@ -30,11 +31,11 @@
         function init() {
             console.log(`${scriptName} loaded`);
             const ScriptsButton = qx.core.Init.getApplication().getMenuBar().getScriptsButton(),
-                  children = ScriptsButton.getMenu().getChildren(),
-                  iconGreen = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=',
-                  iconLime = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGpJREFUOE9jZKAQMFKonwG/Af8Z/oMtYMStbtQAUPDgA2QFIrImXGwkSxEuaGGQZ6hheAiWg2lEdx0sOpHUIgwAaUKOb3RD0OWgfNwGILsEPSEhWYZqAIFUB/cRVgPw+R1XWIBTOYWAYgMAXJ0qEdD91o0AAAAASUVORK5CYII=',
-                  iconRed = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGxJREFUOE9jZKAQMFKonwGvAf8ZGP6DLGAEI+xg1AA8gQMKMrICEVkTLjZyfCBioYVBnqGG4SGyzegRB49OJLVwA0C2Icc3zHaYIehyMD5OA/CFAbJlKAYQSnUw12A1AJ/fcYYFJJlTBig2AABvnSoRu23XWQAAAABJRU5ErkJggg==',
-                  iconBlue = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG5JREFUOE9jZKAQMFKonwGvAU6tX/6DLNhXzYNT3agBDDQIROSQx8VGjnpELLQwyDPUMDwEScI0oqcReHQiqYUbANKEHN/ohqDLwfg4DUB2CXpCQrYMxQBCqQ7mJawG4PM7zrBgIBCNxGQ0inMjAD6pUBFgbmXxAAAAAElFTkSuQmCC';
+                children = ScriptsButton.getMenu().getChildren(),
+                iconGreen = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=',
+                iconLime = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGpJREFUOE9jZKAQMFKonwG/Af8Z/oMtYMStbtQAUPDgA2QFIrImXGwkSxEuaGGQZ6hheAiWg2lEdx0sOpHUIgwAaUKOb3RD0OWgfNwGILsEPSEhWYZqAIFUB/cRVgPw+R1XWIBTOYWAYgMAXJ0qEdD91o0AAAAASUVORK5CYII=',
+                iconRed = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGxJREFUOE9jZKAQMFKonwGvAf8ZGP6DLGAEI+xg1AA8gQMKMrICEVkTLjZyfCBioYVBnqGG4SGyzegRB49OJLVwA0C2Icc3zHaYIehyMD5OA/CFAbJlKAYQSnUw12A1AJ/fcYYFJJlTBig2AABvnSoRu23XWQAAAABJRU5ErkJggg==',
+                iconBlue = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG5JREFUOE9jZKAQMFKonwGvAU6tX/6DLNhXzYNT3agBDDQIROSQx8VGjnpELLQwyDPUMDwEScI0oqcReHQiqYUbANKEHN/ohqDLwfg4DUB2CXpCQrYMxQBCqQ7mJawG4PM7zrBgIBCNxGQ0inMjAD6pUBFgbmXxAAAAAElFTkSuQmCC';
             pbContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({
                 padding: 0,
                 width: 115,
@@ -466,15 +467,15 @@
                         ...AllianceCitiesArr.find(city => city.Base_Id === cityId),
                         "FoundStep": loadedCity.get_FoundStep(),
                         "Base_is_Ghost": loadedCity.get_IsGhostMode(),
-                        //"ConstructionYardLevel": loadedCity.get_ConstructionYardLevel(), //doesn't always load...
-                        //"CommandCenterLevel": loadedCity.get_CommandCenterLevel(), //doesn't always load...
-                        "LvlBase": loadedCity.get_LvlBase(),
-                        "LvlDefense": loadedCity.get_LvlDefense(),
-                        "LvlOffense": loadedCity.get_LvlOffense(),
                         "Tiberium": loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Tiberium, true, true),
                         "Crystal": loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Crystal, true, true),
                         "Power": loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Power, true, true),
                         "Credits": (loadedCity.get_CityCreditsProduction().Delta + loadedCity.get_CityCreditsProduction().ExtraBonusDelta) * 3600,
+                        "LvlBase": loadedCity.get_LvlBase(),
+                        "LvlDefense": loadedCity.get_LvlDefense(),
+                        "LvlOffense": loadedCity.get_LvlOffense(),
+                        //"ConstructionYardLevel": loadedCity.get_ConstructionYardLevel(), //doesn't always load...
+                        //"CommandCenterLevel": loadedCity.get_CommandCenterLevel(), //doesn't always load...
                     };
                     console.log(cityData);
                     a++;
