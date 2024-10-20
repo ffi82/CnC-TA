@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CnC-TA Lister
 // @namespace   https://github.com/ffi82/CnC-TA/
-// @version     2024-10-20
+// @version     2024-10-21
 // @description Under 'Scripts' menu, click to download CSV files containing Alliance Cities, Alliances, Players and Cities, Player Hall Of Fame / Challenge ranking, Alliance Roster, Alliance Cities and POIs data. How to: Click --> See progress bar above game options --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
 // @author      ffi82
 // @match       https://*.alliances.commandandconquer.com/*/index.aspx*
@@ -9,7 +9,6 @@
 // @downloadURL https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
 // @icon        data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAk5JREFUeF7tWctxwjAQlStIC1RAAxlmyDFpJWfOIWfOaSU5hhkqSAfpxEExGDBa7a5XljX244ok73v7tD9Vbua/aub4HQiAAmbOAK7AzAWAIDjaFdgdXt6u1bdZfb6PocZRCNgdnr+dq9a3gOv9ZvX1lJuE7AScPL8lgG5zKwEE5JYcFNAEP1wBxIAwAwiCyAKZCyKkQaTBzAygDkAdgEIIlSBKYfQCaIbQDaIbnFI3qJnwWipBzXekBa65GQoDoie8fQkIT5KdeX6QgIDQiNvzHyahDwEEePIbUu/7dSYCGDBBA7UE0OBbmCYVmAjwJvAG3ipBQwB/9j8J4xKgJUFKgAy8/TXJrICzEHmDG2MlBPBn0TFGc/9FMaCbevwmanDJG17vj2+C+1gzdAye6/t3wy4sNsu0G7gha1QBEW+R944joarcb127RchTsf8u61nw3TI7GiOSEyCLCVqhntfH7zzhsPwEDEMCH/CKIiAtCTz45nvBcds4CpBnB+46yMAXS4BNCXLwRROgJ6FJl1wK62qnyCtwbSSXIpu1Oq/fnl9gDLj3EtU92sAXfwV4JfT3PBNwh8gCqY1NcR754tSfAM/s68fjz2L5sLxPVsmMJnsLLkFePO/Bkz2EjYB499Y2N1JbB1gXa554J4naYVn0HgCb/Uh2WCIkIPqiazdzkBN47/vPigjQFzKDIFIcKgOvIuCSZyUDC4WtSZfqK0ixAgIVV1LTUxymLZ3VCkhhZGln9FJAaSAs9oAAC3tT2AsFTMGLFgxQgIW9Kez9A8eY4FA22gNKAAAAAElFTkSuQmCC
 // @require     https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
-// @require     https://github.com/bloofi/CnC_TA/raw/master/CnCTA-Base-Finder.user.js
 // @grant       none
 // ==/UserScript==
 (() => {
@@ -28,7 +27,7 @@
             CitiesCount,
             AllianceCitiesArr;
         /*
-         ** get Alliances list
+         * get Alliances list
          */
         function getAlliances() {
             timestamp = performance.now();
@@ -98,7 +97,7 @@
             }), null);
         }
         /*
-         ** get Players and Cities list
+         * get Players and Cities list
          */
         function getPlayersAndCities() {
             timestamp = performance.now();
@@ -222,7 +221,7 @@
             }), null);
         }
         /*
-         ** get Player Hall Of Fame list
+         * get Player Hall Of Fame list
          */
         function getPlayerHallOfFame() {
             timestamp = performance.now();
@@ -259,7 +258,7 @@
             }), null);
         }
         /*
-         ** get Alliance Roster
+         * get Alliance Roster
          */
         function getAllianceRoster() {
             timestamp = performance.now();
@@ -274,7 +273,7 @@
             console.log(`%cAlliance Roster (${roster.length}) list done in ${msToTime(performance.now() - timestamp)}`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
         }
         /*
-         ** get Points Of Interest list
+         * get Points Of Interest list
          */
         function getPOIs() {
             const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
@@ -322,7 +321,7 @@
             }
         }
         /*
-         ** get Alliance Cities list
+         * get Alliance Cities list
          */
         async function getAllianceCities() {
             const memberDataAsArray = ClientLib.Data.MainData.GetInstance().get_Alliance().get_MemberDataAsArray();
@@ -399,7 +398,6 @@
         function loadCity(id) {
             return new Promise((resolve) => {
                 ClientLib.API.Util.SetPlayAreaView(ClientLib.Data.PlayerAreaViewMode.pavmNone, id, 0, 0); // Set the play area view for the current city
-                //webfrontend.gui.UtilView.selectAndCenterCityOnRegionViewWindow(id);
                 const checkLoading = setInterval(() => {
                     const loadedCity = ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentCity();
                     // Check if the loaded city's ID matches the requested city ID
@@ -460,7 +458,7 @@
             }
         }
         /*
-         ** helper functions
+         * helper functions
          */
         //list to CSV (Comma Separated Values file)
         function getCSV(data, name) {
@@ -546,7 +544,7 @@
             return Math.sqrt((fx - x) ** 2 + (fy - y) ** 2); //distance formula in cartesian coordinates : d = √[(x₂ - x₁)² + (y₂ - y₁)² + (z₂ - z₁)²] (z1=0 ,z2=0 in 2D spaces)
         }
         /*
-         ** initialization logic
+         * initialization logic
          */
         //add to Scripts menu
         function init() {
@@ -556,18 +554,25 @@
                 iconLime = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGpJREFUOE9jZKAQMFKonwG/Af8Z/oMtYMStbtQAUPDgA2QFIrImXGwkSxEuaGGQZ6hheAiWg2lEdx0sOpHUIgwAaUKOb3RD0OWgfNwGILsEPSEhWYZqAIFUB/cRVgPw+R1XWIBTOYWAYgMAXJ0qEdD91o0AAAAASUVORK5CYII=',
                 iconRed = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGxJREFUOE9jZKAQMFKonwGvAf8ZGP6DLGAEI+xg1AA8gQMKMrICEVkTLjZyfCBioYVBnqGG4SGyzegRB49OJLVwA0C2Icc3zHaYIehyMD5OA/CFAbJlKAYQSnUw12A1AJ/fcYYFJJlTBig2AABvnSoRu23XWQAAAABJRU5ErkJggg==',
                 iconBlue = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG5JREFUOE9jZKAQMFKonwGvAU6tX/6DLNhXzYNT3agBDDQIROSQx8VGjnpELLQwyDPUMDwEScI0oqcReHQiqYUbANKEHN/ohqDLwfg4DUB2CXpCQrYMxQBCqQ7mJawG4PM7zrBgIBCNxGQ0inMjAD6pUBFgbmXxAAAAAElFTkSuQmCC';
-            ScriptsButton.Add('Alliances', iconLime);
-            ScriptsButton.Add('Players and Cities', iconLime);
-            ScriptsButton.Add('Player Hall of Fame', iconLime);
-            ScriptsButton.Add('Alliance Roster', iconLime);
-            ScriptsButton.Add('Alliance Cities', iconRed);
-            ScriptsButton.Add('Points of Interest', iconBlue);
-            children[children.length - 6].addListener('execute', getAlliances, null);
-            children[children.length - 5].addListener('execute', getPlayersAndCities, null);
-            children[children.length - 4].addListener('execute', getPlayerHallOfFame, null);
-            children[children.length - 3].addListener('execute', getAllianceRoster, null);
-            children[children.length - 2].addListener('execute', getAllianceCities, null);
-            children[children.length - 1].addListener('execute', getPOIs, null);
+            // Add the menu items
+            ScriptsButton.Add("Alliances", iconLime);
+            ScriptsButton.Add("Players and Cities", iconLime);
+            ScriptsButton.Add("Player Hall of Fame", iconLime);
+            ScriptsButton.Add("Alliance Roster", iconLime);
+            ScriptsButton.Add("Alliance Cities", iconRed);
+            ScriptsButton.Add("Points of Interest", iconBlue);
+
+            // Use a timer to delay adding listeners until the menu items are fully added
+            qx.event.Timer.once(() => {
+                const children = ScriptsButton.getMenu().getChildren();
+
+                children[children.length - 6].addListener("execute", getAlliances);
+                children[children.length - 5].addListener("execute", getPlayersAndCities);
+                children[children.length - 4].addListener("execute", getPlayerHallOfFame);
+                children[children.length - 3].addListener("execute", getAllianceRoster);
+                children[children.length - 2].addListener("execute", getAllianceCities);
+                children[children.length - 1].addListener("execute", getPOIs);
+            }, null, 50); // Delay the execution slightly (50ms)
         }
         //wait for game
         function GO() {
@@ -585,7 +590,7 @@
         GO();
     }
     /*
-     ** inject script
+     * inject script
      */
     if (/commandandconquer\.com/i.test(document.domain)) {
         try {
@@ -594,7 +599,7 @@
             script_block.type = 'text/javascript';
             document.getElementsByTagName('head')[0].appendChild(script_block);
         } catch (e) {
-            console.log('Failed to inject CnC-TA Lister:', e);
+            console.log('Failed to inject script:', e);
         }
     }
 })();
