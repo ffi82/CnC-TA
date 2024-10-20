@@ -1,20 +1,20 @@
 // ==UserScript==
 // @name        CnC-TA Lister
 // @namespace   https://github.com/ffi82/CnC-TA/
-// @version     2024-10-16
-// @description Under 'Scripts' menu, click to download CSV files containing Alliance Cities, Alliances, Players and Cities, Player Hall Of Fame / Challenge ranking, Alliance Roster or POIs data. How to: Click --> See progress bar above game options --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
+// @version     2024-10-20
+// @description Under 'Scripts' menu, click to download CSV files containing Alliance Cities, Alliances, Players and Cities, Player Hall Of Fame / Challenge ranking, Alliance Roster, Alliance Cities and POIs data. How to: Click --> See progress bar above game options --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
 // @author      ffi82
-// @contributor leo7044, bloofi, c4l10s <== i took and adjusted pieces of code... indirect contribution (what license :P)
+// @match       https://*.alliances.commandandconquer.com/*/index.aspx*
 // @updateURL   https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.meta.js
 // @downloadURL https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
-// @match       https://*.alliances.commandandconquer.com/*/index.aspx*
 // @icon        data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAk5JREFUeF7tWctxwjAQlStIC1RAAxlmyDFpJWfOIWfOaSU5hhkqSAfpxEExGDBa7a5XljX244ok73v7tD9Vbua/aub4HQiAAmbOAK7AzAWAIDjaFdgdXt6u1bdZfb6PocZRCNgdnr+dq9a3gOv9ZvX1lJuE7AScPL8lgG5zKwEE5JYcFNAEP1wBxIAwAwiCyAKZCyKkQaTBzAygDkAdgEIIlSBKYfQCaIbQDaIbnFI3qJnwWipBzXekBa65GQoDoie8fQkIT5KdeX6QgIDQiNvzHyahDwEEePIbUu/7dSYCGDBBA7UE0OBbmCYVmAjwJvAG3ipBQwB/9j8J4xKgJUFKgAy8/TXJrICzEHmDG2MlBPBn0TFGc/9FMaCbevwmanDJG17vj2+C+1gzdAye6/t3wy4sNsu0G7gha1QBEW+R944joarcb127RchTsf8u61nw3TI7GiOSEyCLCVqhntfH7zzhsPwEDEMCH/CKIiAtCTz45nvBcds4CpBnB+46yMAXS4BNCXLwRROgJ6FJl1wK62qnyCtwbSSXIpu1Oq/fnl9gDLj3EtU92sAXfwV4JfT3PBNwh8gCqY1NcR754tSfAM/s68fjz2L5sLxPVsmMJnsLLkFePO/Bkz2EjYB499Y2N1JbB1gXa554J4naYVn0HgCb/Uh2WCIkIPqiazdzkBN47/vPigjQFzKDIFIcKgOvIuCSZyUDC4WtSZfqK0ixAgIVV1LTUxymLZ3VCkhhZGln9FJAaSAs9oAAC3tT2AsFTMGLFgxQgIW9Kez9A8eY4FA22gNKAAAAAElFTkSuQmCC
 // @require     https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
+// @require     https://github.com/bloofi/CnC_TA/raw/master/CnCTA-Base-Finder.user.js
 // @grant       none
 // ==/UserScript==
-(function() {
+(() => {
     'use strict';
-    const script = () => {
+    const ListerScript = () => {
         const scriptName = 'CnC-TA Lister';
         let timestamp,
             Alliances,
@@ -26,103 +26,10 @@
             Cities,
             CitiesArr,
             CitiesCount,
-            AllianceCitiesArr,
-            pbContainer;
-
-        function init() {
-            console.log(`${scriptName} loaded`);
-            const ScriptsButton = qx.core.Init.getApplication().getMenuBar().getScriptsButton(),
-                children = ScriptsButton.getMenu().getChildren(),
-                iconGreen = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=',
-                iconLime = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGpJREFUOE9jZKAQMFKonwG/Af8Z/oMtYMStbtQAUPDgA2QFIrImXGwkSxEuaGGQZ6hheAiWg2lEdx0sOpHUIgwAaUKOb3RD0OWgfNwGILsEPSEhWYZqAIFUB/cRVgPw+R1XWIBTOYWAYgMAXJ0qEdD91o0AAAAASUVORK5CYII=',
-                iconRed = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGxJREFUOE9jZKAQMFKonwGvAf8ZGP6DLGAEI+xg1AA8gQMKMrICEVkTLjZyfCBioYVBnqGG4SGyzegRB49OJLVwA0C2Icc3zHaYIehyMD5OA/CFAbJlKAYQSnUw12A1AJ/fcYYFJJlTBig2AABvnSoRu23XWQAAAABJRU5ErkJggg==',
-                iconBlue = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG5JREFUOE9jZKAQMFKonwGvAU6tX/6DLNhXzYNT3agBDDQIROSQx8VGjnpELLQwyDPUMDwEScI0oqcReHQiqYUbANKEHN/ohqDLwfg4DUB2CXpCQrYMxQBCqQ7mJawG4PM7zrBgIBCNxGQ0inMjAD6pUBFgbmXxAAAAAElFTkSuQmCC';
-            pbContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({
-                padding: 0,
-                width: 115,
-                decorator: new qx.ui.decoration.Decorator().set({
-                    width: 1,
-                    style: "solid",
-                    color: "black",
-                    backgroundColor: "transparrent",
-                }),
-            });
-            qx.core.Init.getApplication().getOptionsBar().getLayoutParent().getChildren()[0].getChildren()[2].addAt(pbContainer, 1);
-            ScriptsButton.Add('Alliances', iconLime);
-            ScriptsButton.Add('Players and Cities', iconLime);
-            ScriptsButton.Add('Player Hall of Fame', iconLime);
-            ScriptsButton.Add('Alliance Roster', iconLime);
-            ScriptsButton.Add('Alliance Cities', iconRed);
-            ScriptsButton.Add('Points of Interest', iconBlue);
-            children[children.length - 6].addListener('execute', getAlliances, this);
-            children[children.length - 5].addListener('execute', getPlayersAndCities, this);
-            children[children.length - 4].addListener('execute', getPlayerHallOfFame, this);
-            children[children.length - 3].addListener('execute', getAllianceRoster, this);
-            children[children.length - 2].addListener('execute', getAllianceCities, this);
-            children[children.length - 1].addListener('execute', getPOIs, this);
-        }
-        //list to .csv
-        function getCSV(data, name) {
-            let elLink = document.createElement("a");
-            let oBlob = new Blob([data], {
-                type: 'text/csv;charset=utf-8;'
-            });
-            elLink.download = new Date().toISOString().slice(0, -14) + "_" + ClientLib.Data.MainData.GetInstance().get_Server().get_WorldId() + "_" + name;
-            let oLastUrl = window.URL.createObjectURL(oBlob);
-            elLink.href = oLastUrl;
-            document.body.appendChild(elLink);
-            elLink.click();
-            document.body.removeChild(elLink);
-            elLink = null;
-        }
-        //progress bar for the lists
-        function progressBar(pbIndex, pbLength, pbName) {
-            const pb = new qx.ui.basic.Label();
-            pb.set({
-                value: pbIndex + " / " + pbLength + " " + pbName,
-                width: 0,
-                height: 11,
-                textColor: "black",
-                font: qx.bom.Font.fromString("9px tahoma"),
-                backgroundColor: "white",
-                decorator: "main",
-            });
-            pbContainer.removeAll();
-            pbContainer.add(pb);
-            pb.setWidth(pbIndex / pbLength * 113);
-            if (pbIndex === pbLength) pbContainer.removeAll();
-        }
-        //convert milliseconds to time format "hh:mm:ss:mmm"
-        function msToTime(milliseconds) {
-            const hours = Math.floor(milliseconds / (1000 * 60 * 60));
-            const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
-            const millisecondsLeft = Math.floor(milliseconds % 1000);
-            return `${hours.toString().padStart(2, '0')}h:${minutes.toString().padStart(2, '0')}m:${seconds.toString().padStart(2, '0')}s:${millisecondsLeft.toString().padStart(3, '0')}ms`;
-        }
-        //get world sector abbreviation by coords
-        function getSector(x, y) {
-            const qxApp = qx.core.Init.getApplication();
-            const WorldWidth2 = Math.floor(ClientLib.Data.MainData.GetInstance().get_Server().get_WorldWidth() / 2);
-            const WorldHeight2 = Math.floor(ClientLib.Data.MainData.GetInstance().get_Server().get_WorldHeight() / 2);
-            const SectorCount = ClientLib.Data.MainData.GetInstance().get_Server().get_SectorCount();
-            const WorldCX = (WorldWidth2 - x);
-            const WorldCY = (y - WorldHeight2);
-            const WorldCa = ((Math.atan2(WorldCX, WorldCY) * SectorCount) / (2 * Math.PI)) + (SectorCount + 0.5);
-            const SectorNo = Math.floor(WorldCa) % SectorCount;
-            //const sectorNames = ["tnf:south abbr", "tnf:southwest abbr", "tnf:west abbr", "tnf:northwest abbr", "tnf:north abbr", "tnf:northeast abbr", "tnf:east abbr", "tnf:southeast abbr"];
-            //return qxApp.tr(sectorNames[SectorNo]);
-            return qxApp.tr(`tnf:${['south', 'southwest', 'west', 'northwest', 'north', 'northeast', 'east', 'southeast'][SectorNo]} abbr`);
-        }
-        //get distance from center by coords
-        function getDistanceFromCenter(x, y) {
-            const Fortress = ClientLib.Data.MainData.GetInstance().get_EndGame().get_Hubs().d[1];
-            const fx = Fortress.get_X() + Fortress.get_SizeX() / 2;
-            const fy = Fortress.get_Y() + Fortress.get_SizeY() / 2;
-            //return ((ClientLib.Data.MainData.GetInstance().get_Server().get_WorldWidth() / 2 - x) ** 2 + (ClientLib.Data.MainData.GetInstance().get_Server().get_WorldHeight() / 2 - y) ** 2) ** .5;
-            return Math.sqrt((fx - x) ** 2 + (fy - y) ** 2); //distance formula in cartesian coordinates : d = √[(x₂ - x₁)² + (y₂ - y₁)² + (z₂ - z₁)²] (z1=0 ,z2=0 in 2D spaces)
-        }
-        //get Alliances list
+            AllianceCitiesArr;
+        /*
+         ** get Alliances list
+         */
         function getAlliances() {
             timestamp = performance.now();
             Alliances = "";
@@ -190,7 +97,9 @@
                 }
             }), null);
         }
-        //get Players and Cities lists
+        /*
+         ** get Players and Cities list
+         */
         function getPlayersAndCities() {
             timestamp = performance.now();
             Players = "";
@@ -312,7 +221,9 @@
                 }
             }), null);
         }
-        //get Player Hall Of Fame list: Challange ranking
+        /*
+         ** get Player Hall Of Fame list
+         */
         function getPlayerHallOfFame() {
             timestamp = performance.now();
             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand("RankingGetCount", {
@@ -347,7 +258,9 @@
                 }), null);
             }), null);
         }
-        //get Alliance Roster
+        /*
+         ** get Alliance Roster
+         */
         function getAllianceRoster() {
             timestamp = performance.now();
             const roster = ClientLib.Data.MainData.GetInstance().get_Alliance().get_MemberDataAsArray();
@@ -360,12 +273,15 @@
             getCSV(AllianceRoster, "AllianceRoster");
             console.log(`%cAlliance Roster (${roster.length}) list done in ${msToTime(performance.now() - timestamp)}`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
         }
-        //get Points Of Interest List
+        /*
+         ** get Points Of Interest list
+         */
         function getPOIs() {
             const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
             const zoomFactor = region.get_ZoomFactor();
             timestamp = performance.now();
             if (zoomFactor !== 0.01 && confirm(`Switch to region view and set zoom factor @ 0.01 to be able to capture all POIs.\r\nYour current zoom factor: ${zoomFactor}\r\n\r\nClick 'Points of Interest' again once region view has loaded.`)) {
+                ClientLib.Config.Main.GetInstance().SetConfig(ClientLib.Config.Main.CONFIG_VIS_REGION_MINZOOM, 0); //Uncheck 'Allow max zoom out' in game options
                 region.set_ZoomFactor(0.01);
                 qx.core.Init.getApplication().showMainOverlay(!1);
             } else {
@@ -402,90 +318,111 @@
                 POIs = Object.keys(AllPOIs[0]) + "\r\n" + POIs;
                 getCSV(POIs, "POIs");
                 console.log(`%cPoints of Interest (${AllPOIs.length}) list done in ${msToTime(performance.now() - timestamp)}`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
-                confirm("Done. World POI list was downloaded.\r\nReset zoom factor?") ? region.set_ZoomFactor(1) : null;
+                confirm("Done. World POI list was downloaded.\r\nReset zoom factor?") ? region.set_ZoomFactor(1) && ClientLib.Config.Main.GetInstance().SetConfig(ClientLib.Config.Main.CONFIG_VIS_REGION_MINZOOM, 1) : null;
             }
         }
-        //get Alliance Cities
-        function getAllianceCities() {
+        /*
+         ** get Alliance Cities list
+         */
+        async function getAllianceCities() {
             const memberDataAsArray = ClientLib.Data.MainData.GetInstance().get_Alliance().get_MemberDataAsArray();
             timestamp = performance.now();
             AllianceCitiesArr = [];
 
-            function getPublicPlayerInfoById(n) {
-                ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {
-                    id: n
-                }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
-                    const s = ClientLib.Data.MainData.GetInstance().get_Server().get_Name();
-                    for (const getCity of data.c) {
-                        AllianceCitiesArr.push({
-                            "Server_Name": s,
-                            "Alliance_Name": data.an,
-                            "Alliance_Id": data.a,
-                            "Player_Name": data.n,
-                            "Player_Id": data.i,
-                            "Player_Faction": data.f,
-                            "Player_Ranking": data.r,
-                            "Player_Score": data.p,
-                            "Player_Bases_Count": data.c.length,
-                            "Player_Distance_to_Center": data.dccc,
-                            "Player_has_Code": data.hchc,
-                            "Player_versus_Bases": data.bd,
-                            "Player_versus_Environment": data.bde,
-                            "Player_versus_Player": data.d,
-                            "Player_is_Inactive": data.ii,
-                            "Player_Endgame_Won_Count": data.ew.length,
-                            "Player_Challange_Won_Count": data.cw.length,
-                            "Player_Other_Won_Count": data.mw.length,
-                            "Endgame_Won_Server_Name": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).n : '',
-                            "Endgame_Won_Rank": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).r : '0',
-                            "Endgame_Won_Alliance": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).an : '',
-                            "Endgame_Won_Timestamp": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).ws : '',
-                            "Endgame_Won_Member_Role": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).mr : '',
-                            "Base_Name": getCity.n,
-                            "Base_Id": getCity.i,
-                            "Base_Score": getCity.p,
-                            "Base_Coord_X": getCity.x,
-                            "Base_Coord_Y": getCity.y,
-                            "Base_Sector": getSector(getCity.x, getCity.y),
-                            "Base_Distance_from_Center": getDistanceFromCenter(getCity.x, getCity.y),
-                        });
-                    }
-                }), null);
+            // Sequentially process each member's public info
+            for (const member of memberDataAsArray) {
+                await getPublicPlayerInfoByIdAC(member.Id); // Sequential execution
             }
-            for (const member of memberDataAsArray) getPublicPlayerInfoById(member.Id);
-            setTimeout(function() {
-                AllianceCitiesArr.sort((a, b) => b.Base_Score - a.Base_Score);
-                AllianceCitiesArr.sort((a, b) => a.Player_Id - b.Player_Id);
-                console.table(AllianceCitiesArr);
-                processCityIDs(AllianceCitiesArr.map(item => item.Base_Id));
-            }, 3000); // Adjust the timeout as needed
+
+            // After processing all cities, sort and process the city IDs
+            AllianceCitiesArr.sort((a, b) => b.Base_Score - a.Base_Score);
+            AllianceCitiesArr.sort((a, b) => a.Player_Id - b.Player_Id);
+
+            console.table(AllianceCitiesArr);
+
+            // Process cities asynchronously (but sequentially)
+            await processCityIDs(AllianceCitiesArr.map(item => item.Base_Id));
+        }
+
+        async function getPublicPlayerInfoByIdAC(playerId) {
+            try {
+                const data = await new Promise((resolve, reject) => {
+                    ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand(
+                        'GetPublicPlayerInfo', {
+                            id: playerId
+                        },
+                        webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
+                            resolve(data);
+                        }), reject);
+                });
+
+                const s = ClientLib.Data.MainData.GetInstance().get_Server().get_Name();
+                for (const city of data.c) {
+                    AllianceCitiesArr.push({
+                        "Server_Name": s,
+                        "Alliance_Name": data.an,
+                        "Alliance_Id": data.a,
+                        "Player_Name": data.n,
+                        "Player_Id": data.i,
+                        "Player_Faction": data.f,
+                        "Player_Ranking": data.r,
+                        "Player_Score": data.p,
+                        "Player_Bases_Count": data.c.length,
+                        "Player_Distance_to_Center": data.dccc,
+                        "Player_has_Code": data.hchc,
+                        "Player_versus_Bases": data.bd,
+                        "Player_versus_Environment": data.bde,
+                        "Player_versus_Player": data.d,
+                        "Player_is_Inactive": data.ii,
+                        "Player_Endgame_Won_Count": data.ew.length,
+                        "Player_Challange_Won_Count": data.cw.length,
+                        "Player_Other_Won_Count": data.mw.length,
+                        "Endgame_Won_Server_Name": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).n : '',
+                        "Endgame_Won_Rank": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).r : '0',
+                        "Endgame_Won_Alliance": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).an : '',
+                        "Endgame_Won_Timestamp": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).ws : '',
+                        "Endgame_Won_Member_Role": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).mr : '',
+                        "Base_Name": city.n,
+                        "Base_Id": city.i,
+                        "Base_Score": city.p,
+                        "Base_Coord_X": city.x,
+                        "Base_Coord_Y": city.y,
+                        "Base_Sector": getSector(city.x, city.y),
+                        "Base_Distance_from_Center": getDistanceFromCenter(city.x, city.y),
+                    });
+                }
+            } catch (error) {
+                console.error(`Error fetching player info for ID ${playerId}:`, error);
+            }
         }
 
         function loadCity(id) {
             return new Promise((resolve) => {
-                // Set the play area view for the City ID
-                ClientLib.API.Util.SetPlayAreaView(ClientLib.Data.PlayerAreaViewMode.pavmNone, id, 0, 0);
-                // Check if the current city matches the loaded object ID
+                ClientLib.API.Util.SetPlayAreaView(ClientLib.Data.PlayerAreaViewMode.pavmNone, id, 0, 0); // Set the play area view for the current city
+                //webfrontend.gui.UtilView.selectAndCenterCityOnRegionViewWindow(id);
                 const checkLoading = setInterval(() => {
                     const loadedCity = ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentCity();
+                    // Check if the loaded city's ID matches the requested city ID
                     if (loadedCity && loadedCity.get_Id() === id && loadedCity.get_FoundStep()) {
                         clearInterval(checkLoading);
                         resolve(loadedCity);
                     }
-                }, 200); // Check every 200 ms
+                }, 200);
             });
         }
 
-        async function processCityIDs(objectIds) {
-            let a = 0;
+        async function processCityIDs(cityIds) {
+            let processedCount = 0;
             let AllianceCities = "";
-            qx.core.Init.getApplication().showMainOverlay(!1);
-            for (const cityId of objectIds) {
+            let failedCities = [];
+
+            for (const cityId of cityIds) {
                 try {
+                    // Wait for the city to load
                     const loadedCity = await loadCity(cityId);
                     const cityData = {
                         ...AllianceCitiesArr.find(city => city.Base_Id === cityId),
-                        "Base_Found_Step": loadedCity.get_FoundStep(), //since server start
+                        "Base_Found_Step": loadedCity.get_FoundStep(),
                         "Base_is_Ghost": loadedCity.get_IsGhostMode(),
                         "Base_Tiberium_per_Hour": loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Tiberium, true, true),
                         "Base_Crystal_per_Hour": loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Crystal, true, true),
@@ -494,47 +431,170 @@
                         "Base_Base_Level": loadedCity.get_LvlBase(),
                         "Base_Defense_Level": loadedCity.get_LvlDefense(),
                         "Base_Offense_Level": loadedCity.get_LvlOffense(),
-                        "Base_Construction_Yard_Level": loadedCity.get_ConstructionYardLevel(), //doesn't always load...
-                        "Base_Command_Center_Level": loadedCity.get_CommandCenterLevel(), //doesn't always load...
+                        "Base_Construction_Yard_Level": loadedCity.get_ConstructionYardLevel(),
+                        "Base_Command_Center_Level": loadedCity.get_CommandCenterLevel(),
                     };
+                    qx.core.Init.getApplication().showMainOverlay(!1);
+                    if (!loadedCity) {
+                        failedCities.push(cityId);
+                        continue;
+                    }
                     console.log(cityData);
-                    a++;
-                    AllianceCities += Object.values(cityData) + "\r\n";
-                    progressBar(a, objectIds.length, "Alliance Cities");
-                    if (a === objectIds.length) {
-                        AllianceCities = Object.keys(cityData) + "\r\n" + AllianceCities;
-                        console.log(AllianceCities);
+                    processedCount++;
+                    AllianceCities += Object.values(cityData).join(",") + "\r\n";
+                    progressBar(processedCount, cityIds.length, "Alliance Cities");
+
+                    if (processedCount === cityIds.length) {
+                        AllianceCities = Object.keys(cityData).join(",") + "\r\n" + AllianceCities;
                         getCSV(AllianceCities, "AllianceCities");
-                        console.log(`%cAlliance Cities (${objectIds.length}) list done in ${msToTime(performance.now() - timestamp)}`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
+                        console.log(AllianceCities);
+                        console.log(`%cAlliance Cities (${cityIds.length}) list done in ${msToTime(performance.now() - timestamp)}`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
                     }
                 } catch (error) {
                     console.error(`Error loading City ID ${cityId}:`, error);
+                    failedCities.push(cityId);
                 }
             }
+            if (failedCities.length > 0) {
+                console.warn(`Failed to load ${failedCities.length} cities:`, failedCities);
+            }
+        }
+        /*
+         ** helper functions
+         */
+        //list to CSV (Comma Separated Values file)
+        function getCSV(data, name) {
+            let elLink = document.createElement("a");
+            let oBlob = new Blob([data], {
+                type: 'text/csv;charset=utf-8;'
+            });
+            elLink.download = new Date().toISOString().slice(0, -14) + "_" + ClientLib.Data.MainData.GetInstance().get_Server().get_WorldId() + "_" + name;
+            let oLastUrl = window.URL.createObjectURL(oBlob);
+            elLink.href = oLastUrl;
+            document.body.appendChild(elLink);
+            elLink.click();
+            document.body.removeChild(elLink);
+            elLink = null;
+        }
+        // Progress bar for the lists
+        function progressBar(pbIndex, pbLength, pbName) {
+            const app = qx.core.Init.getApplication();
+            const optionsBar = app.getOptionsBar().getLayoutParent().getChildren()[0].getChildren()[2];
+            let pbContainer = optionsBar.getChildren().find(child => child.getUserData("pbContainer")); // Try to find an existing pbContainer in the parent
+            if (!pbContainer) { // If pbContainer doesn't exist, create and add it
+                pbContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({
+                    padding: 0,
+                    width: 115,
+                    decorator: new qx.ui.decoration.Decorator().set({
+                        width: 1,
+                        style: "solid",
+                        color: "black",
+                        backgroundColor: "transparent",
+                    }),
+                });
+                pbContainer.setUserData("pbContainer", true); // Mark this container with user data to identify it later
+                optionsBar.addAt(pbContainer, 1); // Add pbContainer only once
+            }
+            let pb = pbContainer.getChildren()[0];
+            if (!pb) { // If no progress bar exists inside pbContainer, create one
+                pb = new qx.ui.basic.Label();
+                pb.set({
+                    value: pbIndex + " / " + pbLength + " " + pbName,
+                    width: 0,
+                    height: 11,
+                    textColor: "black",
+                    font: qx.bom.Font.fromString("9px tahoma"),
+                    backgroundColor: "white",
+                    decorator: "main",
+                });
+                pbContainer.add(pb);
+            }
+            pb.set({ // Update the progress label and width
+                value: pbIndex + " / " + pbLength + " " + pbName,
+                width: (pbIndex / pbLength) * 113,
+            });
+            if (pbIndex === pbLength) { // Remove pbContainer when progress is complete
+                pbContainer.getLayoutParent().remove(pbContainer);
+            }
+        }
+        //convert milliseconds to time format "hh:mm:ss:mmm"
+        function msToTime(milliseconds) {
+            const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+            const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
+            const millisecondsLeft = Math.floor(milliseconds % 1000);
+            return `${hours.toString().padStart(2, '0')}h:${minutes.toString().padStart(2, '0')}m:${seconds.toString().padStart(2, '0')}s:${millisecondsLeft.toString().padStart(3, '0')}ms`;
+        }
+        //get world sector abbreviation by coords
+        function getSector(x, y) {
+            const qxApp = qx.core.Init.getApplication();
+            const WorldWidth2 = Math.floor(ClientLib.Data.MainData.GetInstance().get_Server().get_WorldWidth() / 2);
+            const WorldHeight2 = Math.floor(ClientLib.Data.MainData.GetInstance().get_Server().get_WorldHeight() / 2);
+            const SectorCount = ClientLib.Data.MainData.GetInstance().get_Server().get_SectorCount();
+            const WorldCX = (WorldWidth2 - x);
+            const WorldCY = (y - WorldHeight2);
+            const WorldCa = ((Math.atan2(WorldCX, WorldCY) * SectorCount) / (2 * Math.PI)) + (SectorCount + 0.5);
+            const SectorNo = Math.floor(WorldCa) % SectorCount;
+            return qxApp.tr(`tnf:${['south', 'southwest', 'west', 'northwest', 'north', 'northeast', 'east', 'southeast'][SectorNo]} abbr`);
+        }
+        //get distance from center by coords
+        function getDistanceFromCenter(x, y) {
+            const Fortress = ClientLib.Data.MainData.GetInstance().get_EndGame().get_Hubs().d[1];
+            const fx = Fortress.get_X() + Fortress.get_SizeX() / 2;
+            const fy = Fortress.get_Y() + Fortress.get_SizeY() / 2;
+            //return ((ClientLib.Data.MainData.GetInstance().get_Server().get_WorldWidth() / 2 - x) ** 2 + (ClientLib.Data.MainData.GetInstance().get_Server().get_WorldHeight() / 2 - y) ** 2) ** .5;
+            return Math.sqrt((fx - x) ** 2 + (fy - y) ** 2); //distance formula in cartesian coordinates : d = √[(x₂ - x₁)² + (y₂ - y₁)² + (z₂ - z₁)²] (z1=0 ,z2=0 in 2D spaces)
+        }
+        /*
+         ** initialization logic
+         */
+        //add to Scripts menu
+        function init() {
+            const ScriptsButton = qx.core.Init.getApplication().getMenuBar().getScriptsButton(),
+                children = ScriptsButton.getMenu().getChildren(),
+                iconGreen = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG1JREFUOE9jZKAQMFKonwG/AQ0M/8EWNOBWN2oAAy0CETnkcbGR4h4RCy0M8gw1DA+h0QaJPnQAi04ktQgDQLYhxzfMdpgh6HJQPm4DIAkIe0JCsgzVAAKpDu4jrAYg20gogyB5h8aZiZBLgPIA/0oqEY62gBUAAAAASUVORK5CYII=',
+                iconLime = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGpJREFUOE9jZKAQMFKonwG/Af8Z/oMtYMStbtQAUPDgA2QFIrImXGwkSxEuaGGQZ6hheAiWg2lEdx0sOpHUIgwAaUKOb3RD0OWgfNwGILsEPSEhWYZqAIFUB/cRVgPw+R1XWIBTOYWAYgMAXJ0qEdD91o0AAAAASUVORK5CYII=',
+                iconRed = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGxJREFUOE9jZKAQMFKonwGvAf8ZGP6DLGAEI+xg1AA8gQMKMrICEVkTLjZyfCBioYVBnqGG4SGyzegRB49OJLVwA0C2Icc3zHaYIehyMD5OA/CFAbJlKAYQSnUw12A1AJ/fcYYFJJlTBig2AABvnSoRu23XWQAAAABJRU5ErkJggg==',
+                iconBlue = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAG5JREFUOE9jZKAQMFKonwGvAU6tX/6DLNhXzYNT3agBDDQIROSQx8VGjnpELLQwyDPUMDwEScI0oqcReHQiqYUbANKEHN/ohqDLwfg4DUB2CXpCQrYMxQBCqQ7mJawG4PM7zrBgIBCNxGQ0inMjAD6pUBFgbmXxAAAAAElFTkSuQmCC';
+            ScriptsButton.Add('Alliances', iconLime);
+            ScriptsButton.Add('Players and Cities', iconLime);
+            ScriptsButton.Add('Player Hall of Fame', iconLime);
+            ScriptsButton.Add('Alliance Roster', iconLime);
+            ScriptsButton.Add('Alliance Cities', iconRed);
+            ScriptsButton.Add('Points of Interest', iconBlue);
+            children[children.length - 6].addListener('execute', getAlliances, null);
+            children[children.length - 5].addListener('execute', getPlayersAndCities, null);
+            children[children.length - 4].addListener('execute', getPlayerHallOfFame, null);
+            children[children.length - 3].addListener('execute', getAllianceRoster, null);
+            children[children.length - 2].addListener('execute', getAllianceCities, null);
+            children[children.length - 1].addListener('execute', getPOIs, null);
         }
         //wait for game
-        function checkForInit() {
+        function GO() {
             try {
-                if (typeof qx !== 'undefined' && qx && qx.core && qx.core.Init && qx.core.Init.getApplication && qx.core.Init.getApplication() && qx.core.Init.getApplication().initDone) {
+                if (typeof qx !== 'undefined' && qx.core.Init.getApplication().initDone && qx.core.Init.getApplication().getMenuBar().getScriptsButton() !== 'undefined') {
                     init();
+                    console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
                 } else {
-                    window.setTimeout(checkForInit, 1000);
+                    window.setTimeout(GO, 1000);
                 }
             } catch (e) {
                 console.log(`Failed to init script ${scriptName}:`, e);
             }
         }
-        checkForInit();
-    };
-    //inject userscript
+        GO();
+    }
+    /*
+     ** inject script
+     */
     if (/commandandconquer\.com/i.test(document.domain)) {
         try {
             const script_block = document.createElement('script');
-            script_block.innerHTML = `(${script.toString()})();`;
+            script_block.innerHTML = `(${ListerScript.toString()})();`;
             script_block.type = 'text/javascript';
             document.getElementsByTagName('head')[0].appendChild(script_block);
         } catch (e) {
-            console.log('Failed to inject script:', e);
+            console.log(`Failed to inject script ${scriptName}:`, e);
         }
     }
 })();
