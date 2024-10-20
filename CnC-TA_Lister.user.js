@@ -594,7 +594,7 @@
             script_block.type = 'text/javascript';
             document.getElementsByTagName('head')[0].appendChild(script_block);
         } catch (e) {
-            console.log(`Failed to inject script ${scriptName}:`, e);
+            console.log('Failed to inject CnC-TA Lister:', e);
         }
     }
 })();
