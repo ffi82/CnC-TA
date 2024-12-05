@@ -1,200 +1,101 @@
 // ==UserScript==
 // @name         CnC-TA Lister UI
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2024-11-11
-// @description  Extended info... look here if you can't find it :P (seems i'm always in "beta" stage...i plan to add several more tabs... alliance cities is the most troublesome to implement, so i started with it)
+// @version      2024-12-05
+// @description  Some data tables...
 // @author       ffi82
 // @contributor  4o (ChatGPT)
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
 // @updateURL    https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister_UI.meta.js
 // @downloadURL  https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister_UI.user.js
 // @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAhlJREFUeF7tmtFtwzAMRJPBukD36RTdpwtksBb+EGAItu4okYcyYn/tSrzHI2UReT42/3turv9RAMoBmxOoEtjcANUE3Uvg+/X521z19fFzu/75vSgXjvZve7oCuBJ1F4QCwCESQXADcCfoKgCVeBmAkaCtAbxVD2hZ7kVZsx/V8GbXhT1g1Niyiz+gTQN4B/HTAEZ2Q8fOrFWj/m/KAVsBOMSy53a27FMlwAKwimehrlifiQmWQAvAs+kpxDP3EdoByAUM6XMmUwK4g2AVzzhqxfb9/6L46BK4ChwtPhKicAETnxkAyg47D0DrqJ67ArDMA1QC0T5uACzzABSU8rkLAM8jUinedAzONDSmCakF9/vRDoiYB0SeBCx8CCBqHhAp/pxlBGIawErdq8QfIEIArF6HtweA7haejXHZAZZg0Wa9sEgnsLHAHsACYDf0zK7HWhQABCGreNOH0ErX98hU1Bq0A7znAVGCrOuaAPQQMlu/gTIDQITZeUDkCdBiZBLkCsAyD1AAcPkSRBlvzy3zAJV4GQDrCbENgPp9wOBHUmxpRb8Hm2DUPCBaGLv+NABr3bMBqd+bArA6D1CLHO1XAJhssMcW8+XF7Kd8BzoAXYUtn51nYSzUFRhMQigACAKzkVo8m5gCYLGY5bKD1lWUQMhdgL3u/gcATGnSJYAEZX1eALJmzivucoAXyazrlAOyZs4r7u0d8AfcG0xQF263twAAAABJRU5ErkJggg==
-// @require      https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
 // @grant        none
 // ==/UserScript==
 'use strict';
 (() => {
     const ListerUIScript = () => {
-		if (typeof ClientLib === 'undefined' || typeof qx === 'undefined' || !qx.core.Init.getApplication().initDone || !ClientLib.Data.MainData.GetInstance().get_EndGame().get_Hubs().d[1]) {
+        if (typeof ClientLib === 'undefined' || typeof qx === 'undefined' || !qx.core.Init.getApplication().initDone || !ClientLib.Data.MainData.GetInstance().get_EndGame().get_Hubs().d[1]) {
             setTimeout(ListerUIScript, 100); // Retry after 100ms if liraries (ClientLib or qx) are not loaded
             return;
         }
         const scriptName = 'CnC-TA Lister UI';
-        const AllianceCitiesTemplate = {
-            "Server_Name": null,
-            "Alliance_Name": null,
-            "Alliance_Id": null,
-            "Player_Name": null,
-            "Player_Id": null,
-            "Player_Faction": null,
-            "Player_Ranking": null,
-            "Player_Score": null,
-            "Player_Bases_Count": null,
-            "Player_Distance_to_Center": null,
-            "Player_has_Code": null,
-            "Player_versus_Bases": null,
-            "Player_versus_Environment": null,
-            "Player_versus_Player": null,
-            "Player_is_Inactive": null,
-            "Player_Endgame_Won_Count": null,
-            "Player_Challange_Won_Count": null,
-            "Player_Other_Won_Count": null,
-            "Endgame_Won_Server_Name": null,
-            "Endgame_Won_Rank": null,
-            "Endgame_Won_Alliance": null,
-            "Endgame_Won_Timestamp": null,
-            "Endgame_Won_Member_Role": null,
-            "Base_Name": null,
-            "Base_Id": null,
-            "Base_Score": null,
-            "Base_Coords": null,
-            "Base_Sector": null,
-            "Base_Distance_from_Center": null,
-            "Base_Found_Step": null,
-            "Base_is_Ghost": null,
-            "Base_Tiberium_per_Hour": null,
-            "Base_Crystal_per_Hour": null,
-            "Base_Power_per_Hour": null,
-            "Base_Credits_per_Hour": null,
-            "Base_Base_Level": null,
-            "Base_Defense_Level": null,
-            "Base_Offense_Level": null,
-            "Base_Construction_Yard_Level": null,
-            "Base_Command_Center_Level": null,
-            "processedTimestamp": null
-        };
         const qxApp = qx.core.Init.getApplication();
+        const cfg = ClientLib.Config.Main;
+        const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
         const mainData = ClientLib.Data.MainData.GetInstance();
+        const wid = mainData.get_Server().get_WorldId();
         const defaultPoint = mainData.get_EndGame().get_Hubs().d[1];
         const [centerX, centerY] = [defaultPoint.get_X() + defaultPoint.get_SizeX() / 2, defaultPoint.get_Y() + defaultPoint.get_SizeY() / 2];
         const sectorNames = ['south', 'southwest', 'west', 'northwest', 'north', 'northeast', 'east', 'southeast'];
         const clockPositions = Array(12).fill().map((_, i) => `${i || 12} o'clock`);
-        let AllianceCitiesArr = localStorage.getItem("cacheCleared") === "true" ? (localStorage.removeItem("cacheCleared"), []) : JSON.parse(localStorage.getItem('AllianceCitiesArr')) || [];
-        let processedCityIds = JSON.parse(localStorage.getItem('processedCityIds')) || [];
+        const AllianceCitiesTemplate = {
+            Server_Name: null,
+            Alliance_Name: null,
+            Alliance_Id: null,
+            Player_Name: null,
+            Player_Id: null,
+            Player_Faction: null,
+            Player_Ranking: null,
+            Player_Score: null,
+            Player_Bases_Count: null,
+            Player_Distance_to_Center: null,
+            Player_has_Code: null,
+            Player_versus_Bases: null,
+            Player_versus_Environment: null,
+            Player_versus_Player: null,
+            Player_is_Inactive: null,
+            Player_Endgame_Won_Count: null,
+            Player_Challange_Won_Count: null,
+            Player_Other_Won_Count: null,
+            Endgame_Won_Server_Name: null,
+            Endgame_Won_Rank: null,
+            Endgame_Won_Alliance: null,
+            Endgame_Won_Timestamp: null,
+            Endgame_Won_Member_Role: null,
+            Base_Name: null,
+            Base_Id: null,
+            Base_Score: null,
+            Base_Coords: null,
+            Base_Sector: null,
+            Base_Distance_from_Center: null,
+            Base_Found_Step: null,
+            Base_is_Ghost: null,
+            Base_Tiberium_per_Hour: null,
+            Base_Crystal_per_Hour: null,
+            Base_Power_per_Hour: null,
+            Base_Credit_per_Hour: null,
+            Base_Base_Level: null,
+            Base_Defense_Level: null,
+            Base_Offense_Level: null,
+            Base_Construction_Yard_Level: null,
+            Base_Command_Center_Level: null,
+            processedTimestamp: null
+        };
+        const poiTemplate = {
+            Level: null,
+            Name: null,
+            Coords: null,
+            Alliance: null,
+            Score: null,
+            Type: null,
+            Sector: null,
+            Distance: null
+        };
+        const Icons = {
+            Refresh: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAaBJREFUOE+l0j1ok1EUxvHf25amiUJKvzeXUmhxUOiqmw6CrgFxdfNjE1fBwUVFcVM3HbSTkyI6qDiJFCnFWgVxsKXV1BjTpE3e3FdaqSb2I4IXLhcu5zyc53+eyH+eaJv+6PLHEN4XEwuVxHKNxwc6tqzd9Hlhppq8nF81nY99LuwiH1OpEdeNTl059PbBxSe9974n+Vx2vbdJ4NRkObmxP3MMs0g7/mxSHH6V9Y4SYkKVUOH22CaBHixtYWlM7tG09nYG9iIQxVzds3mCHXiOOP38nUyKwRE6Es70tCHZDmKz1vkXicE+0im6Ohno50jqnwX6cBCVhruKN40TRMOzcSjNxxYXY2Emz5dvXN83iMWdorJhIco8DaE8VWSuylKRW8NDWGiVs98Crq0EcwmlH1QKVIvcGW/J6E/BuXyiFFNbob5CeY56jYnDW4l0o9AcpJMfEjeHM068KqsvE2p0drH6lSihVqaS5+HZHO5vWGtUb0cdbY7era+nLZ0lO8TuftLdXBoax+tGLjt5zGAN5Npbwqe1tf0NtSWkVlv4CYSGmRHjxxGoAAAAAElFTkSuQmCC',
+            DownloadCSV: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAWNJREFUOE+lk8Erg3EYxz+blKImGeGqdvNHUC6OFGo5KIc5zVFaIrbDUo4sl+XgJBzHCSlSUlxMLdTMLG3v3u3du3d730fiIl68ea6/5/d5nt/3+/25+Ge5frofvBDZjOZ52Wqz7bM9mLsTqRahuwK5FETGXd/22gLm0yK6+g54SkJk1CFgIfsBqMLjFUTGHAIWcyJ6Aboq8HAJ0QmHgPlHEV0BrwqZJKz4/wgIF0XCk88EVzuoadCah8Y+CPszWKpGYb/3k25fRAwrIoYBdR3eNvD0QOoEdmNptMNTqsrIz4C3XISyIoYK5QJUFNhZz1E6OMbID38ZaGtj8FpEy8N2TEHZTVBXR53lwDsrMtQP8cE1RAJ/T2J7wJTCRhzLzCCSBopAC263D9Oc+f0JU+citTLoJTDKcJTQwLKwSmWWljuZ9n2203Y1z8CNNHi9uJuboF6jenuPdraHaYZ+d8HJD38FkCelEdQP/XcAAAAASUVORK5CYII=',
+            ClearCache: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAYZJREFUOE+1k0FrE0EUx38zm5g22WAa0zY0uB9ACOLFi+lVqqHgQXop1kMp8ahfQA1CIz0YNGIPFcSvUJAam+zBQ2svaQrSox6EklAQPQjBbPbJLqgsaUyg+JjDm5n3/zHvPzzFKUOdUs8/AZe/fBUtLh+s1MC6wYCj78LMWf/+wreOHCbGTqwNHGbrOzJ26aLfVafrcMbQaK356eXhEC6QcoVqyvyjC1I/fpbEZBINKBRhEVztZd4eHAHLUDRS8QEAYL7cEZSH8EL89dsphbB5N9hKX1+31kXMCJz7dJ+j80Ve7+1SX+ry5CDHVNTg5YoKaPoAiy9E4hHkYb6tStVpKltvsO+YrO7nyEQNXhWGABaei0yMQzHfxgfUatjL4dEBNyuOJKMGxestHr9LU3m7hV2I8qhxBSsWGv6CG08dSccNHlxrsbad5pn9ntptl1JzFsscwYO5ck8ypsbpwWQMjn9AdhqaLRgPwcYwE73Pu1p25K+7glIaEaF6L9Rn+v8dplEm9Rcp/HsRO0tPngAAAABJRU5ErkJggg==',
+            Power: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAzdJREFUOE+VlFtvVFUYht+19tqzp51DO6XgNM7YmQotVAoxMZomSkCbmFZAsFITDWiNgVgi4eSNN265MPbCSNCQFIoXNdFmkNYTSEKglYQCoaSN0ZY0pZhyGDul7DJ2Zp/XMvvCRO2AuH7Ak+d7v/V+BP/jqULQ2hEwhCEZMqh/BvbIUTiqSjh5UE4qJSRjFfxmPhe0wUqlRfJ6mqFduovZHUuI+UAgtU+wshiKmWRWkAirv3Z1Yt/EpSsPN2xueiuvSd27YzD+E9QnBBudRMjH7ITjl1ZphvZRx7uf+fceeS9L0+KZDPGNqUlyf1DHoJDtKMLUtRMkRDYOXxjaPnr6cmlpMioat6xvp7N2ZySuXG8hxLqnkQcpiiHyh+lUkwBfO3RucOfEwC9KtLwcJcviU3W1K3dQwS9A86e3PUHseSAhBDkKyLnfUGYwZykW0DcHevo3mjduB5ufr0d7x9dobX97kOXkA9RxBsCU9LYK6PNAXiZjaZSCO3V2kLed7jqxzm84yq7WtfhpaBzfnzyHZQ2PI1ZbaQbkwO6IFfzyjQSy/wB5Nl9MoVjXrbiIyp8c2/9VQzxYwlpeXINAwA9dNzGjZZH69gyu/z6Nl/e8uv8hlH9QEHRwBAEe1Bt/7PkhpV2bworaxXjk0UrUVFfBdl1c7DuPscy0tW7XK+clzX1f5Nnw1qoCRocuo8iJ2tV37dmDruBJKpGy4wd6fdvbNuNY93cwZYLntrzQ67OLOhXD+rnEKsq0PFZga962aBxlrmEs52HW1N9zqq2YM//MrQyUWMRYvaHhG6bTTuKwEZ+A1pokhteOeWF7VdCqEOQLneVzLLfvZEfvs0bexJPNT2Px0iVdNEsPMZeNl+jQPJO/KjYP5BUzeRORfMBtGh3+9fDZ7lNKffPq2bqnVn4u3REpWMbViBPK/h1S0MgbjS3KLzQW+D79eOuHL7Xsfe1mIlF5RLrLu4lkTN0YD2fVNcT5d9kL/qNbkwhdmZ58J5+ba6xZUXOYzjlnXUuZTk8iVwhS0EhVBa18HT6LQ+GBOUW2ueNKYSNdAUMlhN/r7BTsmpcT+kErQiCRCfBNm8AJIeJ+t+tPo7JxHFEeK5MAAAAASUVORK5CYII=',
+            Credit: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAA2pJREFUOE+tlG9sU1UYxp9z723v7d1Gt9La4pCOtS4hBkHd0EZxjKIyZSRD5wfMIGQYcMliyKISHWYNIUr8gExJ3NBkcUjMBqMDgkFEcGMfdOoyMsJYGWPD0bAV7rb+ub29/8wlqUE698nz9bznd573yfs+BP/TIfNxdF0ngYug3WvApOsKAGUNoBJC9Affzglq1HXKdh0mxgyeaEmrBjWXsrA2StamUnHlLmXjZ2sdSBBCtDQsA2RAFoXBKRIWUIy8hPC0L8Vq/htXR5c+/sTSEWZaa01JGIpr5vCzhYiXEaIYsAxQU0hnVVPCxvHM6nti7PXB34eW93ReKrIwNM1Ys2K+8pJQie+p44goXbJuHq/zImYoywA1j9yzqmz2sllabNhfe6Cc0kDZ83LwbaAGFbuakJRkvFztH/f7n2+iRDVY9Bg7Zqj6F8gw9/OxhIujmbVdwbP7Q79dy29trIHbmXffipSsoLN7AAc7zssNX793Vr8jNlqW8Fe2EZLMAH05hgLwybdbPjtSW+RycHtrKtj6g+1aWJiV1z7pZSv9xdj8YTO27Nk8sDjX1TATp3t2e8jMvCCP087Vb61gPz5wVBsP3yUz01FizeERTaXkD5rf7bfEmU+UeKq3zpsdmRNE0/JLwRM/BIb7hl176qvhyM0Gx7H32xsavY1D3wRRWOyZ2Phm+aeaKHU5ei23/xN09Ejnvuv9I3a3Ox+TdyIwmRgsdi3Ezu2bcOJUN85d+lMOHH5/H5lW2+y/smOZoFtYRExSZdvhYwFZkBbuqHsLfd19EGUFWRYWTz+3EsHjP+Ly4LD00Re79qYE5bv8Pu7WHHMUdZg5U8n5cz1NP3X1eta/VopVpav+2YbQ4DC+bzuJsqrVN/2vvNCoCNKZDI+M6kOTerYyGyvQrHT1hdO9b/T/MvBofDrGrSt/EWdO/qw77Lmqd4UnXLl9Q4c6JbVas7JuVDuRyFDU3q7TEyXIseiyGxx8sDGvfrW7Zd3N0TD7TOmKyKZ3Nl6m4topLYluVTRNLP8LQlnZQwNpKDKGsuUPMMgTeBm8k+EZr2pWlk1NCd5HnPaQHlUHVWCEldkIBCR2FBN5zl1Lm2Eogw/myViUJwsYniiUidZVUVD5RGEhxCpAfjBK5s2jtMIOgEp/UAVoD2eRcfc36WeHHqkkmHYAAAAASUVORK5CYII=',
+            Tiberium: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAA6hJREFUOE+tlFtMXFUYhdc++1zmcmCG+zAQGS5DDSXEVIwVY2xNtJqYlvQy+kBqkyYa++AjsVUjPkiMRqM11tTEmhptBR60GjHVkrSgTWk1tmmLIEUqIJcZGGDu58zZ5zdQxKImvLhf915fVva/1s/wPx22HoeI2CsAqwOW3w4A1MaY/U/dGtCKiOMm5FINkjUPSfdAEwyutG1oskkmV81Ebiw3EdrIzNthf4OIWOcAlLQHOWQbXkvVnJaZdUhgBaRQ0M6X9kpx6kGavrANY3SmWo+2MWb9BVsFtRFJ5RPwcjlbnckR7WPzQ0W1nvrLQqaK0YW+u/rmvvT6Ew3JBze0HKc4jpFTGTpQhCRjjJZgq6DDw6S5uREgr/LUheg3B3+mbuwqfBE9E8cRqqpBpwhj7GwvdtcdRKWn/ulsgn9VdAmRUIiJNaAPByM5wu3dlNZT7d8nX2py5jXAiLtw7YeLkPQF1JTV4sLNfgSmyrEv9M4JsWC/ZZnx4b6a/GQXY+KWIyJ2bDpRCO586LfMr29/HuvwsUgMizcWkOtxIuyIwRweB8UyaKx+GDt3HBpkGfqMm64TLgWTe0uQWgYd/ZEUyjMCXFeaz1/peL2j+wNodwdgh+Pg0TlksgnIleWg2TC23/cY4nIKwardZlCt30cwe2ZK9Fm29MnFY/Co3NrE8/iB/l++e/zTw8+rUqAc8P0BazEJ0S/gqfehJBDEC0+04JIYwcB1W2yv2/+qlpE/6u7DODtKpPDRjN8ulp/9aaSj9fT5kyw6bsBxRxR8GwOldCQ7BaxJE+6mIKr8BWjaeCc6Tp3Gyy1dR7SU8obbh3HWdp3UMrdZHVXn2l97s7lZ6IWQ8nX4ixVUbQ3i2vwE5t6/AtvlhVyqQoRnkV+Qi3sqd4ltW/a30qJ5cqrCNbPsyBoxKqLy5Lsfv3fo0UkpCsmvQe6dgbvcjcxWF4yvJ5CejcJ5bwCbdzyJRwr3hHXLc4QLdmo+oYy0bkCCdRLxxdFkoe10NJqu7HO9Zz9p8tfWJ4pyS42rg2cqhq5eBIUN5FT78MD9e8YDxQ3nWEb6loS4nGXqpDKN2DONLMuWRt8JOBZvpAuEW/bJTKrMGkLlKnMRY2W2zjZzCykQpuyY6OGM/W5J1rTEnfNnSmEsZWg1kEtl7QKU+BC0NMVVTZNk05ZUrkkOIqYpACymGsJKxpFyJyJhZNq2QGClHmuS/a91csupVLRSowhAIcC+Xfzf7V9vMa1z/yem2KPLWChEcAAAAABJRU5ErkJggg==',
+            Crystal: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAA5FJREFUOE+tlG1oW2UUx//PfZ57b15uetsm6ctWm1JRSalTaEGZUgbTgmLdHFql2DkVJo5NxlAUJy5DRMHh1LFBqygT/DD9sA8OxE5pNwVh00ynri5N1y5ZUpJ0Se7N6829uY/El+IQVj94vh7Oj3P4//+H4H8qshqHcy5M/gDa0g5WssB7FmGd2gA7RIj9z9lrQJxzMgPQzBWIhRKY1QYBetklUZdiEdNLGTivifFqAfqOPpQIIfxv2DWgie+5KKporjmMZpHRLoHDIgJpMQR+a8rM7rbKVf0GZe0uGOasGnAkRgmp/QsUCnGhcxwe6jB70SS8ejoS2zzUHzhXLpR5olINhiM5p3Y5hbFNt806LedupcrOzn0ELRT688SVjaY5Z5ElrGGK/Uh4KXZgPtsElksj91sUm4fX4/OZPJYyCXT7F/Do+NhBQa8fKXfJ8V1ArXHiCujtOHc28dqNopc9fyKceKJN9uC7s0lw7RIiP+oIdMuAs4jc5Z/x4sHQt1Je3O+wzZ9MTck/MwBrBTQxz1XZbQ0uGOmvJvdOQSsSWFc1dAYZ0lddgJUERwX963vw2FNbdGoKU6qovmHqmN/eC52AczIBMCtZ6ZCZtGEhNffWm4+/0k5dgxBoHbJfQ0VPgEgDkDvqGN86goq3ikyMWw/c3f8CLPHYkg8p0pD8w2Uo3DKDgirsubi8/ODhnfucVkqCY9NdoIFmaJOfwdXqBhd6sP+lMWSdCo4dn+J7nht5h+WsQ2rAESOfck61BfjEVnvLyfnZ92Y++Zpp0TIcGwPwjdyPQpZj+d2jqP96DmLPMKhs4N6td+L01Cm8Hnr6sFwWD7g7ECcNtaIJdBSdpdfe/+DjbXNfxCG2BOFpzWDdQ/fhl6QDuW+Ow74SBfUGQFQVXWs13DF4e3po6J6XYdATiTZkSMOEkhfeqs/Ye34xtvPoviMA8UHtVpENfwlXcCNKixEI9SzENevw8LNPYqDPe4YVcUiw+RlTkpM7/CiREOdC5yV4JDe6bdkejqbj47LLzXv93kxc03tnw+e7DC3DZX975Zabb7ro9/imxYp90jJZjDmR9kyjPDpK6n+oNg3QxTyUWgVNxDZbJULcNoXMJOIwynDZqBNS4wZ10wxFPS1W5Wwxg+L2hn/+ytuKjxqb9V0AQxNoVYSQL4AyCZSYRdGtKKjYsJkIo+RDLQuY103/ai/lev1V/9F/hf8O1jSTcwWrPEMAAAAASUVORK5CYII=',
+            Production: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAZJJREFUOE9jZKAQMFKon4E2BphnT+gS5ONNZ2ZmBjvw79+/DB8+f2s9MSW3C93FWF1gnjVhVntBVKqmrDBY/aX7Lxnqp69pOzE5r5poA5pywlLVZMXB6s/dfMTQvXAzaQZUZEekykhAXHDz0QuGKfPWEzbANLPvvZ6KHD8zCzODspwU4+Pnbxn8fe0Y7j98zjBr6ebqM9OL2vB6walo2qd5jam8jIyQoJmy+iCDoa0xw7uXbxnWrNn59OfvX89//vr97tysUneYQSiBaFcw5VN9SQIvSJKLnZVh9caDDCoWRgwfP39j0GRnYNBVkWJIrJvx+dCEHD6sBlhkT/iUUwAxAOSI4/tOMciY6DO8fvuRQenfNwYFNQWG5p4Fn09MLcBugFlW38fAlGi45PWDJxjkLU0YPr95x8DO8I9BQVGaYf7URZ9OTSvix+oC4/TuT1qWZmAXgMDHB48Y+GSkGP7+/s3AwsLCwC3Ay3B6z6HPZ2eWYneBekzjmj9//ojgyx8sLCxvbi6pD8HqAnIyFsWZCQAHS5MRrpL/9AAAAABJRU5ErkJggg==',
+            Lister: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGZJREFUOE9jZKAQMFKonwGrAd2Hvf6X2m5jBNG4LADJg+TgBqBrgikg5EIUA2CKidWM4gIQB+YKmEEkeQHZqegG4fMGwTDA5QqsgYgtDIg2AFsYEIoBjEBEDryRng6ICTyYGopzIwAF2VQRfJD3EwAAAABJRU5ErkJggg=='
+        }
+        let AllianceCitiesArr = localStorage.getItem(wid + 'cacheCleared') === 'true' ? (localStorage.removeItem(wid + 'cacheCleared'), []) : JSON.parse(localStorage.getItem(wid + 'AllianceCitiesArr')) || [];
+        let processedCityIds = JSON.parse(localStorage.getItem(wid + 'processedCityIds')) || [];
+        let AllPOIs = JSON.parse(localStorage.getItem(wid + 'AllPOIs')) || [];
         let timestamp;
-        /*
-         * Get alliance cities list
-         */
-        // Start alliance cities scan (logic: get alliance member IDs --> get alliance cities IDs --> load and grab each city data)
-        async function getAllianceCities() {
-            timestamp = performance.now();
-            for (const memberId of mainData.get_Alliance().getMemberIds().l) {
-                await getPublicPlayerInfoByIdAC(memberId);
-            }
-            AllianceCitiesArr.sort((a, b) => b.Base_Score - a.Base_Score).sort((a, b) => a.Player_Id - b.Player_Id);
-            //console.table(AllianceCitiesArr);
-            await processCityIDs(AllianceCitiesArr.map(item => item.Base_Id));
-            localStorage.setItem('AllianceCitiesArr', JSON.stringify(AllianceCitiesArr)); // Save updated AllianceCitiesArr to localStorage
-        }
-        // Get public member info (about 75% of each alliance city data)
-        async function getPublicPlayerInfoByIdAC(playerId) {
-            try {
-                const data = await new Promise((resolve, reject) => {
-                    ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand(
-                        'GetPublicPlayerInfo', {
-                            id: playerId
-                        },
-                        webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
-                            resolve(data);
-                        }), reject);
-                });
-                const s = mainData.get_Server().get_Name();
-                for (const city of data.c) {
-                    let cityData = {
-                        ...AllianceCitiesTemplate
-                    };
-                    Object.assign(cityData, {
-                        "Server_Name": s,
-                        "Alliance_Name": data.an,
-                        "Alliance_Id": data.a,
-                        "Player_Name": data.n,
-                        "Player_Id": data.i,
-                        "Player_Faction": data.f,
-                        "Player_Ranking": data.r,
-                        "Player_Score": data.p,
-                        "Player_Bases_Count": data.c.length,
-                        "Player_Distance_to_Center": data.dccc,
-                        "Player_has_Code": data.hchc,
-                        "Player_versus_Bases": data.bd,
-                        "Player_versus_Environment": data.bde,
-                        "Player_versus_Player": data.d,
-                        "Player_is_Inactive": data.ii,
-                        "Player_Endgame_Won_Count": data.ew.length,
-                        "Player_Challange_Won_Count": data.cw.length,
-                        "Player_Other_Won_Count": data.mw.length,
-                        "Endgame_Won_Server_Name": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).n : '',
-                        "Endgame_Won_Rank": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).r : '0',
-                        "Endgame_Won_Alliance": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).an : '',
-                        "Endgame_Won_Timestamp": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).ws : '',
-                        "Endgame_Won_Member_Role": data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).mr : '',
-                        "Base_Name": city.n,
-                        "Base_Id": city.i,
-                        "Base_Score": city.p,
-                        "Base_Coords": `${city.x}:${city.y}`,
-                        "Base_Sector": calculateMetric(city.x, city.y, 'sector'),
-                        "Base_Distance_from_Center": calculateMetric(city.x, city.y, 'distance')
-                    });
-                    const cityExists = AllianceCitiesArr.some(existingCity => existingCity.Base_Id === cityData.Base_Id); // Check if cityData already exists in AllianceCitiesArr
-                    if (!cityExists) {
-                        AllianceCitiesArr.push(cityData);
-                    }
-                }
-            } catch (error) {
-                console.error(`Error fetching player info for ID ${playerId}:`, error);
-            }
-        }
-        // Set the play area view on the selected ID and wait for it's data to be loaded
-        function loadCity(id) {
-            return new Promise((resolve) => {
-                ClientLib.API.Util.SetPlayAreaView(ClientLib.Data.PlayerAreaViewMode.pavmNone, id, 0, 0); // Set the play area view for the current city
-                const checkLoading = setInterval(() => {
-                    const loadedCity = mainData.get_Cities().get_CurrentCity();
-                    // Check if the loaded city's ID matches the requested city ID
-                    if (loadedCity && loadedCity.get_Id() === id && loadedCity.get_FoundStep()) {
-                        clearInterval(checkLoading);
-                        resolve(loadedCity);
-                    }
-                }, 200);
-            });
-        }
-        // Get more data for each alliance city (about 25%) with ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentCity()
-        async function processCityIDs(remainingCityIds) {
-            remainingCityIds = remainingCityIds.filter(cityId => !processedCityIds.includes(cityId));
-            while (remainingCityIds.length > 0) {
-                const cityId = remainingCityIds.shift(); // Take the first city ID
-                try {
-                    const loadedCity = await loadCity(cityId);
-                    let cityData = AllianceCitiesArr.find(city => city.Base_Id === cityId); // Find the existing city object in AllianceCitiesArr and update its properties
-                    if (cityData) {
-                        cityData.Base_Found_Step = loadedCity.get_FoundStep();
-                        cityData.Base_is_Ghost = loadedCity.get_IsGhostMode();
-                        cityData.Base_Tiberium_per_Hour = loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Tiberium, true, true);
-                        cityData.Base_Crystal_per_Hour = loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Crystal, true, true);
-                        cityData.Base_Power_per_Hour = loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Power, true, true);
-                        cityData.Base_Credits_per_Hour = (loadedCity.get_CityCreditsProduction().Delta + loadedCity.get_CityCreditsProduction().ExtraBonusDelta) * 3600;
-                        cityData.Base_Base_Level = loadedCity.get_LvlBase();
-                        cityData.Base_Defense_Level = loadedCity.get_LvlDefense();
-                        cityData.Base_Offense_Level = loadedCity.get_LvlOffense();
-                        cityData.Base_Construction_Yard_Level = loadedCity.get_ConstructionYardLevel();
-                        cityData.Base_Command_Center_Level = loadedCity.get_CommandCenterLevel();
-                        cityData.processedTimestamp = new Date().toISOString();
-                    }
-                    processedCityIds.push(cityId);
-                    localStorage.setItem('AllianceCitiesArr', JSON.stringify(AllianceCitiesArr));
-                    localStorage.setItem('processedCityIds', JSON.stringify(processedCityIds));
-                    eventBus.dispatch("cityDataAdded", cityData);
-                    progressBar(processedCityIds.length, AllianceCitiesArr.length, "Alliance Cities");
-                } catch (error) {
-                    console.error(`Error loading City ID ${cityId}:`, error);
-                }
-            }
-            if (remainingCityIds.length === 0) {
-                localStorage.removeItem('processedCityIds'); // Clear processedCityIds from localStorage on completion to allow refresh
-            }
-        }
-        /*
-         * Build UI
-         */
         // Allow different parts of the application to communicate with each other without tight coupling.
         class EventBus {
             // Initializes an empty listeners object that will hold arrays of callbacks for each event.
@@ -234,14 +135,249 @@
             }
         }
         const eventBus = new EventBus(); // Create an instance of the EventBus
-        // Alliance cities scan UI
-        function createCityDataWindow() {
+        /*
+         * Alliance Cities
+         */
+        // Start alliance cities scan (logic: get alliance member IDs --> get alliance cities IDs --> load and grab each city data)
+        async function getAllianceCities() {
+            timestamp = performance.now();
+            for (const memberId of mainData.get_Alliance().getMemberIds().l) {
+                await getPublicPlayerInfoByIdAC(memberId);
+            }
+            AllianceCitiesArr.sort((a, b) => b.Base_Score - a.Base_Score).sort((a, b) => a.Player_Id - b.Player_Id);
+            await processCityIDs(AllianceCitiesArr.map(item => item.Base_Id));
+            localStorage.setItem(wid + 'AllianceCitiesArr', JSON.stringify(AllianceCitiesArr)); // Save updated AllianceCitiesArr to localStorage
+        }
+        // Get public member info (about 75% of each alliance city data)
+        async function getPublicPlayerInfoByIdAC(playerId) {
+            try {
+                const data = await new Promise((resolve, reject) => {
+                    ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {
+                        id: playerId
+                    }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
+                        resolve(data);
+                    }), reject);
+                });
+                const s = mainData.get_Server().get_Name();
+                for (const city of data.c) {
+                    let cityData = {
+                        ...AllianceCitiesTemplate
+                    };
+                    Object.assign(cityData, {
+                        Server_Name: s,
+                        Alliance_Name: data.an,
+                        Alliance_Id: data.a,
+                        Player_Name: data.n,
+                        Player_Id: data.i,
+                        Player_Faction: data.f,
+                        Player_Ranking: data.r,
+                        Player_Score: data.p,
+                        Player_Bases_Count: data.c.length,
+                        Player_Distance_to_Center: data.dccc,
+                        Player_has_Code: data.hchc,
+                        Player_versus_Bases: data.bd,
+                        Player_versus_Environment: data.bde,
+                        Player_versus_Player: data.d,
+                        Player_is_Inactive: data.ii,
+                        Player_Endgame_Won_Count: data.ew.length,
+                        Player_Challange_Won_Count: data.cw.length,
+                        Player_Other_Won_Count: data.mw.length,
+                        Endgame_Won_Server_Name: data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).n : '',
+                        Endgame_Won_Rank: data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).r : '0',
+                        Endgame_Won_Alliance: data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).an : '',
+                        Endgame_Won_Timestamp: data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).ws : '',
+                        Endgame_Won_Member_Role: data.ew.find(obj => obj.n === s) ? data.ew.find(obj => obj.n === s).mr : '',
+                        Base_Name: city.n,
+                        Base_Id: city.i,
+                        Base_Score: city.p,
+                        Base_Coords: `${city.x}:${city.y}`,
+                        Base_Sector: calculateMetric(city.x, city.y, 'sector'),
+                        Base_Distance_from_Center: calculateMetric(city.x, city.y, 'distance')
+                    });
+                    //ghost bases values fix
+                    ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicCityInfoById', {
+                        id: city.i
+                    }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
+                        if (data.g === true) {
+                            Object.assign(cityData, {
+                                Base_Found_Step: -1,
+                                Base_is_Ghost: data.g,
+                                Base_Tiberium_per_Hour: 0,
+                                Base_Crystal_per_Hour: 0,
+                                Base_Power_per_Hour: 0,
+                                Base_Credit_per_Hour: 0,
+                                Base_Base_Level: -1,
+                                Base_Defense_Level: -1,
+                                Base_Offense_Level: -1,
+                                Base_Construction_Yard_Level: -1,
+                                Base_Command_Center_Level: -1,
+                                processedTimestamp: new Date().toISOString()
+                            });
+                            processedCityIds.push(city.i);
+                            localStorage.setItem(wid + 'AllianceCitiesArr', JSON.stringify(AllianceCitiesArr));
+                            localStorage.setItem(wid + 'processedCityIds', JSON.stringify(processedCityIds));
+                            eventBus.dispatch("cityDataAdded", cityData);
+                            progressBar(processedCityIds.length, AllianceCitiesArr.length, "Alliance Cities");
+                        }
+                    }), null)
+                    const cityExists = AllianceCitiesArr.some(existingCity => existingCity.Base_Id === cityData.Base_Id); // Check if cityData already exists in AllianceCitiesArr
+                    if (!cityExists) {
+                        AllianceCitiesArr.push(cityData);
+                    }
+                }
+            } catch (error) {
+                console.error(`Error fetching player info for ID ${playerId}:`, error);
+            }
+        }
+        // Set the play area view on the selected ID and wait for it's data to be loaded
+        function loadCity(id) {
+            return new Promise((resolve) => {
+                ClientLib.API.Util.SetPlayAreaView(ClientLib.Data.PlayerAreaViewMode.pavmNone, id, 0, 0); // Set the play area view for the current city
+                const checkLoading = setInterval(() => {
+                    const loadedCity = mainData.get_Cities().get_CurrentCity();
+                    // Check if the loaded city's ID matches the requested city ID
+                    if (loadedCity && loadedCity.get_Id() === id && loadedCity.get_FoundStep()) {
+                        clearInterval(checkLoading);
+                        resolve(loadedCity);
+                    }
+                }, 200);
+            });
+        }
+        // Get more data for each alliance city (about 25%) with ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentCity()
+        async function processCityIDs(remainingCityIds) {
+            remainingCityIds = remainingCityIds.filter(cityId => !processedCityIds.includes(cityId));
+            while (remainingCityIds.length > 0) {
+                const cityId = remainingCityIds.shift(); // Take the first city ID
+                try {
+                    const loadedCity = await loadCity(cityId);
+                    let cityData = AllianceCitiesArr.find(city => city.Base_Id === cityId); // Find the existing city object in AllianceCitiesArr and update its properties
+                    if (cityData) {
+                        Object.assign(cityData, {
+                            Base_Found_Step: loadedCity.get_FoundStep(),
+                            Base_is_Ghost: loadedCity.get_IsGhostMode(),
+                            Base_Tiberium_per_Hour: loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Tiberium, true, true),
+                            Base_Crystal_per_Hour: loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Crystal, true, true),
+                            Base_Power_per_Hour: loadedCity.GetResourceGrowPerHour(ClientLib.Base.EResourceType.Power, true, true),
+                            Base_Credit_per_Hour: (loadedCity.get_CityCreditsProduction().Delta + loadedCity.get_CityCreditsProduction().ExtraBonusDelta) * 3600,
+                            Base_Base_Level: loadedCity.get_LvlBase(),
+                            Base_Defense_Level: loadedCity.get_LvlDefense(),
+                            Base_Offense_Level: loadedCity.get_LvlOffense(),
+                            Base_Construction_Yard_Level: loadedCity.get_ConstructionYardLevel(),
+                            Base_Command_Center_Level: loadedCity.get_CommandCenterLevel(),
+                            processedTimestamp: new Date().toISOString()
+                        });
+                    }
+                    processedCityIds.push(cityId);
+                    localStorage.setItem(wid + 'AllianceCitiesArr', JSON.stringify(AllianceCitiesArr));
+                    localStorage.setItem(wid + 'processedCityIds', JSON.stringify(processedCityIds));
+                    eventBus.dispatch("cityDataAdded", cityData);
+                    progressBar(processedCityIds.length, AllianceCitiesArr.length, "Alliance Cities");
+                } catch (error) {
+                    console.error(`Error loading City ID ${cityId}:`, error);
+                }
+            }
+            if (remainingCityIds.length === 0) {
+                localStorage.removeItem(wid + 'processedCityIds'); // Clear processedCityIds from localStorage on completion to allow refresh
+            }
+        }
+        /*
+         * Points Of Interest
+         */
+        function getPOIs() {
+            timestamp = performance.now();
+            qxApp.showMainOverlay(false); // Switch to region view
+            webfrontend.gui.UtilView.centerCoordinatesOnRegionViewWindow(Math.floor(mainData.get_Server().get_WorldWidth() / 2), Math.floor(mainData.get_Server().get_WorldHeight() / 2)); // Center map on region view
+            waitForMapAreaResize(region).then(() => {
+                return processPOIs(region, timestamp)
+            }); // Wait for the map area resize to complete and process all RegionPointOfInterest (except tunnel exit)
+        }
+        // Calculate ZoomFactor for your window width and height. The bigger ZoomFactor is chosen to ensure the map fills the window and crops off whatever doesn't fit... get_VisAreaComplete() will return 'false' otherwise.
+        function calculateZoomFactor() {
+            const fullMapWidth = region.get_MaxXPosition(); // 102400
+            const fullMapHeight = region.get_MaxYPosition(); // 76800
+            const viewableWidth = window.innerWidth;
+            const viewableHeight = window.innerHeight;
+            const zoomFactorWidth = Math.ceil(viewableWidth / fullMapWidth * 1000) / 1000;
+            const zoomFactorHeight = Math.ceil(viewableHeight / fullMapHeight * 1000) / 1000;
+            return Math.max(zoomFactorWidth, zoomFactorHeight);
+        }
+        // Set the proper zoom on region view and wait for objects to be available... get_VisAreaComplete() must return "true"
+        function waitForMapAreaResize(region) {
+            cfg.GetInstance().SetConfig(cfg.CONFIG_VIS_REGION_MINZOOM, false); // Uncheck 'Allow max zoom out' in game video options
+            cfg.GetInstance().SaveToDB(); //Save settings
+            const getMinZoomMethod = region.get_MinZoomFactor.toString().match(/\$I\.[A-Z]{6}\.([A-Z]{6});?}/)?.[1]; // Extract the `getMinZoomFactor` method dynamically.
+            ClientLib.Vis.Region.Region[getMinZoomMethod] = calculateZoomFactor(); // Modify the MinZoomFactor to be able to zoom out further
+            region.set_ZoomFactor(calculateZoomFactor()); // Zoom out the region view to visualize the entire world... bird's eye view
+            return new Promise((resolve) => {
+                const checkResizeComplete = setInterval(() => {
+                    if (region.get_VisAreaComplete()) {
+                        clearInterval(checkResizeComplete);
+                        resolve();
+                    }
+                }, 100);
+            });
+        }
+
+        function processPOIs(region, timestamp) {
+            const rangeX = mainData.get_Server().get_WorldWidth();
+            const rangeY = mainData.get_Server().get_WorldHeight();
+            const maxLevel = mainData.get_Server().get_MaxCenterLevel();
+            const POIScore = Array.from({
+                length: maxLevel + 1
+            }, (_, i) => ClientLib.Base.PointOfInterestTypes.GetScoreByLevel(i));
+            const gridWidth = region.get_GridWidth();
+            const gridHeight = region.get_GridHeight();
+            AllPOIs = [];
+            for (let x = -rangeX; x <= rangeX; x++) {
+                for (let y = -rangeY; y <= rangeY; y++) {
+                    const xPos = x * gridWidth;
+                    const yPos = y * gridHeight;
+                    const visObject = region.GetObjectFromPosition(xPos, yPos);
+                    if (!visObject || visObject.get_VisObjectType() !== ClientLib.Vis.VisObject.EObjectType.RegionPointOfInterest || visObject.get_Name() === 'Tunnel exit') {
+                        continue;
+                    }
+                    const poi = Object.assign({}, poiTemplate, {
+                        Level: visObject.get_Level(),
+                        Name: visObject.get_Name().split(' ')[0],
+                        Coords: `${x}:${y}`,
+                        Alliance: visObject.get_OwnerAllianceName(),
+                        Score: POIScore[visObject.get_Level()],
+                        Type: visObject.get_Type(),
+                        Sector: calculateMetric(x, y, 'sector'),
+                        Distance: calculateMetric(x, y, 'distance')
+                    });
+                    AllPOIs.push(poi);
+                }
+            }
+            AllPOIs.sort((a, b) => b.Level - a.Level || a.Type - b.Type);
+            console.log(`%cPoints of Interest (${AllPOIs.length}) list done in ${Math.round(performance.now() - timestamp) / 1000} seconds`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
+            region.set_ZoomFactor(1);
+            localStorage.setItem(wid + 'AllPOIs', JSON.stringify(AllPOIs));
+            eventBus.dispatch('POIs_Refreshed', AllPOIs);
+            return AllPOIs;
+        }
+        /*
+         * Build UI
+         */
+        function mainUI() {
             const listerWindow = new qx.ui.window.Window("Lister");
             listerWindow.setLayout(new qx.ui.layout.VBox());
-            const tabView = new qx.ui.tabview.TabView(); // Create a TabView to hold different tabs
+            const tabView = new qx.ui.tabview.TabView();
+            listerWindow.add(tabView, {
+                flex: 1
+            });
+            // Add tabs
+            const allianceTab = tabAllianceCities();
+            tabView.add(allianceTab);
+            tabPointsOfInterest(tabView, AllPOIs);
+            // Display the window
+            qx.core.Init.getApplication().getRoot().add(listerWindow);
+            listerWindow.open();
+        }
+        // Alliance cities scan UI
+        function tabAllianceCities() {
             const allianceCitiesTab = new qx.ui.tabview.Page("Alliance Cities"); // Create Alliance Cities tab
             allianceCitiesTab.setLayout(new qx.ui.layout.VBox());
-
             // Table setup
             const columnNames = Object.keys(AllianceCitiesTemplate);
             const tableModel = new qx.ui.table.model.Simple();
@@ -257,24 +393,20 @@
             const statusBar = allianceCitiesTable.getChildControl("statusbar");
             statusBar.setTextColor("darkgreen");
             allianceCitiesTable.setAdditionalStatusBarText(` / ${getAllianceCitiesCount()} cities`);
-
             // Default visible columns
             const defaultVisibleColumns = ["Player_Name", "Player_Faction", "Base_Name", "Base_Coords", "Base_Tiberium_per_Hour", "Base_Crystal_per_Hour", "Base_Power_per_Hour", "Base_Credits_per_Hour", "Base_Base_Level", "Base_Defense_Level", "Base_Offense_Level", "processedTimestamp"];
             columnNames.forEach((columnName, index) => {
                 tableColumnModel.setColumnVisible(index, defaultVisibleColumns.includes(columnName));
             });
-
             // Renderer setup
             const createRenderer = (formatter) => {
                 const renderer = new qx.ui.table.cellrenderer.Default();
                 renderer._getContentHtml = formatter;
                 return renderer;
             };
-
             const booleanColumns = [10, 14, 30];
             const compactNumberColumns = [6, 7, 8, 9, 11, 12, 13, 15, 16, 17, 19, 25, 31, 32, 33, 34];
             const allianceLinkColumns = [1, 20];
-
             booleanColumns.forEach(index => tableColumnModel.setDataCellRenderer(index, new qx.ui.table.cellrenderer.Boolean()));
             compactNumberColumns.forEach(index => tableColumnModel.setDataCellRenderer(index, createRenderer(cellInfo => webfrontend.phe.cnc.gui.util.Numbers.formatNumbersCompact(cellInfo.value))));
             allianceLinkColumns.forEach(index => tableColumnModel.setDataCellRenderer(index, createRenderer(cellInfo => webfrontend.gui.util.BBCode.createAllianceLinkText(cellInfo.value))));
@@ -291,19 +423,10 @@
                 };
                 return factionImages[cellInfo.value] ? `<img src="${factionImages[cellInfo.value]}" style="height:20px;width:20px;">` : cellInfo.value;
             }));
-
             allianceCitiesTab.add(allianceCitiesTable, {
                 flex: 1
             });
-            allianceCitiesTab.add(setupFooterContainer());
-            tabView.add(allianceCitiesTab);
-            listerWindow.add(tabView, {
-                flex: 1
-            });
-
-            qxApp.getRoot().add(listerWindow);
-            listerWindow.open();
-
+            allianceCitiesTab.add(setupAllianceCitiesFooterContainer());
             //Production window
             function createPlayerResourceWindow() {
                 const resourceWindow = new qx.ui.window.Window("Alliance members total resource production per hour by type").set({
@@ -314,26 +437,21 @@
                 });
                 resourceWindow.center();
                 const columnData = [{
-                        label: "Player",
-                        icon: "webfrontend/battleview/neutral/gui/player_icn_own_alliance.png"
-                    },
-                    {
-                        label: "Power",
-                        icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAzdJREFUOE+VlFtvVFUYht+19tqzp51DO6XgNM7YmQotVAoxMZomSkCbmFZAsFITDWiNgVgi4eSNN265MPbCSNCQFIoXNdFmkNYTSEKglYQCoaSN0ZY0pZhyGDul7DJ2Zp/XMvvCRO2AuH7Ak+d7v/V+BP/jqULQ2hEwhCEZMqh/BvbIUTiqSjh5UE4qJSRjFfxmPhe0wUqlRfJ6mqFduovZHUuI+UAgtU+wshiKmWRWkAirv3Z1Yt/EpSsPN2xueiuvSd27YzD+E9QnBBudRMjH7ITjl1ZphvZRx7uf+fceeS9L0+KZDPGNqUlyf1DHoJDtKMLUtRMkRDYOXxjaPnr6cmlpMioat6xvp7N2ZySuXG8hxLqnkQcpiiHyh+lUkwBfO3RucOfEwC9KtLwcJcviU3W1K3dQwS9A86e3PUHseSAhBDkKyLnfUGYwZykW0DcHevo3mjduB5ufr0d7x9dobX97kOXkA9RxBsCU9LYK6PNAXiZjaZSCO3V2kLed7jqxzm84yq7WtfhpaBzfnzyHZQ2PI1ZbaQbkwO6IFfzyjQSy/wB5Nl9MoVjXrbiIyp8c2/9VQzxYwlpeXINAwA9dNzGjZZH69gyu/z6Nl/e8uv8hlH9QEHRwBAEe1Bt/7PkhpV2bworaxXjk0UrUVFfBdl1c7DuPscy0tW7XK+clzX1f5Nnw1qoCRocuo8iJ2tV37dmDruBJKpGy4wd6fdvbNuNY93cwZYLntrzQ67OLOhXD+rnEKsq0PFZga962aBxlrmEs52HW1N9zqq2YM//MrQyUWMRYvaHhG6bTTuKwEZ+A1pokhteOeWF7VdCqEOQLneVzLLfvZEfvs0bexJPNT2Px0iVdNEsPMZeNl+jQPJO/KjYP5BUzeRORfMBtGh3+9fDZ7lNKffPq2bqnVn4u3REpWMbViBPK/h1S0MgbjS3KLzQW+D79eOuHL7Xsfe1mIlF5RLrLu4lkTN0YD2fVNcT5d9kL/qNbkwhdmZ58J5+ba6xZUXOYzjlnXUuZTk8iVwhS0EhVBa18HT6LQ+GBOUW2ueNKYSNdAUMlhN/r7BTsmpcT+kErQiCRCfBNm8AJIeJ+t+tPo7JxHFEeK5MAAAAASUVORK5CYII="
-                    },
-                    {
-                        label: "Credits",
-                        icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAA2pJREFUOE+tlG9sU1UYxp9z723v7d1Gt9La4pCOtS4hBkHd0EZxjKIyZSRD5wfMIGQYcMliyKISHWYNIUr8gExJ3NBkcUjMBqMDgkFEcGMfdOoyMsJYGWPD0bAV7rb+ub29/8wlqUE698nz9bznd573yfs+BP/TIfNxdF0ngYug3WvApOsKAGUNoBJC9Affzglq1HXKdh0mxgyeaEmrBjWXsrA2StamUnHlLmXjZ2sdSBBCtDQsA2RAFoXBKRIWUIy8hPC0L8Vq/htXR5c+/sTSEWZaa01JGIpr5vCzhYiXEaIYsAxQU0hnVVPCxvHM6nti7PXB34eW93ReKrIwNM1Ys2K+8pJQie+p44goXbJuHq/zImYoywA1j9yzqmz2sllabNhfe6Cc0kDZ83LwbaAGFbuakJRkvFztH/f7n2+iRDVY9Bg7Zqj6F8gw9/OxhIujmbVdwbP7Q79dy29trIHbmXffipSsoLN7AAc7zssNX793Vr8jNlqW8Fe2EZLMAH05hgLwybdbPjtSW+RycHtrKtj6g+1aWJiV1z7pZSv9xdj8YTO27Nk8sDjX1TATp3t2e8jMvCCP087Vb61gPz5wVBsP3yUz01FizeERTaXkD5rf7bfEmU+UeKq3zpsdmRNE0/JLwRM/BIb7hl176qvhyM0Gx7H32xsavY1D3wRRWOyZ2Phm+aeaKHU5ei23/xN09Ejnvuv9I3a3Ox+TdyIwmRgsdi3Ezu2bcOJUN85d+lMOHH5/H5lW2+y/smOZoFtYRExSZdvhYwFZkBbuqHsLfd19EGUFWRYWTz+3EsHjP+Ly4LD00Re79qYE5bv8Pu7WHHMUdZg5U8n5cz1NP3X1eta/VopVpav+2YbQ4DC+bzuJsqrVN/2vvNCoCNKZDI+M6kOTerYyGyvQrHT1hdO9b/T/MvBofDrGrSt/EWdO/qw77Lmqd4UnXLl9Q4c6JbVas7JuVDuRyFDU3q7TEyXIseiyGxx8sDGvfrW7Zd3N0TD7TOmKyKZ3Nl6m4topLYluVTRNLP8LQlnZQwNpKDKGsuUPMMgTeBm8k+EZr2pWlk1NCd5HnPaQHlUHVWCEldkIBCR2FBN5zl1Lm2Eogw/myViUJwsYniiUidZVUVD5RGEhxCpAfjBK5s2jtMIOgEp/UAVoD2eRcfc36WeHHqkkmHYAAAAASUVORK5CYII="
-                    },
-                    {
-                        label: "Tiberium",
-                        icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAA6hJREFUOE+tlFtMXFUYhdc++1zmcmCG+zAQGS5DDSXEVIwVY2xNtJqYlvQy+kBqkyYa++AjsVUjPkiMRqM11tTEmhptBR60GjHVkrSgTWk1tmmLIEUqIJcZGGDu58zZ5zdQxKImvLhf915fVva/1s/wPx22HoeI2CsAqwOW3w4A1MaY/U/dGtCKiOMm5FINkjUPSfdAEwyutG1oskkmV81Ebiw3EdrIzNthf4OIWOcAlLQHOWQbXkvVnJaZdUhgBaRQ0M6X9kpx6kGavrANY3SmWo+2MWb9BVsFtRFJ5RPwcjlbnckR7WPzQ0W1nvrLQqaK0YW+u/rmvvT6Ew3JBze0HKc4jpFTGTpQhCRjjJZgq6DDw6S5uREgr/LUheg3B3+mbuwqfBE9E8cRqqpBpwhj7GwvdtcdRKWn/ulsgn9VdAmRUIiJNaAPByM5wu3dlNZT7d8nX2py5jXAiLtw7YeLkPQF1JTV4sLNfgSmyrEv9M4JsWC/ZZnx4b6a/GQXY+KWIyJ2bDpRCO586LfMr29/HuvwsUgMizcWkOtxIuyIwRweB8UyaKx+GDt3HBpkGfqMm64TLgWTe0uQWgYd/ZEUyjMCXFeaz1/peL2j+wNodwdgh+Pg0TlksgnIleWg2TC23/cY4nIKwardZlCt30cwe2ZK9Fm29MnFY/Co3NrE8/iB/l++e/zTw8+rUqAc8P0BazEJ0S/gqfehJBDEC0+04JIYwcB1W2yv2/+qlpE/6u7DODtKpPDRjN8ulp/9aaSj9fT5kyw6bsBxRxR8GwOldCQ7BaxJE+6mIKr8BWjaeCc6Tp3Gyy1dR7SU8obbh3HWdp3UMrdZHVXn2l97s7lZ6IWQ8nX4ixVUbQ3i2vwE5t6/AtvlhVyqQoRnkV+Qi3sqd4ltW/a30qJ5cqrCNbPsyBoxKqLy5Lsfv3fo0UkpCsmvQe6dgbvcjcxWF4yvJ5CejcJ5bwCbdzyJRwr3hHXLc4QLdmo+oYy0bkCCdRLxxdFkoe10NJqu7HO9Zz9p8tfWJ4pyS42rg2cqhq5eBIUN5FT78MD9e8YDxQ3nWEb6loS4nGXqpDKN2DONLMuWRt8JOBZvpAuEW/bJTKrMGkLlKnMRY2W2zjZzCykQpuyY6OGM/W5J1rTEnfNnSmEsZWg1kEtl7QKU+BC0NMVVTZNk05ZUrkkOIqYpACymGsJKxpFyJyJhZNq2QGClHmuS/a91csupVLRSowhAIcC+Xfzf7V9vMa1z/yem2KPLWChEcAAAAABJRU5ErkJggg=="
-                    },
-                    {
-                        label: "Crystal",
-                        icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAA5FJREFUOE+tlG1oW2UUx//PfZ57b15uetsm6ctWm1JRSalTaEGZUgbTgmLdHFql2DkVJo5NxlAUJy5DRMHh1LFBqygT/DD9sA8OxE5pNwVh00ynri5N1y5ZUpJ0Se7N6829uY/El+IQVj94vh7Oj3P4//+H4H8qshqHcy5M/gDa0g5WssB7FmGd2gA7RIj9z9lrQJxzMgPQzBWIhRKY1QYBetklUZdiEdNLGTivifFqAfqOPpQIIfxv2DWgie+5KKporjmMZpHRLoHDIgJpMQR+a8rM7rbKVf0GZe0uGOasGnAkRgmp/QsUCnGhcxwe6jB70SS8ejoS2zzUHzhXLpR5olINhiM5p3Y5hbFNt806LedupcrOzn0ELRT688SVjaY5Z5ElrGGK/Uh4KXZgPtsElksj91sUm4fX4/OZPJYyCXT7F/Do+NhBQa8fKXfJ8V1ArXHiCujtOHc28dqNopc9fyKceKJN9uC7s0lw7RIiP+oIdMuAs4jc5Z/x4sHQt1Je3O+wzZ9MTck/MwBrBTQxz1XZbQ0uGOmvJvdOQSsSWFc1dAYZ0lddgJUERwX963vw2FNbdGoKU6qovmHqmN/eC52AczIBMCtZ6ZCZtGEhNffWm4+/0k5dgxBoHbJfQ0VPgEgDkDvqGN86goq3ikyMWw/c3f8CLPHYkg8p0pD8w2Uo3DKDgirsubi8/ODhnfucVkqCY9NdoIFmaJOfwdXqBhd6sP+lMWSdCo4dn+J7nht5h+WsQ2rAESOfck61BfjEVnvLyfnZ92Y++Zpp0TIcGwPwjdyPQpZj+d2jqP96DmLPMKhs4N6td+L01Cm8Hnr6sFwWD7g7ECcNtaIJdBSdpdfe/+DjbXNfxCG2BOFpzWDdQ/fhl6QDuW+Ow74SBfUGQFQVXWs13DF4e3po6J6XYdATiTZkSMOEkhfeqs/Ye34xtvPoviMA8UHtVpENfwlXcCNKixEI9SzENevw8LNPYqDPe4YVcUiw+RlTkpM7/CiREOdC5yV4JDe6bdkejqbj47LLzXv93kxc03tnw+e7DC3DZX975Zabb7ro9/imxYp90jJZjDmR9kyjPDpK6n+oNg3QxTyUWgVNxDZbJULcNoXMJOIwynDZqBNS4wZ10wxFPS1W5Wwxg+L2hn/+ytuKjxqb9V0AQxNoVYSQL4AyCZSYRdGtKKjYsJkIo+RDLQuY103/ai/lev1V/9F/hf8O1jSTcwWrPEMAAAAASUVORK5CYII="
-                    }
-                ];
+                    label: "Player",
+                    icon: "webfrontend/battleview/neutral/gui/player_icn_own_alliance.png"
+                }, {
+                    label: "Power",
+                    icon: Icons.Power
+                }, {
+                    label: "Credit",
+                    icon: Icons.Credit
+                }, {
+                    label: "Tiberium",
+                    icon: Icons.Tiberium
+                }, {
+                    label: "Crystal",
+                    icon: Icons.Crystal
+                }];
                 const playerData = {};
                 AllianceCitiesArr.forEach(city => {
                     const playerName = city.Player_Name;
@@ -372,48 +490,55 @@
                 resourceWindow.open();
                 return resourceWindow;
             }
-
             // UI Helper functions
-            function setupFooterContainer() {
-                const footerContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox());
+            function setupAllianceCitiesFooterContainer() {
+                const allianceCitiesFooterContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox());
                 const buttons = [{
                     label: "Clear Cache",
-                    icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAYZJREFUOE+1k0FrE0EUx38zm5g22WAa0zY0uB9ACOLFi+lVqqHgQXop1kMp8ahfQA1CIz0YNGIPFcSvUJAam+zBQ2svaQrSox6EklAQPQjBbPbJLqgsaUyg+JjDm5n3/zHvPzzFKUOdUs8/AZe/fBUtLh+s1MC6wYCj78LMWf/+wreOHCbGTqwNHGbrOzJ26aLfVafrcMbQaK356eXhEC6QcoVqyvyjC1I/fpbEZBINKBRhEVztZd4eHAHLUDRS8QEAYL7cEZSH8EL89dsphbB5N9hKX1+31kXMCJz7dJ+j80Ve7+1SX+ry5CDHVNTg5YoKaPoAiy9E4hHkYb6tStVpKltvsO+YrO7nyEQNXhWGABaei0yMQzHfxgfUatjL4dEBNyuOJKMGxestHr9LU3m7hV2I8qhxBSsWGv6CG08dSccNHlxrsbad5pn9ntptl1JzFsscwYO5ck8ypsbpwWQMjn9AdhqaLRgPwcYwE73Pu1p25K+7glIaEaF6L9Rn+v8dplEm9Rcp/HsRO0tPngAAAABJRU5ErkJggg==",
+                    icon: Icons.ClearCache,
                     handler: () => {
                         sessionStorage.clear();
                         tableModel.setData([]);
-                        localStorage.removeItem("processedCityIds");
-                        localStorage.removeItem("AllianceCitiesArr");
-                        localStorage.setItem("cacheCleared", "true");
+                        localStorage.removeItem(wid + 'processedCityIds');
+                        localStorage.removeItem(wid + 'AllianceCitiesArr');
+                        localStorage.setItem(wid + 'cacheCleared', 'true');
                         processedCityIds = [];
                         AllianceCitiesArr = [];
                         Object.keys(cityRowMap).forEach(key => delete cityRowMap[key]);
                         updateFooterWithOldestTimestamp();
-                    }
-                }, {
-                    label: "Download CSV",
-                    icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAWNJREFUOE+lk8Erg3EYxz+blKImGeGqdvNHUC6OFGo5KIc5zVFaIrbDUo4sl+XgJBzHCSlSUlxMLdTMLG3v3u3du3d730fiIl68ea6/5/d5nt/3+/25+Ge5frofvBDZjOZ52Wqz7bM9mLsTqRahuwK5FETGXd/22gLm0yK6+g54SkJk1CFgIfsBqMLjFUTGHAIWcyJ6Aboq8HAJ0QmHgPlHEV0BrwqZJKz4/wgIF0XCk88EVzuoadCah8Y+CPszWKpGYb/3k25fRAwrIoYBdR3eNvD0QOoEdmNptMNTqsrIz4C3XISyIoYK5QJUFNhZz1E6OMbID38ZaGtj8FpEy8N2TEHZTVBXR53lwDsrMtQP8cE1RAJ/T2J7wJTCRhzLzCCSBopAC263D9Oc+f0JU+citTLoJTDKcJTQwLKwSmWWljuZ9n2203Y1z8CNNHi9uJuboF6jenuPdraHaYZ+d8HJD38FkCelEdQP/XcAAAAASUVORK5CYII=",
-                    handler: getCSV
+                    },
+                    tip: "Clear table data."
                 }, {
                     label: "Refresh",
-                    icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAaBJREFUOE+l0j1ok1EUxvHf25amiUJKvzeXUmhxUOiqmw6CrgFxdfNjE1fBwUVFcVM3HbSTkyI6qDiJFCnFWgVxsKXV1BjTpE3e3FdaqSb2I4IXLhcu5zyc53+eyH+eaJv+6PLHEN4XEwuVxHKNxwc6tqzd9Hlhppq8nF81nY99LuwiH1OpEdeNTl059PbBxSe9974n+Vx2vbdJ4NRkObmxP3MMs0g7/mxSHH6V9Y4SYkKVUOH22CaBHixtYWlM7tG09nYG9iIQxVzds3mCHXiOOP38nUyKwRE6Es70tCHZDmKz1vkXicE+0im6Ohno50jqnwX6cBCVhruKN40TRMOzcSjNxxYXY2Emz5dvXN83iMWdorJhIco8DaE8VWSuylKRW8NDWGiVs98Crq0EcwmlH1QKVIvcGW/J6E/BuXyiFFNbob5CeY56jYnDW4l0o9AcpJMfEjeHM068KqsvE2p0drH6lSihVqaS5+HZHO5vWGtUb0cdbY7era+nLZ0lO8TuftLdXBoax+tGLjt5zGAN5Npbwqe1tf0NtSWkVlv4CYSGmRHjxxGoAAAAAElFTkSuQmCC",
+                    icon: Icons.Refresh,
                     handler: async () => {
                         await getAllianceCities();
                         updateFooterWithOldestTimestamp();
-                    }
+                    },
+                    tip: "Populate/Update table data."
+                }, {
+                    label: "Download CSV",
+                    icon: Icons.DownloadCSV,
+                    handler: () => {
+                        getCSV(AllianceCitiesArr, "AllianceCities")
+                    },
+                    tip: "Download table data in CSV (comma-separated values) format."
                 }, {
                     label: "Res Production",
-                    icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAZJJREFUOE9jZKAQMFKon4E2BphnT+gS5ONNZ2ZmBjvw79+/DB8+f2s9MSW3C93FWF1gnjVhVntBVKqmrDBY/aX7Lxnqp69pOzE5r5poA5pywlLVZMXB6s/dfMTQvXAzaQZUZEekykhAXHDz0QuGKfPWEzbANLPvvZ6KHD8zCzODspwU4+Pnbxn8fe0Y7j98zjBr6ebqM9OL2vB6walo2qd5jam8jIyQoJmy+iCDoa0xw7uXbxnWrNn59OfvX89//vr97tysUneYQSiBaFcw5VN9SQIvSJKLnZVh9caDDCoWRgwfP39j0GRnYNBVkWJIrJvx+dCEHD6sBlhkT/iUUwAxAOSI4/tOMciY6DO8fvuRQenfNwYFNQWG5p4Fn09MLcBugFlW38fAlGi45PWDJxjkLU0YPr95x8DO8I9BQVGaYf7URZ9OTSvix+oC4/TuT1qWZmAXgMDHB48Y+GSkGP7+/s3AwsLCwC3Ay3B6z6HPZ2eWYneBekzjmj9//ojgyx8sLCxvbi6pD8HqAnIyFsWZCQAHS5MRrpL/9AAAAABJRU5ErkJggg==",
-                    handler: createPlayerResourceWindow
+                    icon: Icons.Production,
+                    handler: createPlayerResourceWindow,
+                    tip: "Total resource producton per hour for each alliance member... A full scan is needed for proper values."
                 }];
                 buttons.forEach(({
                     label,
                     icon,
-                    handler
+                    handler,
+                    tip
                 }) => {
                     const button = new qx.ui.form.Button(label, icon);
+                    button.setToolTipText(tip);
                     button.addListener("execute", handler);
-                    footerContainer.add(button);
+                    allianceCitiesFooterContainer.add(button);
                 });
                 const offenseLevelFilterSelectBox = new qx.ui.form.SelectBox().set({
                     width: 150,
@@ -428,27 +553,20 @@
                     if (selectedRank) {
                         filterCitiesByOffenseLevel(parseInt(selectedRank[0], 10));
                     } else {
-                        updateCityTable(AllianceCitiesArr);
+                        tableModel.setData(AllianceCitiesArr.map(city => Object.values(city)));
                     }
                 });
-                footerContainer.add(offenseLevelFilterSelectBox);
+                allianceCitiesFooterContainer.add(offenseLevelFilterSelectBox);
 
                 function updateFooterWithOldestTimestamp() {
-                    const validTimestamps = AllianceCitiesArr
-                        .map(city => new Date(city.processedTimestamp))
-                        .filter(date => date instanceof Date && !isNaN(date.getTime()) && date.getTime() > 0);
-
-                    const oldestTimestamp = validTimestamps.length > 0 ?
-                        new Date(Math.min(...validTimestamps)) :
-                        null;
-
-                    let footnoteAtom = footerContainer.getUserData("footnoteAtom");
+                    const validTimestamps = AllianceCitiesArr.map(city => new Date(city.processedTimestamp)).filter(date => date instanceof Date && !isNaN(date.getTime()) && date.getTime() > 0);
+                    const oldestTimestamp = validTimestamps.length > 0 ? new Date(Math.min(...validTimestamps)) : null;
+                    let footnoteAtom = allianceCitiesFooterContainer.getUserData("footnoteAtom");
                     if (!footnoteAtom) {
                         footnoteAtom = new qx.ui.basic.Atom();
-                        footerContainer.add(footnoteAtom);
-                        footerContainer.setUserData("footnoteAtom", footnoteAtom);
+                        allianceCitiesFooterContainer.add(footnoteAtom);
+                        allianceCitiesFooterContainer.setUserData("footnoteAtom", footnoteAtom);
                     }
-
                     if (oldestTimestamp) {
                         const timeDifference = Date.now() - oldestTimestamp.getTime();
                         const formattedTime = msToTime(timeDifference);
@@ -456,11 +574,10 @@
                     } else {
                         footnoteAtom.setLabel("Oldest Processed Timestamp: No data available");
                     }
-
                     footnoteAtom.setTextColor("darkgreen");
                 }
                 updateFooterWithOldestTimestamp();
-                return footerContainer;
+                return allianceCitiesFooterContainer;
             }
 
             function filterCitiesByOffenseLevel(levelRank) {
@@ -471,17 +588,7 @@
                     cities.sort((a, b) => b.Base_Offense_Level - a.Base_Offense_Level);
                     return cities[levelRank - 1] && cities[levelRank - 1].Base_Offense_Level > 0 ? cities[levelRank - 1] : null;
                 }).filter(Boolean);
-
-                updateCityTable(filteredCities);
-            }
-
-            function updateCityTable(cities) {
-                tableModel.setData(cities.map(city => Object.values(city)));
-            }
-
-            function loadExistingCities() {
-                const storedCities = JSON.parse(localStorage.getItem("AllianceCitiesArr")) || [];
-                storedCities.forEach(addCityRow);
+                tableModel.setData(filteredCities.map(city => Object.values(city)));
             }
 
             function addCityRow(cityData) {
@@ -495,26 +602,145 @@
                     }
                 }
             }
-
-            loadExistingCities();
+            AllianceCitiesArr.forEach(addCityRow);
             eventBus.subscribe("cityDataAdded", (e) => addCityRow(e.getData()));
-            return listerWindow;
+            return allianceCitiesTab;
+        }
+        // Points Of Interest UI
+        function tabPointsOfInterest(tabView, data) {
+            const existingTab = tabView.getChildren().find(tab => tab.getLabel() === "Points of Interest");
+            if (existingTab) {
+                const tableModel = existingTab.getUserData("tableModel");
+                updateTableData(data, tableModel);
+                updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, data);
+                return;
+            }
+            const poiTab = new qx.ui.tabview.Page("Points of Interest");
+            poiTab.setLayout(new qx.ui.layout.VBox());
+            const tableModel = new qx.ui.table.model.Simple();
+            tableModel.setColumns(Object.keys(poiTemplate));
+            poiTab.setUserData("tableModel", tableModel);
+            const poiNameSelectBox = new qx.ui.form.SelectBox();
+            const poiOwnerSelectBox = new qx.ui.form.SelectBox();
+            updateTableData(data, tableModel);
+            updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, data);
+            const poiTable = new qx.ui.table.Table(tableModel);
+            [0, 2, 3, 4, 5, 7].forEach(index =>
+                poiTable.getTableColumnModel().setDataCellRenderer(index, new qx.ui.table.cellrenderer.Html())
+            );
+            const poiFooterContainer = buildPoiFooterContainer(data, tableModel, poiNameSelectBox, poiOwnerSelectBox);
+            poiTab.add(poiTable, {
+                flex: 1
+            });
+            poiTab.add(poiFooterContainer);
+            tabView.add(poiTab);
+            eventBus.subscribe("POIs_Refreshed", e => {
+                const refreshedData = e.getData();
+                tabView.setUserData("poiData", refreshedData); // Store globally for consistent access
+                updateTableData(refreshedData, tableModel);
+                updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, refreshedData);
+            });
+
+            function updateTableData(filteredData, tableModel) {
+                const tableData = filteredData.map(poi =>
+                    Object.keys(poiTemplate).map(key => poi[key])
+                );
+                tableModel.setData(tableData);
+                filteredData.forEach((poi, index) => {
+                    const formattedScore = webfrontend.phe.cnc.gui.util.Numbers.formatNumbersCompact(poi.Score);
+                    const formattedDistance = webfrontend.phe.cnc.gui.util.Numbers.formatNumbersCompact(poi.Distance);
+                    const [x, y] = poi.Coords.split(":");
+                    const coordsLink = webfrontend.gui.util.BBCode.createCoordsLinkText(poi.Coords, parseInt(x), parseInt(y));
+                    const allianceLink = poi.Alliance && poi.Alliance.trim() ? webfrontend.gui.util.BBCode.createAllianceLinkText(poi.Alliance) : "No Alliance";
+                    const formattedValues = {
+                        Coords: coordsLink,
+                        Alliance: allianceLink,
+                        Score: formattedScore,
+                        Distance: formattedDistance,
+                    };
+                    Object.keys(formattedValues).forEach(key => {
+                        const col = Object.keys(poiTemplate).indexOf(key);
+                        if (col !== -1) {
+                            tableModel.setValue(col, index, formattedValues[key]);
+                        }
+                    });
+                });
+            }
+
+            function buildPoiFooterContainer(data, tableModel, poiNameSelectBox, poiOwnerSelectBox) {
+                const refreshButton = new qx.ui.form.Button("Refresh", Icons.Refresh).set({
+                    toolTipText: "Refresh POIs"
+                });
+                const downloadButton = new qx.ui.form.Button("Download CSV", Icons.DownloadCSV).set({
+                    toolTipText: "Download POIs as CSV"
+                });
+                refreshButton.addListener("execute", getPOIs);
+                downloadButton.addListener("execute", () => {
+                    const currentData = tabView.getUserData("poiData") || [];
+                    getCSV(currentData, "POIs");
+                });
+                poiNameSelectBox.addListener("changeSelection", applyFilters);
+                poiOwnerSelectBox.addListener("changeSelection", applyFilters);
+                updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, data);
+                const container = new qx.ui.container.Composite(new qx.ui.layout.HBox());
+                container.add(refreshButton);
+                container.add(downloadButton);
+                container.add(poiNameSelectBox);
+                container.add(poiOwnerSelectBox);
+                return container;
+            }
+
+            function updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, data) {
+                const uniqueNames = Array.from(new Set(data.map(poi => poi.Name)));
+                const uniqueAlliances = Array.from(new Set(data.map(poi => poi.Alliance || "No Alliance")));
+                poiNameSelectBox.removeAll();
+                poiNameSelectBox.add(new qx.ui.form.ListItem("All Names"));
+                uniqueNames.forEach(name => poiNameSelectBox.add(new qx.ui.form.ListItem(name)));
+                poiOwnerSelectBox.removeAll();
+                poiOwnerSelectBox.add(new qx.ui.form.ListItem("All Alliances"));
+                uniqueAlliances.forEach(alliance => {
+                    const listItem = new qx.ui.form.ListItem(alliance);
+                    if (alliance === "No Alliance") {
+                        listItem.setTextColor("yellow");
+                    }
+                    poiOwnerSelectBox.add(listItem);
+                });
+            }
+
+            function applyFilters() {
+                const nameSelection = poiNameSelectBox.getSelection()[0];
+                const allianceSelection = poiOwnerSelectBox.getSelection()[0];
+                const selectedName = nameSelection ? nameSelection.getLabel() : "All Names";
+                const selectedAlliance = allianceSelection ? allianceSelection.getLabel() : "All Alliances";
+                let filteredData = tabView.getUserData("poiData") || data;
+                if (selectedName !== "All Names") {
+                    filteredData = filteredData.filter(poi => poi.Name === selectedName);
+                }
+                if (selectedAlliance === "No Alliance") {
+                    filteredData = filteredData.filter(poi => !poi.Alliance || poi.Alliance.trim() === "");
+                } else if (selectedAlliance !== "All Alliances") {
+                    filteredData = filteredData.filter(poi => poi.Alliance === selectedAlliance);
+                }
+                updateTableData(filteredData, tableModel);
+            }
         }
         /*
          * Helper functions
          */
         // List to CSV
-        function getCSV() {
-            const headers = Object.keys(AllianceCitiesTemplate).join(",");
-            const rows = AllianceCitiesArr.map(city => Object.values(city).join(",")).join("\n");
+        function getCSV(data, name) {
+            if (!data || data.length === 0) {
+                console.warn("No data available for CSV export.");
+                return;
+            }
+            const headers = Object.keys(data[0]).join(",");
+            const rows = data.map(item => Object.values(item).join(",")).join("\n");
             const csvContent = `data:text/csv;charset=utf-8,${headers}\n${rows}`;
             const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", new Date().toISOString().slice(0, -14) + "_" + mainData.get_Server().get_WorldId() + "_AllianceCities.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            const downloadLink = document.createElement("a");
+            downloadLink.href = encodedUri;
+            downloadLink.download = new Date().toISOString().slice(0, 10) + "_" + wid + "_" + name + ".csv";
+            downloadLink.dispatchEvent(new MouseEvent('click'));
         }
         // Progress bar
         function progressBar(pbIndex, pbLength, pbName, targetContainer = null) {
@@ -606,33 +832,18 @@
          */
         // Add Scripts menu entries
         function init() {
-            const ScriptsButton = qxApp.getMenuBar().getScriptsButton(),
-                children = ScriptsButton.getMenu().getChildren(),
-                icon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGZJREFUOE9jZKAQMFKonwGrAd2Hvf6X2m5jBNG4LADJg+TgBqBrgikg5EIUA2CKidWM4gIQB+YKmEEkeQHZqegG4fMGwTDA5QqsgYgtDIg2AFsYEIoBjEBEDryRng6ICTyYGopzIwAF2VQRfJD3EwAAAABJRU5ErkJggg==';
-            ScriptsButton.Add("Lister UI", icon); // Add the menu item
+            const ScriptsButton = qxApp.getMenuBar().getScriptsButton();
+            const children = ScriptsButton.getMenu().getChildren();
+            ScriptsButton.Add("Lister UI", Icons.Lister);
             qx.event.Timer.once(() => {
                 const children = ScriptsButton.getMenu().getChildren();
                 children[children.length - 1].addListener("execute", () => {
-                    createCityDataWindow();
+                    mainUI();
                 });
             }, null, 50); // Use a timer to delay adding listeners until the menu items are fully added
-        } // Wait for game
+        }
         init();
         console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
     }
-	ListerUIScript();
-    /*
-     * inject script
-
-    if (/commandandconquer\.com/i.test(document.domain)) {
-        try {
-            const script_block = document.createElement('script');
-            script_block.innerHTML = `(${ListerUIScript.toString()})();`;
-            script_block.type = 'text/javascript';
-            document.getElementsByTagName('head')[0].appendChild(script_block);
-        } catch (e) {
-            console.log("Failed to inject script ListerUIScript:", e);
-        }
-    }
-    */
+    ListerUIScript();
 })();
