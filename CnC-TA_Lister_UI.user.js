@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnC-TA Lister UI
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2024-12-05
+// @version      2024-12-06
 // @description  Some data tables...
 // @author       ffi82
 // @contributor  4o (ChatGPT)
