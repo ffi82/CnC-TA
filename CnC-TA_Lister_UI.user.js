@@ -388,11 +388,10 @@
                 decorator: "main",
                 showCellFocusIndicator: false,
             });
+            allianceCitiesTable.getChildControl("statusbar").setTextColor("darkgreen");
+            allianceCitiesTable.setAdditionalStatusBarText(` / ${getAllianceCitiesCount()} cities`);
             const tableColumnModel = allianceCitiesTable.getTableColumnModel();
             const cityRowMap = {}; // Map to track row indices by City ID
-            const statusBar = allianceCitiesTable.getChildControl("statusbar");
-            statusBar.setTextColor("darkgreen");
-            allianceCitiesTable.setAdditionalStatusBarText(` / ${getAllianceCitiesCount()} cities`);
             // Default visible columns
             const defaultVisibleColumns = ["Player_Name", "Player_Faction", "Base_Name", "Base_Coords", "Base_Tiberium_per_Hour", "Base_Crystal_per_Hour", "Base_Power_per_Hour", "Base_Credits_per_Hour", "Base_Base_Level", "Base_Defense_Level", "Base_Offense_Level", "processedTimestamp"];
             columnNames.forEach((columnName, index) => {
@@ -620,11 +619,16 @@
             const tableModel = new qx.ui.table.model.Simple();
             tableModel.setColumns(Object.keys(poiTemplate));
             poiTab.setUserData("tableModel", tableModel);
+            const poiTimestamp = new qx.ui.basic.Atom().set({
+                label: localStorage.getItem(wid + 'poiTimestampLabel') ? `Last POI scan age: ${msToTime(Date.now() - localStorage.getItem(wid + 'poiTimestampLabel'))}` : "Not data available... Refresh required.",
+                textColor: "darkgreen"
+            });
             const poiNameSelectBox = new qx.ui.form.SelectBox();
             const poiOwnerSelectBox = new qx.ui.form.SelectBox();
             updateTableData(data, tableModel);
             updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, data);
             const poiTable = new qx.ui.table.Table(tableModel);
+            poiTable.getChildControl("statusbar").setTextColor("darkgreen");
             [0, 2, 3, 4, 5, 7].forEach(index =>
                 poiTable.getTableColumnModel().setDataCellRenderer(index, new qx.ui.table.cellrenderer.Html())
             );
@@ -639,6 +643,8 @@
                 tabView.setUserData("poiData", refreshedData); // Store globally for consistent access
                 updateTableData(refreshedData, tableModel);
                 updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, refreshedData);
+                localStorage.setItem(wid + 'poiTimestampLabel', Date.now());
+                poiTimestamp.setLabel(`Last POI scan age: ${msToTime(Date.now() - localStorage.getItem(wid + 'poiTimestampLabel'))}`);
             });
 
             function updateTableData(filteredData, tableModel) {
@@ -647,8 +653,8 @@
                 );
                 tableModel.setData(tableData);
                 filteredData.forEach((poi, index) => {
-                    const formattedScore = webfrontend.phe.cnc.gui.util.Numbers.formatNumbersCompact(poi.Score);
-                    const formattedDistance = webfrontend.phe.cnc.gui.util.Numbers.formatNumbersCompact(poi.Distance);
+                    const formattedScore = webfrontend.phe.cnc.gui.util.Numbers.formatNumbers(poi.Score);
+                    const formattedDistance = Math.round(poi.Distance);
                     const [x, y] = poi.Coords.split(":");
                     const coordsLink = webfrontend.gui.util.BBCode.createCoordsLinkText(poi.Coords, parseInt(x), parseInt(y));
                     const allianceLink = poi.Alliance && poi.Alliance.trim() ? webfrontend.gui.util.BBCode.createAllianceLinkText(poi.Alliance) : "No Alliance";
@@ -687,6 +693,7 @@
                 container.add(downloadButton);
                 container.add(poiNameSelectBox);
                 container.add(poiOwnerSelectBox);
+                container.add(poiTimestamp);
                 return container;
             }
 
