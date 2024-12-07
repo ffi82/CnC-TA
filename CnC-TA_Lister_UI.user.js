@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnC-TA Lister UI
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2024-12-06
+// @version      2024-12-07
 // @description  Some data tables...
 // @author       ffi82
 // @contributor  4o (ChatGPT)
@@ -393,7 +393,7 @@
             const tableColumnModel = allianceCitiesTable.getTableColumnModel();
             const cityRowMap = {}; // Map to track row indices by City ID
             // Default visible columns
-            const defaultVisibleColumns = ["Player_Name", "Player_Faction", "Base_Name", "Base_Coords", "Base_Tiberium_per_Hour", "Base_Crystal_per_Hour", "Base_Power_per_Hour", "Base_Credits_per_Hour", "Base_Base_Level", "Base_Defense_Level", "Base_Offense_Level", "processedTimestamp"];
+            const defaultVisibleColumns = ["Player_Name", "Player_Faction", "Base_Name", "Base_Coords", "Base_Tiberium_per_Hour", "Base_Crystal_per_Hour", "Base_Power_per_Hour", "Base_Credit_per_Hour", "Base_Base_Level", "Base_Defense_Level", "Base_Offense_Level", "processedTimestamp"];
             columnNames.forEach((columnName, index) => {
                 tableColumnModel.setColumnVisible(index, defaultVisibleColumns.includes(columnName));
             });
