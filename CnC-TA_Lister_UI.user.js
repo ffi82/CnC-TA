@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnC-TA Lister UI
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2024-12-07
+// @version      2024-12-05
 // @description  Some data tables...
 // @author       ffi82
 // @contributor  4o (ChatGPT)
@@ -463,7 +463,7 @@
                         };
                     }
                     playerData[playerName].power += city.Base_Power_per_Hour;
-                    playerData[playerName].credits += city.Base_Credits_per_Hour;
+                    playerData[playerName].credits += city.Base_Credit_per_Hour;
                     playerData[playerName].tiberium += city.Base_Tiberium_per_Hour;
                     playerData[playerName].crystal += city.Base_Crystal_per_Hour;
                 });
@@ -682,7 +682,7 @@
                 });
                 refreshButton.addListener("execute", getPOIs);
                 downloadButton.addListener("execute", () => {
-                    const currentData = tabView.getUserData("poiData") || [];
+                    const currentData = tabView.getUserData("poiData") || AllPOIs;
                     getCSV(currentData, "POIs");
                 });
                 poiNameSelectBox.addListener("changeSelection", applyFilters);
