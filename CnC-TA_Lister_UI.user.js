@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnC-TA Lister UI
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2024-12-05
+// @version      2024-12-14
 // @description  Some data tables...
 // @author       ffi82
 // @contributor  4o (ChatGPT)
@@ -13,11 +13,74 @@
 // ==/UserScript==
 'use strict';
 (() => {
-    const ListerUIScript = () => {
+    const ListerUIScript = async () => {
         if (typeof ClientLib === 'undefined' || typeof qx === 'undefined' || !qx.core.Init.getApplication().initDone || !ClientLib.Data.MainData.GetInstance().get_EndGame().get_Hubs().d[1]) {
             setTimeout(ListerUIScript, 100); // Retry after 100ms if liraries (ClientLib or qx) are not loaded
             return;
         }
+        window.Lister = { // Exposing Lister globally
+            db: null,
+            async init(dbName = "Lister") {
+                if (this.db) return;
+                const request = indexedDB.open(dbName, 1);
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains("storage")) {
+                        db.createObjectStore("storage");
+                    }
+                };
+                return new Promise((resolve, reject) => {
+                    request.onsuccess = (event) => {
+                        this.db = event.target.result;
+                        resolve();
+                    };
+                    request.onerror = (event) => reject(`Error initializing database: ${event.target.error}`);
+                });
+            },
+            async performTransaction(operation, key, value = null) {
+                await this.init();
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction(["storage"], operation === "get" ? "readonly" : "readwrite");
+                    const store = transaction.objectStore("storage");
+                    let request;
+                    transaction.onerror = (event) => reject(`Transaction failed: ${event.target.error}`);
+                    transaction.oncomplete = () => console.log(`Transaction completed: ${operation} on ${key}`);
+                    switch (operation) {
+                        case "get":
+                            request = store.get(key);
+                            request.onsuccess = () => resolve(request.result || null);
+                            break;
+                        case "set":
+                            request = store.put(value, key);
+                            request.onsuccess = () => resolve(true);
+                            break;
+                        case "remove":
+                            request = store.delete(key);
+                            request.onsuccess = () => resolve(true);
+                            break;
+                        case "clear":
+                            request = store.clear();
+                            request.onsuccess = () => resolve(true);
+                            break;
+                        default:
+                            reject(`Unsupported operation: ${operation}`);
+                    }
+                    request.onerror = (event) => reject(`Request failed: ${event.target.error}`);
+                });
+            },
+            get(key) {
+                return this.performTransaction("get", key);
+            },
+            set(key, value) {
+                return this.performTransaction("set", key, value);
+            },
+            remove(key) {
+                return this.performTransaction("remove", key);
+            },
+            clear() {
+                return this.performTransaction("clear");
+            },
+        };
         const scriptName = 'CnC-TA Lister UI';
         const qxApp = qx.core.Init.getApplication();
         const cfg = ClientLib.Config.Main;
@@ -92,9 +155,9 @@
             Production: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAZJJREFUOE9jZKAQMFKon4E2BphnT+gS5ONNZ2ZmBjvw79+/DB8+f2s9MSW3C93FWF1gnjVhVntBVKqmrDBY/aX7Lxnqp69pOzE5r5poA5pywlLVZMXB6s/dfMTQvXAzaQZUZEekykhAXHDz0QuGKfPWEzbANLPvvZ6KHD8zCzODspwU4+Pnbxn8fe0Y7j98zjBr6ebqM9OL2vB6walo2qd5jam8jIyQoJmy+iCDoa0xw7uXbxnWrNn59OfvX89//vr97tysUneYQSiBaFcw5VN9SQIvSJKLnZVh9caDDCoWRgwfP39j0GRnYNBVkWJIrJvx+dCEHD6sBlhkT/iUUwAxAOSI4/tOMciY6DO8fvuRQenfNwYFNQWG5p4Fn09MLcBugFlW38fAlGi45PWDJxjkLU0YPr95x8DO8I9BQVGaYf7URZ9OTSvix+oC4/TuT1qWZmAXgMDHB48Y+GSkGP7+/s3AwsLCwC3Ay3B6z6HPZ2eWYneBekzjmj9//ojgyx8sLCxvbi6pD8HqAnIyFsWZCQAHS5MRrpL/9AAAAABJRU5ErkJggg==',
             Lister: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGZJREFUOE9jZKAQMFKonwGrAd2Hvf6X2m5jBNG4LADJg+TgBqBrgikg5EIUA2CKidWM4gIQB+YKmEEkeQHZqegG4fMGwTDA5QqsgYgtDIg2AFsYEIoBjEBEDryRng6ICTyYGopzIwAF2VQRfJD3EwAAAABJRU5ErkJggg=='
         }
-        let AllianceCitiesArr = localStorage.getItem(wid + 'cacheCleared') === 'true' ? (localStorage.removeItem(wid + 'cacheCleared'), []) : JSON.parse(localStorage.getItem(wid + 'AllianceCitiesArr')) || [];
+        let AllianceCitiesArr = localStorage.getItem(wid + 'cacheCleared') === 'true' ? (localStorage.removeItem(wid + 'cacheCleared'), []) : (await Lister.get(wid + 'AllianceCitiesArr')) || [];
         let processedCityIds = JSON.parse(localStorage.getItem(wid + 'processedCityIds')) || [];
-        let AllPOIs = JSON.parse(localStorage.getItem(wid + 'AllPOIs')) || [];
+        let AllPOIs = (await Lister.get(wid + 'AllPOIs')) || []; // Fetch from IndexedDB
         let timestamp;
         // Allow different parts of the application to communicate with each other without tight coupling.
         class EventBus {
@@ -146,7 +209,7 @@
             }
             AllianceCitiesArr.sort((a, b) => b.Base_Score - a.Base_Score).sort((a, b) => a.Player_Id - b.Player_Id);
             await processCityIDs(AllianceCitiesArr.map(item => item.Base_Id));
-            localStorage.setItem(wid + 'AllianceCitiesArr', JSON.stringify(AllianceCitiesArr)); // Save updated AllianceCitiesArr to localStorage
+            await Lister.set(wid + 'AllianceCitiesArr', AllianceCitiesArr);
         }
         // Get public member info (about 75% of each alliance city data)
         async function getPublicPlayerInfoByIdAC(playerId) {
@@ -197,7 +260,7 @@
                     //ghost bases values fix
                     ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicCityInfoById', {
                         id: city.i
-                    }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
+                    }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, async (context, data) => {
                         if (data.g === true) {
                             Object.assign(cityData, {
                                 Base_Found_Step: -1,
@@ -214,7 +277,7 @@
                                 processedTimestamp: new Date().toISOString()
                             });
                             processedCityIds.push(city.i);
-                            localStorage.setItem(wid + 'AllianceCitiesArr', JSON.stringify(AllianceCitiesArr));
+                            await Lister.set(wid + 'AllianceCitiesArr', AllianceCitiesArr);
                             localStorage.setItem(wid + 'processedCityIds', JSON.stringify(processedCityIds));
                             eventBus.dispatch("cityDataAdded", cityData);
                             progressBar(processedCityIds.length, AllianceCitiesArr.length, "Alliance Cities");
@@ -268,7 +331,7 @@
                         });
                     }
                     processedCityIds.push(cityId);
-                    localStorage.setItem(wid + 'AllianceCitiesArr', JSON.stringify(AllianceCitiesArr));
+                    await Lister.set(wid + 'AllianceCitiesArr', AllianceCitiesArr);
                     localStorage.setItem(wid + 'processedCityIds', JSON.stringify(processedCityIds));
                     eventBus.dispatch("cityDataAdded", cityData);
                     progressBar(processedCityIds.length, AllianceCitiesArr.length, "Alliance Cities");
@@ -318,7 +381,7 @@
             });
         }
 
-        function processPOIs(region, timestamp) {
+        async function processPOIs(region, timestamp) {
             const rangeX = mainData.get_Server().get_WorldWidth();
             const rangeY = mainData.get_Server().get_WorldHeight();
             const maxLevel = mainData.get_Server().get_MaxCenterLevel();
@@ -352,7 +415,7 @@
             AllPOIs.sort((a, b) => b.Level - a.Level || a.Type - b.Type);
             console.log(`%cPoints of Interest (${AllPOIs.length}) list done in ${Math.round(performance.now() - timestamp) / 1000} seconds`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
             region.set_ZoomFactor(1);
-            localStorage.setItem(wid + 'AllPOIs', JSON.stringify(AllPOIs));
+            await Lister.set(wid + 'AllPOIs', AllPOIs); // Save to IndexedDB
             eventBus.dispatch('POIs_Refreshed', AllPOIs);
             return AllPOIs;
         }
@@ -495,11 +558,11 @@
                 const buttons = [{
                     label: "Clear Cache",
                     icon: Icons.ClearCache,
-                    handler: () => {
+                    handler: async () => {
                         sessionStorage.clear();
                         tableModel.setData([]);
                         localStorage.removeItem(wid + 'processedCityIds');
-                        localStorage.removeItem(wid + 'AllianceCitiesArr');
+                        await Lister.remove(wid + 'AllianceCitiesArr');
                         localStorage.setItem(wid + 'cacheCleared', 'true');
                         processedCityIds = [];
                         AllianceCitiesArr = [];
@@ -606,7 +669,7 @@
             return allianceCitiesTab;
         }
         // Points Of Interest UI
-        function tabPointsOfInterest(tabView, data) {
+        async function tabPointsOfInterest(tabView, data) {
             const existingTab = tabView.getChildren().find(tab => tab.getLabel() === "Points of Interest");
             if (existingTab) {
                 const tableModel = existingTab.getUserData("tableModel");
@@ -614,17 +677,24 @@
                 updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, data);
                 return;
             }
+            const poiTimestampKey = wid + 'poiTimestampLabel';
             const poiTab = new qx.ui.tabview.Page("Points of Interest");
             poiTab.setLayout(new qx.ui.layout.VBox());
             const tableModel = new qx.ui.table.model.Simple();
             tableModel.setColumns(Object.keys(poiTemplate));
             poiTab.setUserData("tableModel", tableModel);
+            const storedTimestamp = await Lister.get(poiTimestampKey);
             const poiTimestamp = new qx.ui.basic.Atom().set({
-                label: localStorage.getItem(wid + 'poiTimestampLabel') ? `Last POI scan age: ${msToTime(Date.now() - localStorage.getItem(wid + 'poiTimestampLabel'))}` : "Not data available... Refresh required.",
+                label: storedTimestamp ? `Last POI scan age: ${msToTime(Date.now() - storedTimestamp)}` : "No data available... Refresh required.",
                 textColor: "darkgreen"
             });
-            const poiNameSelectBox = new qx.ui.form.SelectBox();
-            const poiOwnerSelectBox = new qx.ui.form.SelectBox();
+            const poiNameSelectBox = new qx.ui.form.SelectBox().set({
+                toolTipText: "Filter POIs by name/type"
+            });
+            const poiOwnerSelectBox = new qx.ui.form.SelectBox().set({
+                width: 170,
+                toolTipText: "Filter POIs by owner"
+            });
             updateTableData(data, tableModel);
             updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, data);
             const poiTable = new qx.ui.table.Table(tableModel);
@@ -638,13 +708,13 @@
             });
             poiTab.add(poiFooterContainer);
             tabView.add(poiTab);
-            eventBus.subscribe("POIs_Refreshed", e => {
+            eventBus.subscribe("POIs_Refreshed", async (e) => {
                 const refreshedData = e.getData();
-                tabView.setUserData("poiData", refreshedData); // Store globally for consistent access
+                tabView.setUserData("poiData", refreshedData);
                 updateTableData(refreshedData, tableModel);
                 updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, refreshedData);
-                localStorage.setItem(wid + 'poiTimestampLabel', Date.now());
-                poiTimestamp.setLabel(`Last POI scan age: ${msToTime(Date.now() - localStorage.getItem(wid + 'poiTimestampLabel'))}`);
+                await Lister.set(poiTimestampKey, Date.now()); // Save timestamp to IndexedDB
+                poiTimestamp.setLabel(`Last POI scan age: ${msToTime(Date.now() - (await Lister.get(poiTimestampKey)))}`);
             });
 
             function updateTableData(filteredData, tableModel) {
@@ -682,8 +752,7 @@
                 });
                 refreshButton.addListener("execute", getPOIs);
                 downloadButton.addListener("execute", () => {
-                    const currentData = tabView.getUserData("poiData") || AllPOIs;
-                    getCSV(currentData, "POIs");
+                    getCSV(AllPOIs, "POIs");
                 });
                 poiNameSelectBox.addListener("changeSelection", applyFilters);
                 poiOwnerSelectBox.addListener("changeSelection", applyFilters);
@@ -708,6 +777,7 @@
                 uniqueAlliances.forEach(alliance => {
                     const listItem = new qx.ui.form.ListItem(alliance);
                     if (alliance === "No Alliance") {
+                        listItem.setIcon("webfrontend/battleview/neutral/gui/icn_mutants.png");
                         listItem.setTextColor("yellow");
                     }
                     poiOwnerSelectBox.add(listItem);
