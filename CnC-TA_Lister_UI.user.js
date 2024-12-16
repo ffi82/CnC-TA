@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         CnC-TA Lister UI
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2024-12-14
+// @version      2024-12-16
 // @description  Some data tables...
 // @author       ffi82
-// @contributor  4o (ChatGPT)
+// @contributor  leo7044 (https://github.com/leo7044), 4o (ChatGPT)
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
 // @updateURL    https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister_UI.meta.js
 // @downloadURL  https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister_UI.user.js
@@ -14,7 +14,7 @@
 'use strict';
 (() => {
     const ListerUIScript = async () => {
-        if (typeof ClientLib === 'undefined' || typeof qx === 'undefined' || !qx.core.Init.getApplication().initDone || !ClientLib.Data.MainData.GetInstance().get_EndGame().get_Hubs().d[1]) {
+        if (typeof ClientLib === 'undefined' || typeof qx === 'undefined' || !qx.core.Init.getApplication().initDone || !ClientLib.Data.MainData.GetInstance().get_EndGame().GetCenter()) {
             setTimeout(ListerUIScript, 100); // Retry after 100ms if liraries (ClientLib or qx) are not loaded
             return;
         }
@@ -87,7 +87,7 @@
         const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
         const mainData = ClientLib.Data.MainData.GetInstance();
         const wid = mainData.get_Server().get_WorldId();
-        const defaultPoint = mainData.get_EndGame().get_Hubs().d[1];
+        const defaultPoint = mainData.get_EndGame().GetCenter();
         const [centerX, centerY] = [defaultPoint.get_X() + defaultPoint.get_SizeX() / 2, defaultPoint.get_Y() + defaultPoint.get_SizeY() / 2];
         const sectorNames = ['south', 'southwest', 'west', 'northwest', 'north', 'northeast', 'east', 'southeast'];
         const clockPositions = Array(12).fill().map((_, i) => `${i || 12} o'clock`);
