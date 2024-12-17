@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CnCTA Base Finder
 // @namespace   https://github.com/bloofi/CnC_TA
-// @version	    2024.12.17
+// @version     2024.12.17
 // @description Scan and mark main and/or ghost player bases of the selected alliance on region view.
 // @author      bloofi
 // @contributor ffi82
@@ -334,9 +334,7 @@
                         this.buttonClear.setEnabled(true);
                         this.favoriteCheckbox.setEnabled(true);
                         this.buttonRefresh.setEnabled(true);
-                        data.m
-                            .sort((a, b) => a.n.localeCompare(b.n))
-                            .forEach(m => {
+                        data.m.sort((a, b) => a.n.localeCompare(b.n)).forEach(m => {
                                 this.players[`pid-${m.i}`] = Object.assign(Object.assign({}, m), { fetched: false });
                                 ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {
                                     id: m.i,
