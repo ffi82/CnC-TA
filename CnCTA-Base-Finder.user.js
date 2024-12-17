@@ -414,8 +414,7 @@
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     loadStorage: function () {
                         const storage = JSON.parse(localStorage.getItem(storageKey) || '{}') || {};
-                        this.favorites =
-                            storage[`wid-${ClientLib.Data.MainData.GetInstance().get_Server().get_WorldId()}`] || [];
+                        this.favorites = storage[`wid-${ClientLib.Data.MainData.GetInstance().get_Server().get_WorldId()}`] || [];
                     },
                     saveStorage: function () {
                         const storage = JSON.parse(localStorage.getItem(storageKey) || '{}') || {};
