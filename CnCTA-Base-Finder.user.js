@@ -6,8 +6,8 @@
 // @author      bloofi
 // @contributor ffi82
 // @match       https://*.alliances.commandandconquer.com/*/*
-// @downloadURL https://github.com/bloofi/CnC_TA/raw/master/CnCTA-Base-Finder.user.js
-// @updateURL   https://github.com/bloofi/CnC_TA/raw/master/CnCTA-Base-Finder.meta.js
+// @downloadURL https://github.com/ffi82/CnC_TA/raw/master/CnCTA-Base-Finder.user.js
+// @updateURL   https://github.com/ffi82/CnC_TA/raw/master/CnCTA-Base-Finder.meta.js
 // @grant       none
 // ==/UserScript==
 "use strict";
@@ -50,9 +50,7 @@
                     // Init
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     initialize: function () {
-                        const ScriptsButton = qx.core.Init.getApplication()
-                        .getMenuBar()
-                        .getScriptsButton();
+                        const ScriptsButton = qx.core.Init.getApplication().getMenuBar().getScriptsButton();
                         ScriptsButton.Add('Bases Finder');
                         const children = ScriptsButton.getMenu().getChildren();
                         const lastChild = children[children.length - 1];
@@ -99,7 +97,7 @@
                             width: 300,
                             rich: true,
                             textColor: 'white',
-                            value: 'or type alliance name or abbreviation:',
+                            value: 'or type alliance name :',
                         }));
                         const fetchRow = new qx.ui.container.Composite(new qx.ui.layout.HBox(10));
                         this.allianceTextfield = new qx.ui.form.TextField().set({
@@ -178,15 +176,13 @@
                                 ].join('<br>'),
                                 textColor: 'green',
                             });
-                        }
-                        else {
+                        } else {
                             this.fetchLabel.set({ value: `Nothing to show`, textColor: 'silver' });
                         }
                         if (this.selectedAlliance) {
                             this.allianceLabel.set({ value: this.selectedAlliance.n, textColor: 'green' });
                             this.favoriteCheckbox.setValue(this.favorites.some(f => f.id === this.selectedAlliance.i));
-                        }
-                        else {
+                        } else {
                             this.allianceLabel.set({ value: '', textColor: 'green' });
                             this.favoriteCheckbox.setValue(false);
                         }
@@ -194,16 +190,16 @@
                     refreshSelect: function () {
                         ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('RankingGetCount', {
                             view: 1
-                            }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, (context, countof) => {
-                                ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('RankingGetData', {
-                                    ascending: true,
-                                    firstIndex: 0,
-                                    lastIndex: countof,
-                                    rankingType: 0,
-                                    sortColumn: 2,
-                                    view: 1,
-                                }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onRankingGetData), null);
-                            }), null);
+                        }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, (context, countof) => {
+                            ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('RankingGetData', {
+                                ascending: true,
+                                firstIndex: 0,
+                                lastIndex: countof,
+                                rankingType: 0,
+                                sortColumn: 2,
+                                view: 1,
+                            }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onRankingGetData), null);
+                        }), null);
                     },
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     // Buttons events
@@ -217,8 +213,7 @@
                             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicAllianceInfo', {
                                 id: selectA.id,
                             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onGetPublicAllianceInfo), null);
-                        }
-                        else {
+                        } else {
                             this.allianceLabel.set({ value: '' });
                             this.selectedAlliance = null;
                             this.fetchLabel.set({ value: 'Please select an alliance', textColor: 'red' });
@@ -232,8 +227,7 @@
                             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicAllianceInfoByNameOrAbbreviation', {
                                 name: customAlliance,
                             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onGetPublicAllianceInfoByNameOrAbbreviation), null);
-                        }
-                        else {
+                        } else {
                             this.fetchLabel.set({ value: 'Please type something to search', textColor: 'red' });
                         }
                     },
@@ -268,8 +262,7 @@
                                 this.saveStorage();
                                 this.refreshSelect();
                             }
-                        }
-                        else {
+                        } else {
                             if (this.selectedAlliance) {
                                 this.favorites = this.favorites.filter(f => f.id !== this.selectedAlliance.i);
                                 this.saveStorage();
@@ -283,8 +276,7 @@
                     onGetPublicAllianceInfoByNameOrAbbreviation: function (context, data) {
                         if (data && data.i) {
                             this.updateAllianceInfo(data);
-                        }
-                        else {
+                        } else {
                             this.fetchLabel.set({ value: 'Invalid alliance name', textColor: 'red' });
                         }
                     },
@@ -343,13 +335,13 @@
                         this.favoriteCheckbox.setEnabled(true);
                         this.buttonRefresh.setEnabled(true);
                         data.m
-                        .sort((a, b) => a.n.localeCompare(b.n))
-                        .forEach(m => {
-                            this.players[`pid-${m.i}`] = Object.assign(Object.assign({}, m), { fetched: false });
-                            ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {
-                                id: m.i,
-                            }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onGetPublicPlayerInfo), null);
-                        });
+                            .sort((a, b) => a.n.localeCompare(b.n))
+                            .forEach(m => {
+                                this.players[`pid-${m.i}`] = Object.assign(Object.assign({}, m), { fetched: false });
+                                ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {
+                                    id: m.i,
+                                }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onGetPublicPlayerInfo), null);
+                            });
                         this.refreshWindow();
                     },
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -384,54 +376,40 @@
                             rich: true,
                             wrap: false,
                         }));
-                        qx.core.Init.getApplication()
-                        .getDesktop()
-                        .addAfter(marker, qx.core.Init.getApplication().getBackgroundArea(), {
-                            left: ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosX(base.x * this.gridWidth),
-                            top: ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosY(base.y * this.gridHeight),
-                        });
+                        qx.core.Init.getApplication().getDesktop().addAfter(marker, qx.core.Init.getApplication().getBackgroundArea(), {
+                                left: ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosX(base.x * this.gridWidth),
+                                top: ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosY(base.y * this.gridHeight),
+                            });
                         this.bases[`b-${base.i}`].marker = marker;
                     },
                     removeMarkers: function () {
                         Object.values(this.bases).forEach(b => {
                             if (b.marker) {
-                                qx.core.Init.getApplication()
-                                .getDesktop()
-                                .remove(b.marker);
+                                qx.core.Init.getApplication().getDesktop().remove(b.marker);
                                 this.bases[`b-${b.i}`].marker = null;
                             }
                         });
                     },
                     updateMarkerSize: function () {
-                        this.gridWidth = ClientLib.Vis.VisMain.GetInstance()
-                        .get_Region()
-                        .get_GridWidth();
-                        this.gridHeight = ClientLib.Vis.VisMain.GetInstance()
-                        .get_Region()
-                        .get_GridHeight();
-                        this.regionZoomFactor = ClientLib.Vis.VisMain.GetInstance()
-                        .get_Region()
-                        .get_ZoomFactor();
+                        this.gridWidth = ClientLib.Vis.VisMain.GetInstance().get_Region().get_GridWidth();
+                        this.gridHeight = ClientLib.Vis.VisMain.GetInstance().get_Region().get_GridHeight();
+                        this.regionZoomFactor = ClientLib.Vis.VisMain.GetInstance().get_Region().get_ZoomFactor();
                         this.baseMarkerWidth = this.regionZoomFactor * this.gridWidth;
                         this.baseMarkerHeight = this.regionZoomFactor * this.gridHeight;
                     },
                     repositionMarkers: function () {
                         this.updateMarkerSize();
-                        Object.values(this.bases)
-                        .filter(b => b.marker)
-                        .forEach(b => {
-                            b.marker.setDomLeft(ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosX(b.x * this.gridWidth));
-                            b.marker.setDomTop(ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosY(b.y * this.gridHeight));
-                        });
+                        Object.values(this.bases).filter(b => b.marker).forEach(b => {
+                                b.marker.setDomLeft(ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosX(b.x * this.gridWidth));
+                                b.marker.setDomTop(ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosY(b.y * this.gridHeight));
+                            });
                     },
                     resizeMarkers: function () {
                         this.updateMarkerSize();
-                        Object.values(this.bases)
-                        .filter(b => b.marker)
-                        .forEach(b => {
-                            b.marker.setWidth(this.baseMarkerWidth);
-                            b.marker.setHeight(this.baseMarkerHeight);
-                        });
+                        Object.values(this.bases).filter(b => b.marker).forEach(b => {
+                                b.marker.setWidth(this.baseMarkerWidth);
+                                b.marker.setHeight(this.baseMarkerHeight);
+                            });
                     },
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     // Storage
@@ -439,15 +417,11 @@
                     loadStorage: function () {
                         const storage = JSON.parse(localStorage.getItem(storageKey) || '{}') || {};
                         this.favorites =
-                        storage[`wid-${ClientLib.Data.MainData.GetInstance()
-                            .get_Server()
-                        .get_WorldId()}`] || [];
+                            storage[`wid-${ClientLib.Data.MainData.GetInstance().get_Server().get_WorldId()}`] || [];
                     },
                     saveStorage: function () {
                         const storage = JSON.parse(localStorage.getItem(storageKey) || '{}') || {};
-                        storage[`wid-${ClientLib.Data.MainData.GetInstance()
-                            .get_Server()
-                        .get_WorldId()}`] = this.favorites;
+                        storage[`wid-${ClientLib.Data.MainData.GetInstance().get_Server().get_WorldId()}`] = this.favorites;
                         localStorage.setItem(storageKey, JSON.stringify(storage || {}));
                     },
                 },
@@ -459,20 +433,12 @@
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         function checkForInit() {
             try {
-                if (typeof qx !== 'undefined' &&
-                    qx &&
-                    qx.core &&
-                    qx.core.Init &&
-                    qx.core.Init.getApplication &&
-                    qx.core.Init.getApplication() &&
-                    qx.core.Init.getApplication().initDone) {
-                    init();
+                if (typeof qx === 'undefined' || !qx.core.Init.getApplication().initDone) {
+                    setTimeout(checkForInit, 100);
+                    return;
                 }
-                else {
-                    window.setTimeout(checkForInit, 1000);
-                }
-            }
-            catch (e) {
+                init();
+            } catch (e) {
                 console.log(scriptName, e);
             }
         }
@@ -487,8 +453,7 @@
             script_block.innerHTML = `(${script.toString()})();`;
             script_block.type = 'text/javascript';
             document.getElementsByTagName('head')[0].appendChild(script_block);
-        }
-        catch (e) {
+        } catch (e) {
             console.log('Failed to inject script', e);
         }
     }
