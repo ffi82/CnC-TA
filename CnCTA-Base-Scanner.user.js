@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CnCTA Base Scanner
 // @namespace   https://github.com/bloofi
-// @version	    2024.12.17
+// @version     2024.12.17
 // @description bloofi's layout scanner
 // @author      bloofi
 // @contributor ffi82
