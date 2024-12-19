@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name        CnCTA Base Scanner
 // @namespace   https://github.com/bloofi
-// @version     2024.12.17
+// @version	    2024.12.19
 // @description bloofi's layout scanner
 // @author      bloofi
 // @contributor ffi82
 // @downloadURL https://github.com/ffi82/CnC_TA/raw/master/CnCTA-Base-Scanner.user.js
 // @updateURL   https://github.com/ffi82/CnC_TA/raw/master/CnCTA-Base-Scanner.meta.js
 // @match       https://*.alliances.commandandconquer.com/*/index.aspx*
+// @require     https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.20/lodash.min.js
 // @grant       none
 // ==/UserScript==
 "use strict";
@@ -449,7 +450,7 @@
                             height: 20,
                         });
                         header.add(new qx.ui.basic.Label().set({
-                            value: `${sr.x}:${sr.y}`,
+                            value: webfrontend.gui.util.BBCode.createCoordsLinkText(`${sr.x}:${sr.y}`,sr.x,sr.y),
                             rich: true,
                             textColor: 'blue',
                         }));
@@ -803,10 +804,6 @@
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     if (/commandandconquer\.com/i.test(document.domain)) {
         try {
-            const script_lodash = document.createElement('script');
-            script_lodash.type = 'text/javascript';
-            script_lodash.src = 'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.20/lodash.min.js';
-            document.getElementsByTagName('head')[0].appendChild(script_lodash);
             const script_block = document.createElement('script');
             script_block.innerHTML = `(${script.toString()})();`;
             script_block.type = 'text/javascript';
