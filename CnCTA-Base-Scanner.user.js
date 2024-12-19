@@ -5,8 +5,8 @@
 // @description bloofi's layout scanner
 // @author      bloofi
 // @contributor ffi82
-// @downloadURL https://github.com/ffi82/CnC_TA/raw/master/CnCTA-Base-Scanner.user.js
-// @updateURL   https://github.com/ffi82/CnC_TA/raw/master/CnCTA-Base-Scanner.meta.js
+// @downloadURL https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnCTA-Base-Scanner.user.js
+// @updateURL   https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnCTA-Base-Scanner.meta.js
 // @match       https://*.alliances.commandandconquer.com/*/index.aspx*
 // @require     https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.20/lodash.min.js
 // @grant       none
