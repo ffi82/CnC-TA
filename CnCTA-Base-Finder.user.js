@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name        CnCTA Base Finder
 // @namespace   https://github.com/bloofi/CnC_TA
-// @version     2024.12.17
+// @version     2024.12.19
 // @description Scan and mark main and/or ghost player bases of the selected alliance on region view.
 // @author      bloofi
 // @contributor ffi82
 // @match       https://*.alliances.commandandconquer.com/*/*
-// @downloadURL https://github.com/ffi82/CnC_TA/raw/master/CnCTA-Base-Finder.user.js
-// @updateURL   https://github.com/ffi82/CnC_TA/raw/master/CnCTA-Base-Finder.meta.js
+// @downloadURL https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnCTA-Base-Finder.user.js
+// @updateURL   https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnCTA-Base-Finder.meta.js
 // @grant       none
 // ==/UserScript==
 "use strict";
