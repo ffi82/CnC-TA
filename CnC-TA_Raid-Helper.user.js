@@ -18,7 +18,7 @@
             setTimeout(initHideCampsButton, 100);
             return;
         }
-        console.log("C&C Tiberium Alliances New Raidhelper: Loaded");
+        console.log("CnC-TA Raid-Helper: Loaded");
         // Load stored settings or use defaults
         const worldId = ClientLib.Data.MainData.GetInstance().get_Server().get_WorldId();
         const storageKey = `raidhelper_settings_${worldId}`;
