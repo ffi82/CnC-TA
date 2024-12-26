@@ -2,61 +2,55 @@
 // @name         CnC-TA Raid-Helper
 // @namespace    https://github.com/ffi82/CnC-TA/
 // @description  Removes name and level information except for interesting raid targets.
-// @version      2024.12.25
+// @version      2024.12.26
 // @author       Mooff
 // @contributor  Topper42, alexos75, ffi82
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
 // @updateURL    https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnC-TA_Raid-Helper.meta.js
 // @downloadURL  https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnC-TA_Raid-Helper.user.js
 // ==/UserScript==
-
+'use strict';
 (function() {
-    'use strict';
-    
     function initHideCampsButton() {
-        if (typeof ClientLib === 'undefined' || typeof qx === 'undefined' || !qx.core.Init.getApplication().initDone) {
+        if (typeof ClientLib === 'undefined' || typeof qx === 'undefined' || !qx.core.Init.getApplication().initDone ) {
             setTimeout(initHideCampsButton, 100);
             return;
         }
-        console.log("CnC-TA Raid-Helper: Loaded");
-        // Load stored settings or use defaults
-        const worldId = ClientLib.Data.MainData.GetInstance().get_Server().get_WorldId();
+        const scriptName = "CnC-TA Raid-Helper";
+        const app = qx.core.Init.getApplication();
+        const mainData = ClientLib.Data.MainData.GetInstance();
+        const server = mainData.get_Server();
+        const worldId = server.get_WorldId();
+        const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
+        const objType = ClientLib.Vis.VisObject.EObjectType;
         const storageKey = `raidhelper_settings_${worldId}`;
         const storedSettings = JSON.parse(localStorage.getItem(storageKey)) || {};
-        const maxLvl = ClientLib.Data.MainData.GetInstance().get_Server().get_PlayerUpgradeCap();
-        let minLvl = storedSettings.minLevel ?? Math.min(Math.round(ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentOwnCity().get_LvlOffense()), maxLvl);
-        
-        // Initialize container
-        const container = new qx.ui.container.Composite(new qx.ui.layout.HBox());
-        
-        // Button
-        const HCBtn = new qx.ui.form.Button("Hide");
+        const maxLvl = server.get_PlayerUpgradeCap();
+        let minLvl = storedSettings.minLevel ?? Math.min(mainData.get_Cities().get_CurrentOwnCity().get_LvlOffense(), maxLvl);
+        const container = new qx.ui.container.Composite(new qx.ui.layout.VBox());
+        const HCBtn = new qx.ui.form.Button("Hide (< " + minLvl + ")");
+        const levelSelect = new qx.ui.form.SelectBox();
         let active = false;
         HCBtn.set({
-            width: 50,
-            toolTipText: "Hide/Show infos for forgotten targets and player bases that are under the selected level in range of your selected base."
+            width: 80,
+            opacity: .7,
+            toolTip: (new qx.ui.tooltip.ToolTip).set({
+                label: "<b>Hide/Show Infos</b><br>For forgotten targets and player bases<br>that are <i>under</i> the selected level<br>in range of your selected base.<br><br>Right click for custom level select.",
+                rich: true
+            })
         });
-        
         HCBtn.addListener("click", () => {
-            const currCity = ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentOwnCity();
-            if (!currCity) {
-                console.error("Current city is undefined or null.");
-                return;
-            }
+            const currCity = mainData.get_Cities().get_CurrentOwnCity();
             const x = currCity.get_X();
             const y = currCity.get_Y();
-            const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
-            const server = ClientLib.Data.MainData.GetInstance().get_Server();
-            const attackDistance = ClientLib.Data.MainData.GetInstance().get_Server().get_MaxAttackDistance();
-            
+            const attackDistance = server.get_MaxAttackDistance();
             active = !active;
-            
             for (let i = Math.max(x - attackDistance, 0); i < Math.min(x + attackDistance, server.get_WorldWidth()); i++) {
                 for (let j = Math.max(y - attackDistance, 0); j < Math.min(y + attackDistance, server.get_WorldHeight()); j++) {
                     const visObject = region.GetObjectFromPosition(i * region.get_GridWidth(), j * region.get_GridHeight());
                     if (visObject) {
                         const visType = visObject.get_VisObjectType();
-                        if ((visType === ClientLib.Vis.VisObject.EObjectType.RegionNPCCamp) || (visType === ClientLib.Vis.VisObject.EObjectType.RegionNPCBase) || (visType === ClientLib.Vis.VisObject.EObjectType.RegionCityType)) {
+                        if ((visType === objType.RegionNPCCamp) || (visType === objType.RegionNPCBase) || (visType === objType.RegionCityType)) {
                             const visLvl = visObject.get_BaseLevel();
                             if (visLvl < minLvl) {
                                 active ? visObject.HideInfos() : visObject.ShowInfos();
@@ -65,46 +59,29 @@
                     }
                 }
             }
-            
-            HCBtn.set({ label: `${active ? "Show" : "Hide"}` });
+            HCBtn.setLabel(`${active ? "Show" : "Hide (< " + minLvl + ")"}`);
         });
-        
-        // Level Select List
-        const levelSelect = new qx.ui.form.SelectBox();
-        levelSelect.set({
-            width: 45,
-            toolTipText: 'Select raid helper minimum visible level infos.'
-        });
-        for (let i = 1; i <= maxLvl; i++) {
-            const item = new qx.ui.form.ListItem(i, null, i);
-            levelSelect.add(item);
-        }
-
+        HCBtn.addListener("contextmenu", () => {container.add(levelSelect)});
+        for (let i = 1; i <= maxLvl; i++) levelSelect.add(new qx.ui.form.ListItem(i, null, i));
         const selectedItem = levelSelect.getChildren().find(item => item.getModel() === minLvl);
-        if (selectedItem) {
-            levelSelect.setSelection([selectedItem]);
-        } else {
-            console.warn(`Fallback: Could not find level ${minLvl}. Selecting default level.`);
-            levelSelect.setSelection([levelSelect.getChildren()[0]]);
-        }
-
+        levelSelect.set({
+            width: 80,
+            toolTipText: 'Select raid helper minimum visible level infos.',
+            opacity: .7,
+            selection: [selectedItem]
+        });
         levelSelect.addListener("changeSelection", (e) => {
             minLvl = e.getData()[0].getModel();
             localStorage.setItem(storageKey, JSON.stringify({ ...storedSettings, minLevel: minLvl }));
-            HCBtn.set({ label: `${active ? "SHOW" : "HIDE"}` });
+            HCBtn.setLabel(`${active ? "Show" : "Hide (< " + minLvl + ")"}`);
+            container.remove(levelSelect);
         });
-
-        // Add button and level select to container
         container.add(HCBtn);
-        container.add(levelSelect);
-        
-        // Add container to UI
-        const app = qx.core.Init.getApplication();
         app.getBackgroundArea().add(container, {
             right: 125,
             bottom: 55
         });
+        console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
     }
-    
     initHideCampsButton();
 })();
