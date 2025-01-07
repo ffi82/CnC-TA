@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnC-TA Android helper
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025.01.05
+// @version      2025.01.08
 // @description  Alternative directional controls and zoom for the region view.
 // @author       ffi82
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
@@ -50,16 +50,16 @@
         // Create UI elements
         const mainContainer = new qx.ui.container.Composite(new qx.ui.layout.VBox()).set({ opacity: 0.7 });
         const buttonContainer = new qx.ui.container.Composite(new qx.ui.layout.Grid());
-
+        const iconF = ClientLib.Data.MainData.GetInstance().get_Player().get_Faction() == ClientLib.Base.EFactionType.GDIFaction ? "gdi" : "nod";
         const directions = [
-            { label: "🢁", xOffset: 0, yOffset: -1, row: 0, col: 1 },
-            { label: "🢃", xOffset: 0, yOffset: 1, row: 2, col: 1 },
-            { label: "🢀", xOffset: -1, yOffset: 0, row: 1, col: 0 },
-            { label: "🢂", xOffset: 1, yOffset: 0, row: 1, col: 2 }
+            { icon: `webfrontend/ui/${iconF}/icons/icon_step_up_button.png`, xOffset: 0, yOffset: -1, row: 0, col: 1 },
+            { icon: `webfrontend/ui/${iconF}/icons/icon_step_down_button.png`, xOffset: 0, yOffset: 1, row: 2, col: 1 },
+            { icon: `webfrontend/ui/${iconF}/icons/icon_step_left_button.png`, xOffset: -1, yOffset: 0, row: 1, col: 0 },
+            { icon: `webfrontend/ui/${iconF}/icons/icon_step_right_button.png`, xOffset: 1, yOffset: 0, row: 1, col: 2 }
         ];
 
-        directions.forEach(({ label, xOffset, yOffset, row, col }) => {
-            const button = new qx.ui.form.Button(label).set({ width: 30, height: 30 });
+        directions.forEach(({ icon, xOffset, yOffset, row, col }) => {
+            const button = new qx.ui.form.Button(null, icon);
             button.addListener("execute", () => moveRegion(xOffset, yOffset));
             buttonContainer.add(button, { row, column: col });
         });
