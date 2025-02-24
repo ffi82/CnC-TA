@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CnCTA Base Scanner
 // @namespace   https://github.com/bloofi
-// @version	    2025.02.24
+// @version	    2025.02.25
 // @description bloofi's layout scanner
 // @author      bloofi
 // @contributor ffi82
@@ -789,12 +789,20 @@
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         function checkForInit() {
             try {
-                if (typeof qx === 'undefined' || !qx.core.Init.getApplication().initDone) {
-                    setTimeout(checkForInit, 100);
-                    return;
+                if (typeof qx !== 'undefined' &&
+                    qx &&
+                    qx.core &&
+                    qx.core.Init &&
+                    qx.core.Init.getApplication &&
+                    qx.core.Init.getApplication() &&
+                    qx.core.Init.getApplication().initDone) {
+                    init();
                 }
-                init();
-            } catch (e) {
+                else {
+                    window.setTimeout(checkForInit, 1000);
+                }
+            }
+            catch (e) {
                 console.log(scriptName, e);
             }
         }
