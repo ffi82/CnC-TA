@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CnCTA Base Scanner
 // @namespace   https://github.com/bloofi
-// @version	    2024.12.19
+// @version	    2025.02.24
 // @description bloofi's layout scanner
 // @author      bloofi
 // @contributor ffi82
@@ -604,7 +604,8 @@
                                             this.bases[this.currentScanID] = currentScan;
                                             setTimeout(() => {
                                                 this.checkAndFetch();
-                                            }, 200);
+                                                ClientLib.Net.CommunicationManager.GetInstance().$Poll();
+                                            }, 70);
                                         }
                                     }
                                     break;
