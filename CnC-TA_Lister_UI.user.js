@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnC-TA Lister UI
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2024-12-16
+// @version      2025-02-23
 // @description  Some data tables...
 // @author       ffi82
 // @contributor  leo7044 (https://github.com/leo7044), 4o (ChatGPT)
@@ -14,8 +14,8 @@
 'use strict';
 (() => {
     const ListerUIScript = async () => {
-        if (typeof ClientLib === 'undefined' || typeof qx === 'undefined' || !qx.core.Init.getApplication().initDone || !ClientLib.Data.MainData.GetInstance().get_EndGame().GetCenter()) {
-            setTimeout(ListerUIScript, 100); // Retry after 100ms if liraries (ClientLib or qx) are not loaded
+        if (typeof ClientLib === 'undefined' || typeof qx === 'undefined' || !qx || !qx.core || !qx.core.Init || !qx.core.Init.getApplication || !qx.core.Init.getApplication() || !qx.core.Init.getApplication().initDone || !ClientLib.Data.MainData.GetInstance().get_EndGame().GetCenter()) {
+            setTimeout(ListerUIScript, 1000); // Retry after 1000ms if liraries (ClientLib or qx) are not loaded
             return;
         }
         window.Lister = { // Exposing Lister globally
@@ -132,9 +132,12 @@
             Base_Offense_Level: null,
             Base_Construction_Yard_Level: null,
             Base_Command_Center_Level: null,
+            Base_Support_Name: null,
+            Base_Support_Level: null,
             processedTimestamp: null
         };
         const poiTemplate = {
+            Holders: null,
             Level: null,
             Name: null,
             Coords: null,
@@ -153,7 +156,10 @@
             Tiberium: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAA6hJREFUOE+tlFtMXFUYhdc++1zmcmCG+zAQGS5DDSXEVIwVY2xNtJqYlvQy+kBqkyYa++AjsVUjPkiMRqM11tTEmhptBR60GjHVkrSgTWk1tmmLIEUqIJcZGGDu58zZ5zdQxKImvLhf915fVva/1s/wPx22HoeI2CsAqwOW3w4A1MaY/U/dGtCKiOMm5FINkjUPSfdAEwyutG1oskkmV81Ebiw3EdrIzNthf4OIWOcAlLQHOWQbXkvVnJaZdUhgBaRQ0M6X9kpx6kGavrANY3SmWo+2MWb9BVsFtRFJ5RPwcjlbnckR7WPzQ0W1nvrLQqaK0YW+u/rmvvT6Ew3JBze0HKc4jpFTGTpQhCRjjJZgq6DDw6S5uREgr/LUheg3B3+mbuwqfBE9E8cRqqpBpwhj7GwvdtcdRKWn/ulsgn9VdAmRUIiJNaAPByM5wu3dlNZT7d8nX2py5jXAiLtw7YeLkPQF1JTV4sLNfgSmyrEv9M4JsWC/ZZnx4b6a/GQXY+KWIyJ2bDpRCO586LfMr29/HuvwsUgMizcWkOtxIuyIwRweB8UyaKx+GDt3HBpkGfqMm64TLgWTe0uQWgYd/ZEUyjMCXFeaz1/peL2j+wNodwdgh+Pg0TlksgnIleWg2TC23/cY4nIKwardZlCt30cwe2ZK9Fm29MnFY/Co3NrE8/iB/l++e/zTw8+rUqAc8P0BazEJ0S/gqfehJBDEC0+04JIYwcB1W2yv2/+qlpE/6u7DODtKpPDRjN8ulp/9aaSj9fT5kyw6bsBxRxR8GwOldCQ7BaxJE+6mIKr8BWjaeCc6Tp3Gyy1dR7SU8obbh3HWdp3UMrdZHVXn2l97s7lZ6IWQ8nX4ixVUbQ3i2vwE5t6/AtvlhVyqQoRnkV+Qi3sqd4ltW/a30qJ5cqrCNbPsyBoxKqLy5Lsfv3fo0UkpCsmvQe6dgbvcjcxWF4yvJ5CejcJ5bwCbdzyJRwr3hHXLc4QLdmo+oYy0bkCCdRLxxdFkoe10NJqu7HO9Zz9p8tfWJ4pyS42rg2cqhq5eBIUN5FT78MD9e8YDxQ3nWEb6loS4nGXqpDKN2DONLMuWRt8JOBZvpAuEW/bJTKrMGkLlKnMRY2W2zjZzCykQpuyY6OGM/W5J1rTEnfNnSmEsZWg1kEtl7QKU+BC0NMVVTZNk05ZUrkkOIqYpACymGsJKxpFyJyJhZNq2QGClHmuS/a91csupVLRSowhAIcC+Xfzf7V9vMa1z/yem2KPLWChEcAAAAABJRU5ErkJggg==',
             Crystal: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAA5FJREFUOE+tlG1oW2UUx//PfZ57b15uetsm6ctWm1JRSalTaEGZUgbTgmLdHFql2DkVJo5NxlAUJy5DRMHh1LFBqygT/DD9sA8OxE5pNwVh00ynri5N1y5ZUpJ0Se7N6829uY/El+IQVj94vh7Oj3P4//+H4H8qshqHcy5M/gDa0g5WssB7FmGd2gA7RIj9z9lrQJxzMgPQzBWIhRKY1QYBetklUZdiEdNLGTivifFqAfqOPpQIIfxv2DWgie+5KKporjmMZpHRLoHDIgJpMQR+a8rM7rbKVf0GZe0uGOasGnAkRgmp/QsUCnGhcxwe6jB70SS8ejoS2zzUHzhXLpR5olINhiM5p3Y5hbFNt806LedupcrOzn0ELRT688SVjaY5Z5ElrGGK/Uh4KXZgPtsElksj91sUm4fX4/OZPJYyCXT7F/Do+NhBQa8fKXfJ8V1ArXHiCujtOHc28dqNopc9fyKceKJN9uC7s0lw7RIiP+oIdMuAs4jc5Z/x4sHQt1Je3O+wzZ9MTck/MwBrBTQxz1XZbQ0uGOmvJvdOQSsSWFc1dAYZ0lddgJUERwX963vw2FNbdGoKU6qovmHqmN/eC52AczIBMCtZ6ZCZtGEhNffWm4+/0k5dgxBoHbJfQ0VPgEgDkDvqGN86goq3ikyMWw/c3f8CLPHYkg8p0pD8w2Uo3DKDgirsubi8/ODhnfucVkqCY9NdoIFmaJOfwdXqBhd6sP+lMWSdCo4dn+J7nht5h+WsQ2rAESOfck61BfjEVnvLyfnZ92Y++Zpp0TIcGwPwjdyPQpZj+d2jqP96DmLPMKhs4N6td+L01Cm8Hnr6sFwWD7g7ECcNtaIJdBSdpdfe/+DjbXNfxCG2BOFpzWDdQ/fhl6QDuW+Ow74SBfUGQFQVXWs13DF4e3po6J6XYdATiTZkSMOEkhfeqs/Ye34xtvPoviMA8UHtVpENfwlXcCNKixEI9SzENevw8LNPYqDPe4YVcUiw+RlTkpM7/CiREOdC5yV4JDe6bdkejqbj47LLzXv93kxc03tnw+e7DC3DZX975Zabb7ro9/imxYp90jJZjDmR9kyjPDpK6n+oNg3QxTyUWgVNxDZbJULcNoXMJOIwynDZqBNS4wZ10wxFPS1W5Wwxg+L2hn/+ytuKjxqb9V0AQxNoVYSQL4AyCZSYRdGtKKjYsJkIo+RDLQuY103/ai/lev1V/9F/hf8O1jSTcwWrPEMAAAAASUVORK5CYII=',
             Production: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAZJJREFUOE9jZKAQMFKon4E2BphnT+gS5ONNZ2ZmBjvw79+/DB8+f2s9MSW3C93FWF1gnjVhVntBVKqmrDBY/aX7Lxnqp69pOzE5r5poA5pywlLVZMXB6s/dfMTQvXAzaQZUZEekykhAXHDz0QuGKfPWEzbANLPvvZ6KHD8zCzODspwU4+Pnbxn8fe0Y7j98zjBr6ebqM9OL2vB6walo2qd5jam8jIyQoJmy+iCDoa0xw7uXbxnWrNn59OfvX89//vr97tysUneYQSiBaFcw5VN9SQIvSJKLnZVh9caDDCoWRgwfP39j0GRnYNBVkWJIrJvx+dCEHD6sBlhkT/iUUwAxAOSI4/tOMciY6DO8fvuRQenfNwYFNQWG5p4Fn09MLcBugFlW38fAlGi45PWDJxjkLU0YPr95x8DO8I9BQVGaYf7URZ9OTSvix+oC4/TuT1qWZmAXgMDHB48Y+GSkGP7+/s3AwsLCwC3Ay3B6z6HPZ2eWYneBekzjmj9//ojgyx8sLCxvbi6pD8HqAnIyFsWZCQAHS5MRrpL/9AAAAABJRU5ErkJggg==',
-            Lister: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGZJREFUOE9jZKAQMFKonwGrAd2Hvf6X2m5jBNG4LADJg+TgBqBrgikg5EIUA2CKidWM4gIQB+YKmEEkeQHZqegG4fMGwTDA5QqsgYgtDIg2AFsYEIoBjEBEDryRng6ICTyYGopzIwAF2VQRfJD3EwAAAABJRU5ErkJggg=='
+            Lister: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAGZJREFUOE9jZKAQMFKonwGrAd2Hvf6X2m5jBNG4LADJg+TgBqBrgikg5EIUA2CKidWM4gIQB+YKmEEkeQHZqegG4fMGwTDA5QqsgYgtDIg2AFsYEIoBjEBEDryRng6ICTyYGopzIwAF2VQRfJD3EwAAAABJRU5ErkJggg==',
+            TheForgotten: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAACoUExURQAAAAsNBxEWCR0dEwAAAAIFAQUIAwYJAwUFAwICAQMGARAWCAUIAgkLBQIDAhkaEQUFAwAAAAMEAT6lAEGtAAgLBQ0fA0OyACssIcbEh4GAWXR2UhocFDaJBBxGBEJEMNDOjSRbAxUyBEa7AI6OYpiXZqalc1jqABASCy51A2tvTWZmSVBWN1fmAE/QADExLDmWAFXhANvalFPcALe5hOXkq7KyeUB5HgcpoUYAAAARdFJOUwAzqycT9AqM7XtmT6HHtdXVuJdJNwAAAT9JREFUKM+1ktlywjAMRSEhJGGXwGlsZ9/IVkLD0v//s8oztGnK9JHzpPGZO5ZlTSavZ2Zq0//cwioTXM2ezucL096w+HT0Hcs27XHeZp0Hn0ciRey83Uia3U2C/06c0LsJaz6Sbl+D/0GQ7IU1Smpu30BwulwuPni9/J3UtxhGEsDxDwGAG2W4W/48wfBEFEWZCwRreBQVIawe0go5l27NufCgvfPcDa9csIfcuFlHGU/wa8EpRHHZfPekWwBJpW4rri2CU8UIaA8jqNI09R2Qd4T4kKbnZOjXdN4UAciC4V6VlTEb5EERQE3yrMqR3CtI5iRVGQ9yiYm/PwcITc6oH3JsPcxoYWDCAMIsFzSJxBn/6lyjSJ3LNsvrEtd/92EJbRYislaU2vOSbMvSsKcaMqY/S329UqdTc/nqPf4CuKojdch7y7kAAAAASUVORK5CYII=',
+            GDI: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAADtUExURQAAABoaGC8rHCgmHgcHBg8PDR4dFgoLCwsKCAoJBggIBi0vMCQnKCooHyIhGwcICC8xMhwdHgEBAQAAAAgHBQ0NDJ+NRaKRRxwaERUUEZCAP72oU3N5e6qXSiUmI5iHQigjEZKZm1hcXnyCg0M6HdnBX7CdTbW+wtO9X3ptNk9TVKiwtK63u+nWaSkrLUpNT8vU2KKorMawVtvj52ddN1lQKuPMY5ugoYd4O822WENDQLikUHJkMFJIJWNXKjMsFGZqbLvDx3ZuToeNkLWiTjc5OEdBJjo2Kefbb+7idbzFyqeaY7/Izbm7r3hsPJb6nMEAAAATdFJOUwBBVmn5AxDw27/pf9Aeq5yaLXYxpceLAAABe0lEQVQoz7WS2XKCQBREjaICGhNz78AMA8gq4G7Afc2qZvn/3wlWxaiVsiov6ddTPdPVtzOZP6ggi/mLMEsT+SK9xq13geZyGcHfWeKdJEmVwjmrUlKRBu22hX1Xn6J8fZaGhCsEPhyybtyLAwdzp1SOdhEu26HPXuKPh9gmR3pVyBK1zakV+iE13V7QG2H1m91RFNFLbQtqTHwGtB/0GvLBaM4iC1dKONReZ3xCAUdBixxCSa/bobKg1vieG8ZswoA0Hxo3P9WZA+7zeVI3DEOtcxOcN108JMrLm9WSP9cVNVX9/hE6gV78ySvan2zDlb3UsQXpuydQclpTmD7XUikU9nB9hDedpgPgGVoqY4BgthrisQYcuanBU8aaqvAEuk1SOvZX7PY7AFjTIs/y3pntCCflXqFrEwCtNt//6D5h6bT6Cuq2CS+PKgPmPpHy+U3L2LX1DhksycjB8q8VCaShr0lETLj9vZV8qSggTeYL4cLObhkiZjP/qy9e9S7QIkU6xAAAAABJRU5ErkJggg==',
+            NOD: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAACNUExURQAAAOw8Q4tPUY1YWrFPU6ZxcrmDhZg5O+Rlaax1d6csL5dMT6BaXK07PqBqbNJ0d7BrbOJXXL59f9NFSshkZw0BASADBKofJKEdIbAhJRUCAkMICm0SFHkTFbsjKLYhJsEjKZQbHs4jKTkICV0OEdooLSsEBVAND8glK4UXGvAwN+YrMq8WGpIQFNIpL/ELCXgAAAAVdFJOUwD9sWPrMUX18Qv73bn3Tdyy9Zr55xQta2QAAAFFSURBVCjPtZLXbsMwDEWb7nQlbXOpZQ1bkkc8/v/zSiXpSp97AAsEjkiQlC8u/pnb+xO3f916VUXDRLta/5GbCfUBTJtzdzPqYX+g1uPNmXxNtM+hHsJ+T+n1t3trsHQopDGjefvdDaXMhvjTsqLxZ0+7GZko2XGIkaD0vPsxYkbtEce85NECnUD+Hvbd0Digb3omtOAq5v3TbSeoxWLoA9O7jiNM21M3izZNCB01jukjYLLRy7Gna4vgvFuidN773gBVCLDXxb1w4JRS3go+w8AdKe8s/EtJ7HQvGMXOu8SzGidEr01JfRpQq2KFs5WC1hj4Xo35qdR9NtpLRhnossKkpPTaPB8fZEISUopYsqirS5wwnZ7m0UKeZJSiFJGwj59rf2ipYrou2eoAtQ9fq7+aWyJqGTrSzlffm7+8O+PyP3/lD/3hLDLjPwEEAAAAAElFTkSuQmCC'
         }
         let AllianceCitiesArr = localStorage.getItem(wid + 'cacheCleared') === 'true' ? (localStorage.removeItem(wid + 'cacheCleared'), []) : (await Lister.get(wid + 'AllianceCitiesArr')) || [];
         let processedCityIds = JSON.parse(localStorage.getItem(wid + 'processedCityIds')) || [];
@@ -274,6 +280,8 @@
                                 Base_Offense_Level: -1,
                                 Base_Construction_Yard_Level: -1,
                                 Base_Command_Center_Level: -1,
+                                Base_Support_Name: -1,
+                                Base_Support_Level: -1,
                                 processedTimestamp: new Date().toISOString()
                             });
                             processedCityIds.push(city.i);
@@ -296,6 +304,7 @@
         function loadCity(id) {
             return new Promise((resolve) => {
                 ClientLib.API.Util.SetPlayAreaView(ClientLib.Data.PlayerAreaViewMode.pavmNone, id, 0, 0); // Set the play area view for the current city
+                ClientLib.Net.CommunicationManager.GetInstance().$Poll();
                 const checkLoading = setInterval(() => {
                     const loadedCity = mainData.get_Cities().get_CurrentCity();
                     // Check if the loaded city's ID matches the requested city ID
@@ -303,7 +312,7 @@
                         clearInterval(checkLoading);
                         resolve(loadedCity);
                     }
-                }, 200);
+                }, 10);
             });
         }
         // Get more data for each alliance city (about 25%) with ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentCity()
@@ -327,6 +336,8 @@
                             Base_Offense_Level: loadedCity.get_LvlOffense(),
                             Base_Construction_Yard_Level: loadedCity.get_ConstructionYardLevel(),
                             Base_Command_Center_Level: loadedCity.get_CommandCenterLevel(),
+                            Base_Support_Name: loadedCity.get_SupportWeapon()?.dn || "No Support",
+                            Base_Support_Level: loadedCity.get_SupportData()?.get_Level() || 0,
                             processedTimestamp: new Date().toISOString()
                         });
                     }
@@ -407,7 +418,8 @@
                         Score: POIScore[visObject.get_Level()],
                         Type: visObject.get_Type(),
                         Sector: calculateMetric(x, y, 'sector'),
-                        Distance: calculateMetric(x, y, 'distance')
+                        Distance: calculateMetric(x, y, 'distance'),
+                        Holders: findPOIHolders(x, y)
                     });
                     AllPOIs.push(poi);
                 }
@@ -418,6 +430,33 @@
             await Lister.set(wid + 'AllPOIs', AllPOIs); // Save to IndexedDB
             eventBus.dispatch('POIs_Refreshed', AllPOIs);
             return AllPOIs;
+        }
+        // Find POI holders within 2 fields of a POI
+        function findPOIHolders(poiX, poiY) {
+            const holders = [];
+            const range = 2;
+            const gridWidth = region.get_GridWidth();
+            const gridHeight = region.get_GridHeight();
+
+            for (let x = -range; x <= range; x++) {
+                for (let y = -range; y <= range; y++) {
+                    const xPos = (poiX + x) * gridWidth;
+                    const yPos = (poiY + y) * gridHeight;
+                    const visObject = region.GetObjectFromPosition(xPos, yPos);
+
+                    if (!visObject || visObject.get_VisObjectType() !== ClientLib.Vis.VisObject.EObjectType.RegionCityType || calculateMetric(x, y, 'distance', 0, 0) >= range * Math.sqrt(2)) {
+                        continue;
+                    }
+                    holders.push({
+                        Base: visObject.get_Name(),
+                        Player: visObject.get_PlayerName(),
+                        Alliance: visObject.get_AllianceName(),
+                        Coords: `${poiX + x}:${poiY + y}`,
+                        Distance: Math.round(calculateMetric(x, y, 'distance', 0, 0))
+                    });
+                }
+            }
+            return holders;
         }
         /*
          * Build UI
@@ -452,7 +491,7 @@
                 showCellFocusIndicator: false,
             });
             allianceCitiesTable.getChildControl("statusbar").setTextColor("darkgreen");
-            allianceCitiesTable.setAdditionalStatusBarText(` / ${getAllianceCitiesCount()} cities`);
+            allianceCitiesTable.setAdditionalStatusBarText(` / ${Object.values(mainData.get_Alliance().get_MemberData().d).reduce((sum, member) => sum + member.Bases, 0)} cities`);
             const tableColumnModel = allianceCitiesTable.getTableColumnModel();
             const cityRowMap = {}; // Map to track row indices by City ID
             // Default visible columns
@@ -479,9 +518,9 @@
             }));
             tableColumnModel.setDataCellRenderer(5, createRenderer(cellInfo => {
                 const factionImages = {
-                    "0": "https://eaassets-a.akamaihd.net/cncalliancesgame/cdn/data/851b7bd703fac31ba86a8b5ece008f4d.png",
-                    "1": "https://eaassets-a.akamaihd.net/cncalliancesgame/cdn/data/b72c8e05f0cd8dc0a37618c644112143.png",
-                    "2": "https://eaassets-a.akamaihd.net/cncalliancesgame/cdn/data/13d0feaa973172ea7c55622c314feea2.png"
+                    "0": Icons.TheForgotten,
+                    "1": Icons.GDI,
+                    "2": Icons.NOD
                 };
                 return factionImages[cellInfo.value] ? `<img src="${factionImages[cellInfo.value]}" style="height:20px;width:20px;">` : cellInfo.value;
             }));
@@ -579,12 +618,12 @@
                     },
                     tip: "Populate/Update table data."
                 }, {
-                    label: "Download CSV",
-                    icon: Icons.DownloadCSV,
+                    label: "Download TSV",
+                    icon: Icons.DownloadTSV,
                     handler: () => {
-                        getCSV(AllianceCitiesArr, "AllianceCities")
+                        getTSV(AllianceCitiesArr, "AllianceCities")
                     },
-                    tip: "Download table data in CSV (comma-separated values) format."
+                    tip: "Download table data in TSV (tab-separated values) format."
                 }, {
                     label: "Res Production",
                     icon: Icons.Production,
@@ -673,10 +712,12 @@
             const existingTab = tabView.getChildren().find(tab => tab.getLabel() === "Points of Interest");
             if (existingTab) {
                 const tableModel = existingTab.getUserData("tableModel");
+                cleanupHoldersButtons();
                 updateTableData(data, tableModel);
                 updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, data);
                 return;
             }
+            let activeButtonIds = [];
             const poiTimestampKey = wid + 'poiTimestampLabel';
             const poiTab = new qx.ui.tabview.Page("Points of Interest");
             poiTab.setLayout(new qx.ui.layout.VBox());
@@ -699,24 +740,55 @@
             updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, data);
             const poiTable = new qx.ui.table.Table(tableModel);
             poiTable.getChildControl("statusbar").setTextColor("darkgreen");
-            [0, 2, 3, 4, 5, 7].forEach(index =>
+
+            // Apply cell renderers to specific columns
+            [1, 3, 4, 5, 6, 8].forEach(index =>
                 poiTable.getTableColumnModel().setDataCellRenderer(index, new qx.ui.table.cellrenderer.Html())
             );
+
+            // Add custom renderer for Holders column
+            class HoldersButtonRenderer extends qx.ui.table.cellrenderer.Abstract {
+                createDataCellHtml(cellInfo, htmlArr) {
+                    const holders = cellInfo.value || [];
+                    const buttonId = `btn-holders-${cellInfo.row}`;
+                    const buttonLabel = `${holders.length} Holders`;
+                    activeButtonIds.push(buttonId);
+                    htmlArr.push(`
+						<div>
+						<button id="${buttonId}" style="cursor:pointer; padding:2px 5px; font-size:11px;">
+						${buttonLabel}
+						</button>
+						</div>
+					`);
+                    setTimeout(() => {
+                        const buttonElement = document.getElementById(buttonId);
+                        if (buttonElement) {
+                            buttonElement.addEventListener("click", () => showHoldersPopup(holders));
+                        }
+                    }, 10);
+                }
+            }
+            poiTable.getTableColumnModel().setDataCellRenderer(0, new HoldersButtonRenderer());
+
+            // Add POI Table and Footer to Tab
             const poiFooterContainer = buildPoiFooterContainer(data, tableModel, poiNameSelectBox, poiOwnerSelectBox);
             poiTab.add(poiTable, {
                 flex: 1
             });
             poiTab.add(poiFooterContainer);
             tabView.add(poiTab);
+
+            // Event subscription for data refresh
             eventBus.subscribe("POIs_Refreshed", async (e) => {
                 const refreshedData = e.getData();
                 tabView.setUserData("poiData", refreshedData);
                 updateTableData(refreshedData, tableModel);
                 updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, refreshedData);
-                await Lister.set(poiTimestampKey, Date.now()); // Save timestamp to IndexedDB
+                await Lister.set(poiTimestampKey, Date.now());
                 poiTimestamp.setLabel(`Last POI scan age: ${msToTime(Date.now() - (await Lister.get(poiTimestampKey)))}`);
             });
 
+            // Helper Functions
             function updateTableData(filteredData, tableModel) {
                 const tableData = filteredData.map(poi =>
                     Object.keys(poiTemplate).map(key => poi[key])
@@ -733,6 +805,7 @@
                         Alliance: allianceLink,
                         Score: formattedScore,
                         Distance: formattedDistance,
+                        Holders: poi.Holders || [] // Ensure Holders data is an array
                     };
                     Object.keys(formattedValues).forEach(key => {
                         const col = Object.keys(poiTemplate).indexOf(key);
@@ -743,16 +816,70 @@
                 });
             }
 
+            function showHoldersPopup(holders) {
+                if (!holders || holders.length === 0) {
+                    alert("No Holders data available.");
+                    return;
+                }
+
+                const holderDetails = holders.map((holder, idx) => `
+					<p>
+					<strong>Holder ${idx + 1}</strong><br>
+					<strong>Base:</strong> ${holder.Base || "N/A"}<br>
+					<strong>Player:</strong> ${webfrontend.gui.util.BBCode.createPlayerLinkText(holder.Player) || "N/A"}<br>
+					<strong>Alliance:</strong> ${webfrontend.gui.util.BBCode.createAllianceLinkText(holder.Alliance) || "N/A"}<br>
+					<strong>Coords:</strong> ${webfrontend.gui.util.BBCode.createCoordsLinkText(holder.Coords, parseInt(holder.Coords.split(":")[0]), parseInt(holder.Coords.split(":")[1])) || "N/A"}<br>
+                    <strong>Distance:</strong> ${holder.Distance || "N/A"}
+					</p>
+				`).join("");
+
+                const dialog = new qx.ui.window.Window().set({
+                    caption: "Holders Details",
+                    layout: new qx.ui.layout.VBox(),
+                    width: 230,
+                    height: 360,
+                    backgroundColor: "lightgrey"
+                });
+
+                const content = new qx.ui.basic.Label(holderDetails).set({
+                    rich: true,
+                    backgroundColor: "lightgrey",
+                    padding: 5,
+                    opacity: 0.7
+                });
+
+                const scroll = new qx.ui.container.Scroll();
+                scroll.add(content);
+
+                dialog.add(scroll, {
+                    flex: 1
+                });
+                dialog.center();
+                dialog.open();
+            }
+
+            function cleanupHoldersButtons() {
+                activeButtonIds.forEach(buttonId => {
+                    const buttonElement = document.getElementById(buttonId);
+                    if (buttonElement) {
+                        // Clone to remove all listeners
+                        const newButtonElement = buttonElement.cloneNode(true);
+                        buttonElement.replaceWith(newButtonElement);
+                    }
+                });
+                activeButtonIds = []; // Reset the tracking list
+            }
+
             function buildPoiFooterContainer(data, tableModel, poiNameSelectBox, poiOwnerSelectBox) {
                 const refreshButton = new qx.ui.form.Button("Refresh", Icons.Refresh).set({
                     toolTipText: "Refresh POIs"
                 });
-                const downloadButton = new qx.ui.form.Button("Download CSV", Icons.DownloadCSV).set({
-                    toolTipText: "Download POIs as CSV"
+                const downloadButton = new qx.ui.form.Button("Download TSV", Icons.DownloadTSV).set({
+                    toolTipText: "Download table data in TSV (tab-separated values) format."
                 });
                 refreshButton.addListener("execute", getPOIs);
                 downloadButton.addListener("execute", () => {
-                    getCSV(AllPOIs, "POIs");
+                    getTSV(AllPOIs, "POIs");
                 });
                 poiNameSelectBox.addListener("changeSelection", applyFilters);
                 poiOwnerSelectBox.addListener("changeSelection", applyFilters);
@@ -804,21 +931,50 @@
         /*
          * Helper functions
          */
-        // List to CSV
-        function getCSV(data, name) {
+        // Array formatter to TSV file download
+        function getTSV(data, name) {
             if (!data || data.length === 0) {
-                console.warn("No data available for CSV export.");
+                console.warn("No data available for TSV export.");
                 return;
             }
-            const headers = Object.keys(data[0]).join(",");
-            const rows = data.map(item => Object.values(item).join(",")).join("\n");
-            const csvContent = `data:text/csv;charset=utf-8,${headers}\n${rows}`;
-            const encodedUri = encodeURI(csvContent);
+
+            // Recursively process objects/arrays to a flat TSV-safe string
+            function flattenValue(value) {
+                if (Array.isArray(value)) {
+                    // Process sub-arrays recursively
+                    return value.map(flattenValue).join("‖"); // Unicode separator for sub-arrays
+                } else if (value && typeof value === "object") {
+                    // Process objects as key-value pairs
+                    return Object.entries(value)
+                        .map(([key, val]) => `${key}:${flattenValue(val)}`)
+                        .join("¦"); // Unicode separator for object key-values
+                } else {
+                    // Replace tabs in raw values to avoid breaking TSV
+                    return String(value || "").replace(/\t/g, " ");
+                }
+            }
+
+            // Extract headers and rows
+            const headers = Object.keys(data[0]).join("\t");
+            const rows = data
+                .map(item =>
+                    Object.values(item)
+                    .map(flattenValue) // Apply flattening to each cell
+                    .join("\t")
+                )
+                .join("\n");
+
+            // Combine into TSV content
+            const tsvContent = `data:text/tab-separated-values;charset=utf-8,${headers}\n${rows}`;
+            const encodedUri = encodeURI(tsvContent);
+
+            // Trigger download
             const downloadLink = document.createElement("a");
             downloadLink.href = encodedUri;
-            downloadLink.download = new Date().toISOString().slice(0, 10) + "_" + wid + "_" + name + ".csv";
-            downloadLink.dispatchEvent(new MouseEvent('click'));
+            downloadLink.download = `${new Date().toISOString().slice(0, 10)}_${wid}_${name}.tsv`;
+            downloadLink.dispatchEvent(new MouseEvent("click"));
         }
+
         // Progress bar
         function progressBar(pbIndex, pbLength, pbName, targetContainer = null) {
             const optionsBar = qxApp.getOptionsBar().getLayoutParent().getChildren()[0].getChildren()[2];
@@ -895,22 +1051,12 @@
             }
             return calculations[metricType]();
         }
-        // Get number of alliance bases
-        function getAllianceCitiesCount() {
-            const allianceData = mainData.get_Alliance().get_MemberData().d;
-            const memberIds = mainData.get_Alliance().getMemberIds().l;
-            const numAllianceBases = memberIds.reduce((acc, memberId) => {
-                return acc + allianceData[memberId].Bases;
-            }, 0);
-            return numAllianceBases;
-        }
         /*
          * Initialization logic
          */
         // Add Scripts menu entries
         function init() {
             const ScriptsButton = qxApp.getMenuBar().getScriptsButton();
-            const children = ScriptsButton.getMenu().getChildren();
             ScriptsButton.Add("Lister UI", Icons.Lister);
             qx.event.Timer.once(() => {
                 const children = ScriptsButton.getMenu().getChildren();
@@ -918,9 +1064,9 @@
                     mainUI();
                 });
             }, null, 50); // Use a timer to delay adding listeners until the menu items are fully added
+            console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
         }
         init();
-        console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
     }
     ListerUIScript();
 })();
