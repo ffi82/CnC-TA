@@ -6,8 +6,8 @@
 // @author       ffi82
 // @contributor  leo7044 (https://github.com/leo7044), 4o (ChatGPT)
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
-// @updateURL    https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister_UI.meta.js
-// @downloadURL  https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister_UI.user.js
+// @updateURL    https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnC-TA_Lister_UI.meta.js
+// @downloadURL  https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnC-TA_Lister_UI.user.js
 // @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAhlJREFUeF7tmtFtwzAMRJPBukD36RTdpwtksBb+EGAItu4okYcyYn/tSrzHI2UReT42/3turv9RAMoBmxOoEtjcANUE3Uvg+/X521z19fFzu/75vSgXjvZve7oCuBJ1F4QCwCESQXADcCfoKgCVeBmAkaCtAbxVD2hZ7kVZsx/V8GbXhT1g1Niyiz+gTQN4B/HTAEZ2Q8fOrFWj/m/KAVsBOMSy53a27FMlwAKwimehrlifiQmWQAvAs+kpxDP3EdoByAUM6XMmUwK4g2AVzzhqxfb9/6L46BK4ChwtPhKicAETnxkAyg47D0DrqJ67ArDMA1QC0T5uACzzABSU8rkLAM8jUinedAzONDSmCakF9/vRDoiYB0SeBCx8CCBqHhAp/pxlBGIawErdq8QfIEIArF6HtweA7haejXHZAZZg0Wa9sEgnsLHAHsACYDf0zK7HWhQABCGreNOH0ErX98hU1Bq0A7znAVGCrOuaAPQQMlu/gTIDQITZeUDkCdBiZBLkCsAyD1AAcPkSRBlvzy3zAJV4GQDrCbENgPp9wOBHUmxpRb8Hm2DUPCBaGLv+NABr3bMBqd+bArA6D1CLHO1XAJhssMcW8+XF7Kd8BzoAXYUtn51nYSzUFRhMQigACAKzkVo8m5gCYLGY5bKD1lWUQMhdgL3u/gcATGnSJYAEZX1eALJmzivucoAXyazrlAOyZs4r7u0d8AfcG0xQF263twAAAABJRU5ErkJggg==
 // @grant        none
 // ==/UserScript==
