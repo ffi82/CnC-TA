@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name        CnC-TA Lister
 // @namespace   https://github.com/ffi82/CnC-TA/
-// @version     2024-10-21
+// @version     2024-10-24
 // @description Under 'Scripts' menu, click to download CSV files containing Alliance Cities, Alliances, Players and Cities, Player Hall Of Fame / Challenge ranking, Alliance Roster, Alliance Cities and POIs data. How to: Click --> See progress bar above game options --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
 // @author      ffi82
 // @match       https://*.alliances.commandandconquer.com/*/index.aspx*
-// @updateURL   https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.meta.js
-// @downloadURL https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister.user.js
+// @updateURL   https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnC-TA_Lister.meta.js
+// @downloadURL https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnC-TA_Lister.user.js
 // @icon        data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAk5JREFUeF7tWctxwjAQlStIC1RAAxlmyDFpJWfOIWfOaSU5hhkqSAfpxEExGDBa7a5XljX244ok73v7tD9Vbua/aub4HQiAAmbOAK7AzAWAIDjaFdgdXt6u1bdZfb6PocZRCNgdnr+dq9a3gOv9ZvX1lJuE7AScPL8lgG5zKwEE5JYcFNAEP1wBxIAwAwiCyAKZCyKkQaTBzAygDkAdgEIIlSBKYfQCaIbQDaIbnFI3qJnwWipBzXekBa65GQoDoie8fQkIT5KdeX6QgIDQiNvzHyahDwEEePIbUu/7dSYCGDBBA7UE0OBbmCYVmAjwJvAG3ipBQwB/9j8J4xKgJUFKgAy8/TXJrICzEHmDG2MlBPBn0TFGc/9FMaCbevwmanDJG17vj2+C+1gzdAye6/t3wy4sNsu0G7gha1QBEW+R944joarcb127RchTsf8u61nw3TI7GiOSEyCLCVqhntfH7zzhsPwEDEMCH/CKIiAtCTz45nvBcds4CpBnB+46yMAXS4BNCXLwRROgJ6FJl1wK62qnyCtwbSSXIpu1Oq/fnl9gDLj3EtU92sAXfwV4JfT3PBNwh8gCqY1NcR754tSfAM/s68fjz2L5sLxPVsmMJnsLLkFePO/Bkz2EjYB499Y2N1JbB1gXa554J4naYVn0HgCb/Uh2WCIkIPqiazdzkBN47/vPigjQFzKDIFIcKgOvIuCSZyUDC4WtSZfqK0ixAgIVV1LTUxymLZ3VCkhhZGln9FJAaSAs9oAAC3tT2AsFTMGLFgxQgIW9Kez9A8eY4FA22gNKAAAAAElFTkSuQmCC
 // @require     https://github.com/ffi82/CnC-TA/raw/master/Tiberium_Alliances_Zoom.user.js
 // @grant       none
@@ -25,7 +25,8 @@
             Cities,
             CitiesArr,
             CitiesCount,
-            AllianceCitiesArr;
+            AllianceCitiesArr,
+            AllianceCities = "";
         /*
          * get Alliances list
          */
@@ -327,20 +328,13 @@
             const memberDataAsArray = ClientLib.Data.MainData.GetInstance().get_Alliance().get_MemberDataAsArray();
             timestamp = performance.now();
             AllianceCitiesArr = [];
-
-            // Sequentially process each member's public info
             for (const member of memberDataAsArray) {
-                await getPublicPlayerInfoByIdAC(member.Id); // Sequential execution
+                await getPublicPlayerInfoByIdAC(member.Id); // Sequentially process each member's public info
             }
-
-            // After processing all cities, sort and process the city IDs
             AllianceCitiesArr.sort((a, b) => b.Base_Score - a.Base_Score);
             AllianceCitiesArr.sort((a, b) => a.Player_Id - b.Player_Id);
-
             console.table(AllianceCitiesArr);
-
-            // Process cities asynchronously (but sequentially)
-            await processCityIDs(AllianceCitiesArr.map(item => item.Base_Id));
+            await processCityIDs(AllianceCitiesArr.map(item => item.Base_Id)); // Process cities asynchronously (but sequentially)
         }
 
         async function getPublicPlayerInfoByIdAC(playerId) {
@@ -354,7 +348,6 @@
                             resolve(data);
                         }), reject);
                 });
-
                 const s = ClientLib.Data.MainData.GetInstance().get_Server().get_Name();
                 for (const city of data.c) {
                     AllianceCitiesArr.push({
@@ -409,15 +402,15 @@
             });
         }
 
-        async function processCityIDs(cityIds) {
+        async function processCityIDs(remainingCityIds) {
             let processedCount = 0;
-            let AllianceCities = "";
             let failedCities = [];
-
-            for (const cityId of cityIds) {
+            let processedCityIds = JSON.parse(localStorage.getItem('processedCityIds')) || []; // Load already processed city IDs from localStorage (or memory)
+            remainingCityIds = remainingCityIds.filter(cityId => !processedCityIds.includes(cityId)); // Filter out already processed city IDs from remainingCityIds
+            while (remainingCityIds.length > 0) {
+                const cityId = remainingCityIds[0]; // Take the first city ID
                 try {
-                    // Wait for the city to load
-                    const loadedCity = await loadCity(cityId);
+                    const loadedCity = await loadCity(cityId); // Wait for the city to load
                     const cityData = {
                         ...AllianceCitiesArr.find(city => city.Base_Id === cityId),
                         "Base_Found_Step": loadedCity.get_FoundStep(),
@@ -440,13 +433,15 @@
                     console.log(cityData);
                     processedCount++;
                     AllianceCities += Object.values(cityData).join(",") + "\r\n";
-                    progressBar(processedCount, cityIds.length, "Alliance Cities");
-
-                    if (processedCount === cityIds.length) {
+                    progressBar(processedCityIds.length, AllianceCitiesArr.length, "Alliance Cities");
+                    remainingCityIds.shift(); // Remove the processed city ID from the list
+                    processedCityIds.push(cityId); // Add the processed city ID to the list of processed cities
+                    localStorage.setItem('processedCityIds', JSON.stringify(processedCityIds)); // Store the updated processed city IDs in localStorage
+                    if (processedCityIds.length === AllianceCitiesArr.length) {
                         AllianceCities = Object.keys(cityData).join(",") + "\r\n" + AllianceCities;
                         getCSV(AllianceCities, "AllianceCities");
                         console.log(AllianceCities);
-                        console.log(`%cAlliance Cities (${cityIds.length}) list done in ${msToTime(performance.now() - timestamp)}`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
+                        console.log(`%cAlliance Cities (${processedCityIds.length}) list done in ${msToTime(performance.now() - timestamp)}`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
                     }
                 } catch (error) {
                     console.error(`Error loading City ID ${cityId}:`, error);
@@ -455,6 +450,10 @@
             }
             if (failedCities.length > 0) {
                 console.warn(`Failed to load ${failedCities.length} cities:`, failedCities);
+            }
+            if (remainingCityIds.length === 0) {
+                localStorage.removeItem('processedCityIds'); // Clear localStorage after all cities have been processed
+                AllianceCities = "";
             }
         }
         /*
@@ -575,31 +574,27 @@
             }, null, 50); // Delay the execution slightly (50ms)
         }
         //wait for game
-        function GO() {
+        const checkForInit = () => {
             try {
-                if (typeof qx !== 'undefined' && qx.core.Init.getApplication().initDone && qx.core.Init.getApplication().getMenuBar().getScriptsButton() !== 'undefined') {
-                    init();
-                    console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
-                } else {
-                    window.setTimeout(GO, 1000);
-                }
+                if (typeof qx === 'undefined' || typeof qx.core.Init.getApplication !== 'function' || !qx?.core?.Init?.getApplication()?.initDone) return setTimeout(checkForInit, 1000);
+                init();
+                console.log(`%c${scriptName} loaded`, "background: #c4e2a0; color: darkred; font-weight: bold; padding: 3px; border-radius: 5px;");
             } catch (e) {
-                console.log(`Failed to init script ${scriptName}:`, e);
+                console.error(`%c${scriptName} error:`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
             }
-        }
-        GO();
+        };
+
+        checkForInit();
     }
     /*
      * inject script
      */
-    if (/commandandconquer\.com/i.test(document.domain)) {
-        try {
-            const script_block = document.createElement('script');
-            script_block.innerHTML = `(${ListerScript.toString()})();`;
-            script_block.type = 'text/javascript';
-            document.getElementsByTagName('head')[0].appendChild(script_block);
-        } catch (e) {
-            console.log('Failed to inject script:', e);
-        }
+    try {
+        const script_block = document.createElement('script');
+        script_block.innerHTML = `(${ListerScript.toString()})();`;
+        script_block.type = 'text/javascript';
+        document.getElementsByTagName('head')[0].appendChild(script_block);
+    } catch (e) {
+        console.error(`%cCnC-TA Lister init error:`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
     }
 })();
