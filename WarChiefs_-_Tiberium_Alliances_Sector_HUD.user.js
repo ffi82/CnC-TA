@@ -1,157 +1,152 @@
 // ==UserScript==
-// @name            WarChiefs - Tiberium Alliances Sector HUD
-// @description     Displays a tiny HUD with the Sector you are viewing.
-// @author          Eistee, fixes by fuchsma
-// @version         17.5.2.2
-// @include         http*://*.alliances.commandandconquer.com/*
-// @icon            http://eistee82.github.io/ta_simv2/icon.png
+// @name        WarChiefs - Tiberium Alliances Sector HUD
+// @namespace   https://github.com/Eistee82
+// @description Displays a tiny HUD with the Sector you are viewing.
+// @version     2025.03.02
+// @author      Eistee
+// @contributor NetquiK (https://github.com/netquik), ffi82
+// @icon        https://eaassets-a.akamaihd.net/cncalliancesgame/cdn/data/8c7ceb6b9b7e935f707a1bc1d5c228b8.png
+// @downloadURL https://github.com/ffi82/CnC-TA/raw/refs/heads/master/WarChiefs_-_Tiberium_Alliances_Sector_HUD.user.js
+// @updateURL   https://github.com/ffi82/CnC-TA/raw/refs/heads/master/WarChiefs_-_Tiberium_Alliances_Sector_HUD.meta.js
+// @match       https://*.alliances.commandandconquer.com/*/*
+// @grant       none
 // ==/UserScript==
-/**
- *  License: CC-BY-NC-SA 3.0
- */
-(function () {
-	var injectFunction = function () {
-		function createClasses() {
-			qx.Class.define("SectorHUD", {
-				type: "singleton",
-				extend: qx.core.Object,
-				construct: function () {
-					this.SectorText = new qx.ui.basic.Label("").set({
-						textColor : "#FFFFFF",
-						font : "font_size_11"
-					});
-					var HUD = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({
-						decorator : new qx.ui.decoration.Decorator().set({
-							backgroundRepeat : "no-repeat",
-							backgroundImage : "webfrontend/ui/menues/notifications/bgr_ticker_container.png",
-							backgroundPositionX : "center"
-						}),
-						padding : 2,
-						opacity: 0.8
-					});
-					HUD.add(this.SectorText);
-					HUD.addListener("click", function (e) {
-						if (e.getButton() == "left") this.paste_Coords();
-						if (e.getButton() == "right") this.jump_Coords();
-					}, this);
-					this.__refresh = false;
-					qx.core.Init.getApplication().getDesktop().add(HUD, {left: 128, top: 0});
-					phe.cnc.Util.attachNetEvent(ClientLib.Vis.VisMain.GetInstance().get_Region(), "PositionChange", ClientLib.Vis.PositionChange, this, this._update);
-				},
-				destruct: function () {},
-				members: {
-					__refresh: null,
-					SectorText: null,
-					get_SectorText: function (i) {
-						var qxApp = qx.core.Init.getApplication();
-						switch (i) {
-						case 0:
-							return qxApp.tr("tnf:south abbr");
-						case 1:
-							return qxApp.tr("tnf:southwest abbr");
-						case 2:
-							return qxApp.tr("tnf:west abbr");
-						case 3:
-							return qxApp.tr("tnf:northwest abbr");
-						case 4:
-							return qxApp.tr("tnf:north abbr");
-						case 5:
-							return qxApp.tr("tnf:northeast abbr");
-						case 6:
-							return qxApp.tr("tnf:east abbr");
-						case 7:
-							return qxApp.tr("tnf:southeast abbr");
-						}
-					},
-					get_SectorNo: function (x, y) {
-						var WorldX2 = Math.floor(ClientLib.Data.MainData.GetInstance().get_Server().get_WorldWidth() / 2),
-							WorldY2 = Math.floor(ClientLib.Data.MainData.GetInstance().get_Server().get_WorldHeight() / 2),
-							SectorCount = ClientLib.Data.MainData.GetInstance().get_Server().get_SectorCount(),
-							WorldCX = (WorldX2 - x),
-							WorldCY = (y - WorldY2),
-							WorldCa = ((Math.atan2(WorldCX, WorldCY) * SectorCount) / 6.2831853071795862) + (SectorCount + 0.5);
-						return (Math.floor(WorldCa) % SectorCount);
-					},
-					get_Coords: function () {
-						var Region = ClientLib.Vis.VisMain.GetInstance().get_Region();
-							GridWidth = Region.get_GridWidth(),
-							GridHeight = Region.get_GridHeight(),
-							RegionPosX = Region.get_PosX(),
-							RegionPosY = Region.get_PosY(),
-							ViewWidth = Region.get_ViewWidth(),
-							ViewHeight = Region.get_ViewHeight(),
-							ZoomFactor = Region.get_ZoomFactor(),
-							ViewCoordX = Math.floor((RegionPosX + ViewWidth / 2 / ZoomFactor) / GridWidth - 0.5),
-							ViewCoordY = Math.floor((RegionPosY + ViewHeight / 2 / ZoomFactor) / GridHeight - 0.5);
-						return {X: ViewCoordX, Y: ViewCoordY};
-					},
-					paste_Coords: function(){
-						var Coords = this.get_Coords(),
-							input = qx.core.Init.getApplication().getChat().getChatWidget().getEditable(),
-							inputDOM = input.getContentElement().getDomElement(),
-							text = [];
-						text.push(inputDOM.value.substring(0, inputDOM.selectionStart));
-						text.push("[coords]" + Coords.X + ':' + Coords.Y + "[/coords]");
-						text.push(inputDOM.value.substring(inputDOM.selectionEnd, inputDOM.value.length));
-						input.setValue(text.join(' '));
-					},
-					jump_Coords: function(){
-						var coords = prompt("Jump to Coords:");
-						if (coords) {
-							coords.replace(/(\[coords\])?([#])?(\d{1,4})\D(\d{1,4})(\D\w+)?(\[\/coords\])?/gi, function () {
-								if (arguments.length >= 5) {
-									ClientLib.Vis.VisMain.GetInstance().get_Region().CenterGridPosition(parseInt(arguments[3], 10), parseInt(arguments[4], 10));
-								}
-							});
-						}
-					},
-					_update: function () {
-						if (this.__refresh === false) {
-							this.__refresh = true;
-							setTimeout(this.__update.bind(this), 500);
-						}
-					},
-					__update: function () {
-						var Coords = this.get_Coords();
-						this.SectorText.setValue(Coords.X + ":" + Coords.Y + " [" + this.get_SectorText(this.get_SectorNo(Coords.X, Coords.Y)) + "]");
-						this.__refresh = false;
-					}
-				}
-			});
-		}
-		function waitForGame() {
-			try {
-				if (typeof qx !== "undefined" && typeof qx.core !== "undefined" && typeof qx.core.Init !== "undefined" && typeof ClientLib !== "undefined" && typeof phe !== "undefined") {
-					var app = qx.core.Init.getApplication();
-					if (app.initDone === true) {
-						try {
-							console.time("loaded in");
-							createClasses();
-							SectorHUD.getInstance();
-							console.group("WarChiefs - Sector HUD");
-							console.timeEnd("loaded in");
-							console.groupEnd();
-						} catch (e) {
-							console.group("WarChiefs - Sector HUD");
-							console.error("Error in waitForGame", e);
-							console.groupEnd();
-						}
-					} else
-						window.setTimeout(waitForGame, 1000);
-				} else {
-					window.setTimeout(waitForGame, 1000);
-				}
-			} catch (e) {
-				console.group("WarChiefs - Sector HUD");
-				console.error("Error in waitForGame", e);
-				console.groupEnd();
-			}
-		}
-		window.setTimeout(waitForGame, 1000);
-	};
-	var script = document.createElement("script");
-	var txt = injectFunction.toString();
-	script.innerHTML = "(" + txt + ")();";
-	script.type = "text/javascript";
-	document.getElementsByTagName("head")[0].appendChild(script);
+(() => {
+    const injectFunction = () => {
+        function createClasses() {
+            qx.Class.define("SectorHUD", {
+                type: "singleton",
+                extend: qx.core.Object,
+                construct() {
+                    this.SectorText = new qx.ui.basic.Label("").set({
+                        textColor: "white",
+                        font: "font_size_11"
+                    });
+
+                    const HUD = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({
+                        decorator: "uied-backround-header",
+                        padding: 2,
+                        opacity: 0.8
+                    });
+
+                    HUD.add(this.SectorText);
+
+                    HUD.addListener("mousedown", (e) => {
+                        const button = e.getButton();
+                        button === "left" && this.paste_Coords();
+                        button === "right" && this.jump_Coords();
+                    }, this);
+
+                    this.__refresh = false;
+                    qx.core.Init.getApplication().getBackgroundArea().add(HUD, {
+                        left: 128,
+                        top: 0
+                    });
+                    webfrontend.phe.cnc.Util.attachNetEvent(ClientLib.Vis.VisMain.GetInstance().get_Region(), "PositionChange", ClientLib.Vis.PositionChange, this, this._update);
+                },
+                members: {
+                    __refresh: false,
+                    SectorText: null,
+
+                    get_SectorText(i) {
+                        const qxApp = qx.core.Init.getApplication();
+                        return [
+                            qxApp.tr("tnf:south abbr"),
+                            qxApp.tr("tnf:southwest abbr"),
+                            qxApp.tr("tnf:west abbr"),
+                            qxApp.tr("tnf:northwest abbr"),
+                            qxApp.tr("tnf:north abbr"),
+                            qxApp.tr("tnf:northeast abbr"),
+                            qxApp.tr("tnf:east abbr"),
+                            qxApp.tr("tnf:southeast abbr")
+                        ][i] ?? "Unknown";
+                    },
+
+                    get_SectorNo(x, y) {
+                        const server = ClientLib.Data.MainData.GetInstance().get_Server();
+                        const [WorldX2, WorldY2] = [
+                            Math.floor(server.get_WorldWidth() / 2),
+                            Math.floor(server.get_WorldHeight() / 2)
+                        ];
+                        const SectorCount = server.get_SectorCount();
+                        const [WorldCX, WorldCY] = [WorldX2 - x, y - WorldY2];
+                        const WorldCa = ((Math.atan2(WorldCX, WorldCY) * SectorCount) / (2 * Math.PI)) + (SectorCount + 0.5);
+                        return Math.floor(WorldCa) % SectorCount;
+                    },
+
+                    get_Coords() {
+                        const Region = ClientLib.Vis.VisMain.GetInstance().get_Region();
+                        const [GridWidth, GridHeight] = [Region.get_GridWidth(), Region.get_GridHeight()];
+                        const [RegionPosX, RegionPosY] = [Region.get_PosX(), Region.get_PosY()];
+                        const [ViewWidth, ViewHeight] = [Region.get_ViewWidth(), Region.get_ViewHeight()];
+                        const ZoomFactor = Region.get_ZoomFactor();
+
+                        const [ViewCoordX, ViewCoordY] = [
+                            Math.floor((RegionPosX + (ViewWidth / 2 / ZoomFactor)) / GridWidth - 0.5),
+                            Math.floor((RegionPosY + (ViewHeight / 2 / ZoomFactor)) / GridHeight - 0.5)
+                        ];
+
+                        return {
+                            X: ViewCoordX,
+                            Y: ViewCoordY
+                        };
+                    },
+
+                    paste_Coords() {
+                        const Coords = this.get_Coords();
+                        const input = qx.core.Init.getApplication().getChat().getChatWidget().getEditable();
+                        const inputDOM = input.getContentElement().getDomElement();
+
+                        const [before, after] = [
+                            inputDOM.value.substring(0, inputDOM.selectionStart),
+                            inputDOM.value.substring(inputDOM.selectionEnd)
+                        ];
+
+                        input.setValue(`${before}[coords]${Coords.X}:${Coords.Y}[/coords]${after}`);
+                    },
+
+                    jump_Coords() {
+                        const coords = prompt("Jump to Coords:");
+                        if (!coords) return;
+                        coords.replace(/(\[coords\])?([#])?(\d{1,4})\D(\d{1,4})(\D\w+)?(\[\/coords\])?/gi, (_, __, ___, x, y) => ClientLib.Vis.VisMain.GetInstance().get_Region().CenterGridPosition(+x, +y));
+                    },
+
+                    _update() {
+                        if (!this.__refresh) {
+                            this.__refresh = true;
+                            setTimeout(() => this.__update(), 500);
+                        }
+                    },
+
+                    __update() {
+                        const Coords = this.get_Coords();
+                        this.SectorText.setValue(
+                            `${Coords.X}:${Coords.Y} [${this.get_SectorText(this.get_SectorNo(Coords.X, Coords.Y))}]`
+                        );
+                        this.__refresh = false;
+                    }
+                }
+            })
+        }
+
+        function checkForInit() {
+            try {
+                if (typeof qx === 'undefined' || typeof qx.core.Init.getApplication !== 'function' || !qx?.core?.Init?.getApplication()?.initDone || typeof ClientLib === 'undefined' || !ClientLib?.Vis?.VisMain?.GetInstance()?.get_Region()) return setTimeout(checkForInit, 1000);
+                createClasses();
+                SectorHUD.getInstance();
+                console.log(`%cWarChiefs - Sector HUD loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
+            } catch (e) {
+                console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
+            }
+        }
+        checkForInit();
+    };
+    try {
+        const script = document.createElement("script");
+        script.textContent = `(${injectFunction})();`;
+        script.type = "text/javascript";
+        document.head.appendChild(script);
+    } catch (e) {
+        console.log(`%cWarChiefs - Sector HUD init error:`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
+    }
 })();
