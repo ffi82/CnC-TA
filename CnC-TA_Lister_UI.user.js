@@ -1,22 +1,24 @@
 // ==UserScript==
 // @name         CnC-TA Lister UI
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025-02-23
+// @version      2025-03-02
 // @description  Some data tables...
 // @author       ffi82
 // @contributor  leo7044 (https://github.com/leo7044), 4o (ChatGPT)
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
-// @updateURL    https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnC-TA_Lister_UI.meta.js
-// @downloadURL  https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnC-TA_Lister_UI.user.js
+// @updateURL    https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister_UI.meta.js
+// @downloadURL  https://github.com/ffi82/CnC-TA/raw/master/CnC-TA_Lister_UI.user.js
 // @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAhlJREFUeF7tmtFtwzAMRJPBukD36RTdpwtksBb+EGAItu4okYcyYn/tSrzHI2UReT42/3turv9RAMoBmxOoEtjcANUE3Uvg+/X521z19fFzu/75vSgXjvZve7oCuBJ1F4QCwCESQXADcCfoKgCVeBmAkaCtAbxVD2hZ7kVZsx/V8GbXhT1g1Niyiz+gTQN4B/HTAEZ2Q8fOrFWj/m/KAVsBOMSy53a27FMlwAKwimehrlifiQmWQAvAs+kpxDP3EdoByAUM6XMmUwK4g2AVzzhqxfb9/6L46BK4ChwtPhKicAETnxkAyg47D0DrqJ67ArDMA1QC0T5uACzzABSU8rkLAM8jUinedAzONDSmCakF9/vRDoiYB0SeBCx8CCBqHhAp/pxlBGIawErdq8QfIEIArF6HtweA7haejXHZAZZg0Wa9sEgnsLHAHsACYDf0zK7HWhQABCGreNOH0ErX98hU1Bq0A7znAVGCrOuaAPQQMlu/gTIDQITZeUDkCdBiZBLkCsAyD1AAcPkSRBlvzy3zAJV4GQDrCbENgPp9wOBHUmxpRb8Hm2DUPCBaGLv+NABr3bMBqd+bArA6D1CLHO1XAJhssMcW8+XF7Kd8BzoAXYUtn51nYSzUFRhMQigACAKzkVo8m5gCYLGY5bKD1lWUQMhdgL3u/gcATGnSJYAEZX1eALJmzivucoAXyazrlAOyZs4r7u0d8AfcG0xQF263twAAAABJRU5ErkJggg==
 // @grant        none
 // ==/UserScript==
 'use strict';
 (() => {
     const ListerUIScript = async () => {
-        if (typeof ClientLib === 'undefined' || typeof qx === 'undefined' || !qx || !qx.core || !qx.core.Init || !qx.core.Init.getApplication || !qx.core.Init.getApplication() || !qx.core.Init.getApplication().initDone || !ClientLib.Data.MainData.GetInstance().get_EndGame().GetCenter()) {
-            setTimeout(ListerUIScript, 1000); // Retry after 1000ms if liraries (ClientLib or qx) are not loaded
-            return;
+        const scriptName = 'CnC-TA Lister UI';
+        try {
+            if (typeof qx === 'undefined' || typeof qx.core.Init.getApplication !== 'function' || !qx?.core?.Init?.getApplication()?.initDone || typeof ClientLib === 'undefined' || !ClientLib?.Data?.MainData?.GetInstance()?.get_EndGame()?.GetCenter()) return setTimeout(ListerUIScript, 1000);
+        } catch (e) {
+            console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
         }
         window.Lister = { // Exposing Lister globally
             db: null,
@@ -81,7 +83,6 @@
                 return this.performTransaction("clear");
             },
         };
-        const scriptName = 'CnC-TA Lister UI';
         const qxApp = qx.core.Init.getApplication();
         const cfg = ClientLib.Config.Main;
         const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
@@ -743,8 +744,8 @@
 
             // Apply cell renderers to specific columns
             [1, 3, 4, 5, 6, 8].forEach(index =>
-                poiTable.getTableColumnModel().setDataCellRenderer(index, new qx.ui.table.cellrenderer.Html())
-            );
+                                       poiTable.getTableColumnModel().setDataCellRenderer(index, new qx.ui.table.cellrenderer.Html())
+                                      );
 
             // Add custom renderer for Holders column
             class HoldersButtonRenderer extends qx.ui.table.cellrenderer.Abstract {
@@ -791,8 +792,8 @@
             // Helper Functions
             function updateTableData(filteredData, tableModel) {
                 const tableData = filteredData.map(poi =>
-                    Object.keys(poiTemplate).map(key => poi[key])
-                );
+                                                   Object.keys(poiTemplate).map(key => poi[key])
+                                                  );
                 tableModel.setData(tableData);
                 filteredData.forEach((poi, index) => {
                     const formattedScore = webfrontend.phe.cnc.gui.util.Numbers.formatNumbers(poi.Score);
@@ -957,12 +958,12 @@
             // Extract headers and rows
             const headers = Object.keys(data[0]).join("\t");
             const rows = data
-                .map(item =>
-                    Object.values(item)
-                    .map(flattenValue) // Apply flattening to each cell
-                    .join("\t")
+            .map(item =>
+                 Object.values(item)
+                 .map(flattenValue) // Apply flattening to each cell
+                 .join("\t")
                 )
-                .join("\n");
+            .join("\n");
 
             // Combine into TSV content
             const tsvContent = `data:text/tab-separated-values;charset=utf-8,${headers}\n${rows}`;
