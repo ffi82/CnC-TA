@@ -430,9 +430,7 @@
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         function checkForInit() {
             try {
-                if (typeof qx === 'undefined' || !qx || !qx.core || !qx.core.Init || typeof qx.core.Init.getApplication !== 'function' || !qx.core.Init.getApplication() || !qx.core.Init.getApplication().initDone) {
-                    return setTimeout(checkForInit, 1000);
-                }
+                if (typeof qx === 'undefined' || typeof qx.core.Init.getApplication !== 'function' || !qx?.core?.Init?.getApplication()?.initDone) return setTimeout(checkForInit, 1000);
                 init();
                 console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
             } catch (e) {
