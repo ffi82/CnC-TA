@@ -48,24 +48,24 @@
                     transaction.onerror = (event) => reject(`Transaction failed: ${event.target.error}`);
                     transaction.oncomplete = () => console.log(`Transaction completed: ${operation} on ${key}`);
                     switch (operation) {
-                        case "get":
-                            request = store.get(key);
-                            request.onsuccess = () => resolve(request.result || null);
-                            break;
-                        case "set":
-                            request = store.put(value, key);
-                            request.onsuccess = () => resolve(true);
-                            break;
-                        case "remove":
-                            request = store.delete(key);
-                            request.onsuccess = () => resolve(true);
-                            break;
-                        case "clear":
-                            request = store.clear();
-                            request.onsuccess = () => resolve(true);
-                            break;
-                        default:
-                            reject(`Unsupported operation: ${operation}`);
+                    case "get":
+                        request = store.get(key);
+                        request.onsuccess = () => resolve(request.result || null);
+                        break;
+                    case "set":
+                        request = store.put(value, key);
+                        request.onsuccess = () => resolve(true);
+                        break;
+                    case "remove":
+                        request = store.delete(key);
+                        request.onsuccess = () => resolve(true);
+                        break;
+                    case "clear":
+                        request = store.clear();
+                        request.onsuccess = () => resolve(true);
+                        break;
+                    default:
+                        reject(`Unsupported operation: ${operation}`);
                     }
                     request.onerror = (event) => reject(`Request failed: ${event.target.error}`);
                 });
@@ -744,8 +744,8 @@
 
             // Apply cell renderers to specific columns
             [1, 3, 4, 5, 6, 8].forEach(index =>
-                                       poiTable.getTableColumnModel().setDataCellRenderer(index, new qx.ui.table.cellrenderer.Html())
-                                      );
+                poiTable.getTableColumnModel().setDataCellRenderer(index, new qx.ui.table.cellrenderer.Html())
+            );
 
             // Add custom renderer for Holders column
             class HoldersButtonRenderer extends qx.ui.table.cellrenderer.Abstract {
@@ -792,8 +792,8 @@
             // Helper Functions
             function updateTableData(filteredData, tableModel) {
                 const tableData = filteredData.map(poi =>
-                                                   Object.keys(poiTemplate).map(key => poi[key])
-                                                  );
+                    Object.keys(poiTemplate).map(key => poi[key])
+                );
                 tableModel.setData(tableData);
                 filteredData.forEach((poi, index) => {
                     const formattedScore = webfrontend.phe.cnc.gui.util.Numbers.formatNumbers(poi.Score);
@@ -958,12 +958,12 @@
             // Extract headers and rows
             const headers = Object.keys(data[0]).join("\t");
             const rows = data
-            .map(item =>
-                 Object.values(item)
-                 .map(flattenValue) // Apply flattening to each cell
-                 .join("\t")
+                .map(item =>
+                    Object.values(item)
+                    .map(flattenValue) // Apply flattening to each cell
+                    .join("\t")
                 )
-            .join("\n");
+                .join("\n");
 
             // Combine into TSV content
             const tsvContent = `data:text/tab-separated-values;charset=utf-8,${headers}\n${rows}`;
