@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnC-TA Android helper
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025.03.02
+// @version      2025.03.03
 // @description  Alternative directional controls and zoom for the region view.
 // @author       ffi82
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
@@ -11,14 +11,14 @@
 // @grant        none
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     const androidHelper = () => {
         const scriptName = 'CnC-TA Android Helper';
         // Wait for game resources to load
         try {
-            if (typeof ClientLib === 'undefined' || typeof qx === 'undefined' || !qx || !qx.core || !qx.core.Init || !qx.core.Init.getApplication || !qx.core.Init.getApplication() || !qx.core.Init.getApplication().initDone || !ClientLib.Vis.VisMain.GetInstance().get_Region() || !ClientLib.Config.Main.GetInstance() || !ClientLib.Data.MainData.GetInstance().get_Player().get_Faction()) {
+            if (typeof qx === 'undefined' || typeof qx.core.Init.getApplication !== 'function' || !qx?.core?.Init?.getApplication()?.initDone || typeof ClientLib === 'undefined' || !ClientLib?.Vis?.VisMain?.GetInstance()?.get_Region() || !ClientLib?.Config?.Main?.GetInstance() || !ClientLib?.Data?.MainData?.GetInstance()?.get_Player()?.get_Faction()) {
                 return setTimeout(androidHelper, 1000);
             }
         } catch {
@@ -48,25 +48,62 @@
 
         // Helper: Move the region view
         const moveRegion = (xOffset, yOffset) => {
-            const { x, y } = getRegionCenter();
+            const {
+                x,
+                y
+            } = getRegionCenter();
             region.CenterGridPosition(x + xOffset, y + yOffset);
         };
 
         // Create UI elements
-        const mainContainer = new qx.ui.container.Composite(new qx.ui.layout.VBox()).set({ opacity: 0.7 });
+        const mainContainer = new qx.ui.container.Composite(new qx.ui.layout.VBox()).set({
+            opacity: 0.7
+        });
         const buttonContainer = new qx.ui.container.Composite(new qx.ui.layout.Grid());
         const iconF = ClientLib.Data.MainData.GetInstance().get_Player().get_Faction() == ClientLib.Base.EFactionType.GDIFaction ? "gdi" : "nod";
-        const directions = [
-            { icon: `webfrontend/ui/${iconF}/icons/icon_step_up_button.png`, xOffset: 0, yOffset: -1, row: 0, col: 1 },
-            { icon: `webfrontend/ui/${iconF}/icons/icon_step_down_button.png`, xOffset: 0, yOffset: 1, row: 2, col: 1 },
-            { icon: `webfrontend/ui/${iconF}/icons/icon_step_left_button.png`, xOffset: -1, yOffset: 0, row: 1, col: 0 },
-            { icon: `webfrontend/ui/${iconF}/icons/icon_step_right_button.png`, xOffset: 1, yOffset: 0, row: 1, col: 2 }
+        const directions = [{
+                icon: `webfrontend/ui/${iconF}/icons/icon_step_up_button.png`,
+                xOffset: 0,
+                yOffset: -1,
+                row: 0,
+                col: 1
+            },
+            {
+                icon: `webfrontend/ui/${iconF}/icons/icon_step_down_button.png`,
+                xOffset: 0,
+                yOffset: 1,
+                row: 2,
+                col: 1
+            },
+            {
+                icon: `webfrontend/ui/${iconF}/icons/icon_step_left_button.png`,
+                xOffset: -1,
+                yOffset: 0,
+                row: 1,
+                col: 0
+            },
+            {
+                icon: `webfrontend/ui/${iconF}/icons/icon_step_right_button.png`,
+                xOffset: 1,
+                yOffset: 0,
+                row: 1,
+                col: 2
+            }
         ];
 
-        directions.forEach(({ icon, xOffset, yOffset, row, col }) => {
+        directions.forEach(({
+            icon,
+            xOffset,
+            yOffset,
+            row,
+            col
+        }) => {
             const button = new qx.ui.form.Button(null, icon);
             button.addListener("execute", () => moveRegion(xOffset, yOffset));
-            buttonContainer.add(button, { row, column: col });
+            buttonContainer.add(button, {
+                row,
+                column: col
+            });
         });
 
         // Zoom Spinner
@@ -85,7 +122,10 @@
         mainContainer.add(zoomSpinner);
 
         // Add to the game UI
-        qx.core.Init.getApplication().getBackgroundArea().add(mainContainer, { right: 125, bottom: 5 });
+        qx.core.Init.getApplication().getBackgroundArea().add(mainContainer, {
+            right: 125,
+            bottom: 5
+        });
 
         console.log(`%c${scriptName} loaded`, "background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;");
     };
