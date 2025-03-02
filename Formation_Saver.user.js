@@ -5,8 +5,8 @@
 // @description Allows you to save attack formations
 // @author      Panavia, KRS_L, DebitoSphere
 // @contributor NetquiK (https://github.com/netquik), ffi82
-// @updateURL   https://github.com/ffi82/CnC-TA/raw/refs/heads/master/TA_Formation_Saver.meta.js
-// @downloadURL https://github.com/ffi82/CnC-TA/raw/refs/heads/master/TA_Formation_Saver.user.js
+// @updateURL   https://github.com/ffi82/CnC-TA/raw/refs/heads/master/Formation_Saver.meta.js
+// @downloadURL https://github.com/ffi82/CnC-TA/raw/refs/heads/master/Formation_Saver.user.js
 // @match       https://*.alliances.commandandconquer.com/*/index.aspx*
 // @grant       none
 // ==/UserScript==
