@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CnC-TA Lister
 // @namespace   https://github.com/ffi82/CnC-TA/
-// @version     2024-10-24
+// @version     2025-03-02
 // @description Under 'Scripts' menu, click to download CSV files containing Alliance Cities, Alliances, Players and Cities, Player Hall Of Fame / Challenge ranking, Alliance Roster, Alliance Cities and POIs data. How to: Click --> See progress bar above game options --> check your downloads folder for new .csv file/s. (Check your browser console [ Control+Shift+J ] in Chrome / Edge / Firefox for some logs.)
 // @author      ffi82
 // @match       https://*.alliances.commandandconquer.com/*/index.aspx*
