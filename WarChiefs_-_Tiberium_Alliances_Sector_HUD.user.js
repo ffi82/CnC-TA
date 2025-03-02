@@ -13,6 +13,7 @@
 // ==/UserScript==
 (() => {
     const injectFunction = () => {
+        const scriptName = 'WarChiefs - Sector HUD';
         function createClasses() {
             qx.Class.define("SectorHUD", {
                 type: "singleton",
@@ -134,7 +135,7 @@
                 if (typeof qx === 'undefined' || typeof qx.core.Init.getApplication !== 'function' || !qx?.core?.Init?.getApplication()?.initDone || typeof ClientLib === 'undefined' || !ClientLib?.Vis?.VisMain?.GetInstance()?.get_Region()) return setTimeout(checkForInit, 1000);
                 createClasses();
                 SectorHUD.getInstance();
-                console.log(`%cWarChiefs - Sector HUD loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
+                console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
             } catch (e) {
                 console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
             }
