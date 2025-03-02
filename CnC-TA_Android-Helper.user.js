@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnC-TA Android helper
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025.01.08
+// @version      2025.03.02
 // @description  Alternative directional controls and zoom for the region view.
 // @author       ffi82
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
@@ -15,9 +15,14 @@
     'use strict';
 
     const androidHelper = () => {
+        const scriptName = 'CnC-TA Android Helper';
         // Wait for game resources to load
-        if (!window.ClientLib || !window.qx || !qx.core.Init.getApplication().initDone || !ClientLib.Vis.VisMain.GetInstance().get_Region()) {
-            return setTimeout(androidHelper, 100);
+        try {
+            if (typeof ClientLib === 'undefined' || typeof qx === 'undefined' || !qx || !qx.core || !qx.core.Init || !qx.core.Init.getApplication || !qx.core.Init.getApplication() || !qx.core.Init.getApplication().initDone || !ClientLib.Vis.VisMain.GetInstance().get_Region() || !ClientLib.Config.Main.GetInstance() || !ClientLib.Data.MainData.GetInstance().get_Player().get_Faction()) {
+                return setTimeout(androidHelper, 1000);
+            }
+        } catch {
+            console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
         }
 
         const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
@@ -82,7 +87,7 @@
         // Add to the game UI
         qx.core.Init.getApplication().getBackgroundArea().add(mainContainer, { right: 125, bottom: 5 });
 
-        console.log(`%cCnC-TA Android Helper loaded`, "background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;");
+        console.log(`%c${scriptName} loaded`, "background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;");
     };
 
     androidHelper();
