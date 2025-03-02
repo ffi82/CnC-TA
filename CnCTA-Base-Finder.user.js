@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CnCTA Base Finder
 // @namespace   https://github.com/bloofi/CnC_TA
-// @version     2024.12.19
+// @version     2025.03.02
 // @description Scan and mark main and/or ghost player bases of the selected alliance on region view.
 // @author      bloofi
 // @contributor ffi82
@@ -335,11 +335,11 @@
                         this.favoriteCheckbox.setEnabled(true);
                         this.buttonRefresh.setEnabled(true);
                         data.m.sort((a, b) => a.n.localeCompare(b.n)).forEach(m => {
-                                this.players[`pid-${m.i}`] = Object.assign(Object.assign({}, m), { fetched: false });
-                                ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {
-                                    id: m.i,
-                                }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onGetPublicPlayerInfo), null);
-                            });
+                            this.players[`pid-${m.i}`] = Object.assign(Object.assign({}, m), { fetched: false });
+                            ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {
+                                id: m.i,
+                            }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onGetPublicPlayerInfo), null);
+                        });
                         this.refreshWindow();
                     },
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -375,9 +375,9 @@
                             wrap: false,
                         }));
                         qx.core.Init.getApplication().getDesktop().addAfter(marker, qx.core.Init.getApplication().getBackgroundArea(), {
-                                left: ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosX(base.x * this.gridWidth),
-                                top: ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosY(base.y * this.gridHeight),
-                            });
+                            left: ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosX(base.x * this.gridWidth),
+                            top: ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosY(base.y * this.gridHeight),
+                        });
                         this.bases[`b-${base.i}`].marker = marker;
                     },
                     removeMarkers: function () {
@@ -398,16 +398,16 @@
                     repositionMarkers: function () {
                         this.updateMarkerSize();
                         Object.values(this.bases).filter(b => b.marker).forEach(b => {
-                                b.marker.setDomLeft(ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosX(b.x * this.gridWidth));
-                                b.marker.setDomTop(ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosY(b.y * this.gridHeight));
-                            });
+                            b.marker.setDomLeft(ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosX(b.x * this.gridWidth));
+                            b.marker.setDomTop(ClientLib.Vis.VisMain.GetInstance().ScreenPosFromWorldPosY(b.y * this.gridHeight));
+                        });
                     },
                     resizeMarkers: function () {
                         this.updateMarkerSize();
                         Object.values(this.bases).filter(b => b.marker).forEach(b => {
-                                b.marker.setWidth(this.baseMarkerWidth);
-                                b.marker.setHeight(this.baseMarkerHeight);
-                            });
+                            b.marker.setWidth(this.baseMarkerWidth);
+                            b.marker.setHeight(this.baseMarkerHeight);
+                        });
                     },
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     // Storage
@@ -430,13 +430,13 @@
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         function checkForInit() {
             try {
-                if (typeof qx === 'undefined' || !qx.core.Init.getApplication().initDone) {
-                    setTimeout(checkForInit, 100);
-                    return;
+                if (typeof qx === 'undefined' || !qx || !qx.core || !qx.core.Init || typeof qx.core.Init.getApplication !== 'function' || !qx.core.Init.getApplication() || !qx.core.Init.getApplication().initDone) {
+                    return setTimeout(checkForInit, 1000);
                 }
                 init();
+                console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
             } catch (e) {
-                console.log(scriptName, e);
+                console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
             }
         }
         checkForInit();
@@ -446,12 +446,12 @@
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     if (/commandandconquer\.com/i.test(document.domain)) {
         try {
-            const script_block = document.createElement('script');
-            script_block.innerHTML = `(${script.toString()})();`;
-            script_block.type = 'text/javascript';
-            document.getElementsByTagName('head')[0].appendChild(script_block);
+            const script_block = document.createElement("script");
+            script_block.textContent = `(${script})();`;
+            script_block.type = "text/javascript";
+            document.head.appendChild(script_block);
         } catch (e) {
-            console.log('Failed to inject script', e);
+            console.log(`%cCnCTA Base Finder init error:`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
         }
     }
 })();
