@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         CnC-TA Raid-Helper
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @description  Removes name and level information except for interesting raid targets.
-// @version      2025.03.02
+// @description  Removes name and level information except for interesting raid targets. Shows floating point base numbers for tool tips on region view NPC targets.
+// @version      2025.03.09
 // @author       Mooff
+// @contributor  ffi82
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
 // @updateURL    https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnC-TA_Raid-Helper.meta.js
 // @downloadURL  https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnC-TA_Raid-Helper.user.js
@@ -13,13 +14,16 @@
 (function () {
     const initHideCampsButton = () => {
         const scriptName = 'C&C:TA Raid-Helper';
-        try {
-            if (typeof qx === 'undefined' || typeof qx.core.Init.getApplication !== 'function' || !qx?.core?.Init?.getApplication()?.initDone || typeof ClientLib === 'undefined' || !ClientLib?.Data?.MainData?.GetInstance()?.get_Cities()?.get_CurrentOwnCity()) {
+        try {//waitForGame
+            if (typeof qx === 'undefined' || typeof qx.core.Init.getApplication !== 'function'|| !qx?.core?.Init?.getApplication()?.initDone || typeof ClientLib === 'undefined' || !ClientLib?.Data?.MainData?.GetInstance()?.get_Cities()?.get_CurrentOwnCity()) {
                 return setTimeout(initHideCampsButton, 1000);
             }
         } catch (e) {
             console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
         }
+        // Use floating point base numbers for tool tips on region view NPC targets. (Extra feature found in Shockr Tools)
+        ClientLib.Vis.Region.RegionNPCBase.prototype.get_BaseLevel = ClientLib.Vis.Region.RegionNPCBase.prototype.get_BaseLevelFloat;
+        ClientLib.Vis.Region.RegionNPCCamp.prototype.get_BaseLevel = ClientLib.Vis.Region.RegionNPCCamp.prototype.get_BaseLevelFloat;
 
         const app = qx.core.Init.getApplication();
         const mainData = ClientLib.Data.MainData.GetInstance();
@@ -27,23 +31,14 @@
         const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
         const maxLvl = server.get_PlayerUpgradeCap();
         const storageKey = `${server.get_WorldId()}_raidHelperOffset`;
-        let active = false,
-            minLvlOffset = +localStorage.getItem(storageKey) || 0;
+        let active = false, minLvlOffset = +localStorage.getItem(storageKey) || 0;
 
         const calculateMinLvl = (ownOL, offset, max) => Math.min(Math.max(Math.round(ownOL) + offset, 1), max);
         let minLvl = calculateMinLvl(mainData.get_Cities().get_CurrentOwnCity().get_LvlOffense(), minLvlOffset, maxLvl);
 
         const container = new qx.ui.container.Composite(new qx.ui.layout.VBox());
         const HCBtn = new qx.ui.form.Button(`Hide (< ${minLvl})`);
-        const createSpinner = (value, min, max, tooltip) => new qx.ui.form.Spinner().set({
-            value,
-            minimum: min,
-            maximum: max,
-            toolTip: new qx.ui.tooltip.ToolTip().set({
-                label: tooltip,
-                rich: true
-            })
-        });
+        const createSpinner = (value, min, max, tooltip) => new qx.ui.form.Spinner().set({ value, minimum: min, maximum: max, toolTip: new qx.ui.tooltip.ToolTip().set({ label: tooltip, rich: true }) });
 
         const offsetSpinner = createSpinner(minLvlOffset, -10, 10, '<b>Adjust dynamic level offset</b><br>From -10 to +10.<br>Saved per world.');
         const lvlSelect = createSpinner(minLvl, 1, maxLvl, '<b>Adjust static level</b><br>Temporary override.<br>Resets on city change.');
@@ -68,10 +63,7 @@
         HCBtn.set({
             width: 80,
             opacity: 0.7,
-            toolTip: new qx.ui.tooltip.ToolTip().set({
-                label: "<b>Toggle visibility</b><br>Right-click to adjust levels.",
-                rich: true
-            })
+            toolTip: new qx.ui.tooltip.ToolTip().set({ label: "<b>Toggle visibility</b><br>Right-click to adjust levels.", rich: true })
         });
 
         HCBtn.addListener("contextmenu", () => container.add(offsetSpinner) || container.add(lvlSelect));
@@ -95,10 +87,7 @@
         });
 
         container.add(HCBtn);
-        app.getBackgroundArea().add(container, {
-            right: 125,
-            bottom: 55
-        });
+        app.getBackgroundArea().add(container, { right: 125, bottom: 55 });
         webfrontend.phe.cnc.Util.attachNetEvent(mainData.get_Cities(), "CurrentOwnChange", ClientLib.Data.CurrentOwnCityChange, null, updateMinLvl);
         console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
     };
