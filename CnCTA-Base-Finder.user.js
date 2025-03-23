@@ -150,15 +150,25 @@
                         this.buttonShowGhosts = new qx.ui.form.Button('Show ghosts');
                         this.buttonShowGhosts.setEnabled(false);
                         this.buttonShowGhosts.addListener('execute', this.onButtonShowGhosts, this);
-                        grid.add(this.buttonShowGhosts, { row: 0, column: 0 });
+                        grid.add(this.buttonShowGhosts, {
+                            row: 0,
+                            column: 0
+                        });
                         this.buttonShowMains = new qx.ui.form.Button('Show mains');
                         this.buttonShowMains.setEnabled(false);
                         this.buttonShowMains.addListener('execute', this.onButtonShowMains, this);
-                        grid.add(this.buttonShowMains, { row: 0, column: 1 });
+                        grid.add(this.buttonShowMains, {
+                            row: 0,
+                            column: 1
+                        });
                         this.buttonClear = new qx.ui.form.Button('Clear markers');
                         this.buttonClear.setEnabled(false);
                         this.buttonClear.addListener('execute', this.onButtonClear, this);
-                        grid.add(this.buttonClear, { row: 1, column: 0, colSpan: 2 });
+                        grid.add(this.buttonClear, {
+                            row: 1,
+                            column: 0,
+                            colSpan: 2
+                        });
                         this.mainWindow.add(grid);
                     },
                     refreshWindow: function () {
@@ -169,20 +179,26 @@
                         const totalGhosts = Object.values(this.bases).filter(m => m.isFetched && m.g).length;
                         if (totalBases > 0) {
                             this.fetchLabel.set({
-                                value: [
-                                    `<b>Players</b> : ${totalPlayersFetched} / ${totalPlayers}`,
-                                    `<b>Bases</b> : ${totalBasesFetched} / ${totalBases} (${totalGhosts} ghosts)`,
-                                ].join('<br>'),
+                                value: [`<b>Players</b> : ${totalPlayersFetched} / ${totalPlayers}`, `<b>Bases</b> : ${totalBasesFetched} / ${totalBases} (${totalGhosts} ghosts)`, ].join('<br>'),
                                 textColor: 'green',
                             });
                         } else {
-                            this.fetchLabel.set({ value: `Nothing to show`, textColor: 'silver' });
+                            this.fetchLabel.set({
+                                value: `Nothing to show`,
+                                textColor: 'silver'
+                            });
                         }
                         if (this.selectedAlliance) {
-                            this.allianceLabel.set({ value: this.selectedAlliance.n, textColor: 'green' });
+                            this.allianceLabel.set({
+                                value: this.selectedAlliance.n,
+                                textColor: 'green'
+                            });
                             this.favoriteCheckbox.setValue(this.favorites.some(f => f.id === this.selectedAlliance.i));
                         } else {
-                            this.allianceLabel.set({ value: '', textColor: 'green' });
+                            this.allianceLabel.set({
+                                value: '',
+                                textColor: 'green'
+                            });
                             this.favoriteCheckbox.setValue(false);
                         }
                     },
@@ -208,33 +224,50 @@
                         this.resetAlliance();
                         this.allianceTextfield.setValue('');
                         if (selectA && selectA.id > 0) {
-                            this.fetchLabel.set({ value: 'Fetching alliance by ID...', textColor: 'silver' });
+                            this.fetchLabel.set({
+                                value: 'Fetching alliance by ID...',
+                                textColor: 'silver'
+                            });
                             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicAllianceInfo', {
                                 id: selectA.id,
                             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onGetPublicAllianceInfo), null);
                         } else {
-                            this.allianceLabel.set({ value: '' });
+                            this.allianceLabel.set({
+                                value: ''
+                            });
                             this.selectedAlliance = null;
-                            this.fetchLabel.set({ value: 'Please select an alliance', textColor: 'red' });
+                            this.fetchLabel.set({
+                                value: 'Please select an alliance',
+                                textColor: 'red'
+                            });
                         }
                     },
                     onButtonFetchAlliance: function () {
                         const customAlliance = this.allianceTextfield.getValue();
                         this.resetAlliance();
                         if (customAlliance && customAlliance !== '') {
-                            this.fetchLabel.set({ value: 'Fetching alliance by name...', textColor: 'silver' });
+                            this.fetchLabel.set({
+                                value: 'Fetching alliance by name...',
+                                textColor: 'silver'
+                            });
                             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicAllianceInfoByNameOrAbbreviation', {
                                 name: customAlliance,
                             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onGetPublicAllianceInfoByNameOrAbbreviation), null);
                         } else {
-                            this.fetchLabel.set({ value: 'Please type something to search', textColor: 'red' });
+                            this.fetchLabel.set({
+                                value: 'Please type something to search',
+                                textColor: 'red'
+                            });
                         }
                     },
                     onButtonRefresh: function () {
                         if (this.selectedAlliance) {
                             const id = this.selectedAlliance.i;
                             this.resetAlliance();
-                            this.fetchLabel.set({ value: 'Fetching alliance by ID...', textColor: 'silver' });
+                            this.fetchLabel.set({
+                                value: 'Fetching alliance by ID...',
+                                textColor: 'silver'
+                            });
                             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicAllianceInfo', {
                                 id,
                             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onGetPublicAllianceInfo), null);
@@ -276,7 +309,10 @@
                         if (data && data.i) {
                             this.updateAllianceInfo(data);
                         } else {
-                            this.fetchLabel.set({ value: 'Invalid alliance name', textColor: 'red' });
+                            this.fetchLabel.set({
+                                value: 'Invalid alliance name',
+                                textColor: 'red'
+                            });
                         }
                     },
                     onGetPublicAllianceInfo: function (context, data) {
@@ -284,20 +320,37 @@
                     },
                     onRankingGetData: function (context, data) {
                         this.allianceSelect.removeAll();
-                        this.allianceSelect.add(new qx.ui.form.ListItem('', null, { id: 0, name: '' }));
+                        this.allianceSelect.add(new qx.ui.form.ListItem('', null, {
+                            id: 0,
+                            name: ''
+                        }));
                         this.favorites.forEach((a) => {
                             this.allianceSelect.add(new qx.ui.form.ListItem(`[fav] ${a.name}`, null, a));
                         });
                         data.a.forEach((a, i) => {
-                            this.allianceSelect.add(new qx.ui.form.ListItem(`${i + 1} - ${a.an}`, null, { id: a.a, name: a.an }));
+                            this.allianceSelect.add(new qx.ui.form.ListItem(`${i + 1} - ${a.an}`, null, {
+                                id: a.a,
+                                name: a.an
+                            }));
                         });
                     },
                     onGetPublicPlayerInfo: function (context, data) {
                         if (data && data.c) {
                             const idMain = data.c.reduce((p, c) => (c.p > p.p ? c : p), data.c[0]).i;
-                            this.players[`pid-${data.i}`] = Object.assign(Object.assign({}, this.players[`pid-${data.i}`]), { c: data.c.map(cc => (Object.assign(Object.assign({}, cc), { pn: data.n, isMain: cc.i === idMain, isGhost: null }))), isFetched: true });
+                            this.players[`pid-${data.i}`] = Object.assign(Object.assign({}, this.players[`pid-${data.i}`]), {
+                                c: data.c.map(cc => (Object.assign(Object.assign({}, cc), {
+                                    pn: data.n,
+                                    isMain: cc.i === idMain,
+                                    isGhost: null
+                                }))),
+                                isFetched: true
+                            });
                             data.c.forEach(b => {
-                                this.bases[`b-${b.i}`] = Object.assign(Object.assign({}, b), { isFetched: false, isMain: b.i === idMain, marker: null });
+                                this.bases[`b-${b.i}`] = Object.assign(Object.assign({}, b), {
+                                    isFetched: false,
+                                    isMain: b.i === idMain,
+                                    marker: null
+                                });
                                 ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicCityInfoById', {
                                     id: b.i,
                                 }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onGetPublicCityInfoById), null);
@@ -307,7 +360,9 @@
                     },
                     onGetPublicCityInfoById: function (context, data) {
                         if (data && data.i) {
-                            this.bases[`b-${data.i}`] = Object.assign(Object.assign(Object.assign({}, this.bases[`b-${data.i}`]), data), { isFetched: true });
+                            this.bases[`b-${data.i}`] = Object.assign(Object.assign(Object.assign({}, this.bases[`b-${data.i}`]), data), {
+                                isFetched: true
+                            });
                             this.refreshWindow();
                         }
                     },
@@ -334,7 +389,9 @@
                         this.favoriteCheckbox.setEnabled(true);
                         this.buttonRefresh.setEnabled(true);
                         data.m.sort((a, b) => a.n.localeCompare(b.n)).forEach(m => {
-                            this.players[`pid-${m.i}`] = Object.assign(Object.assign({}, m), { fetched: false });
+                            this.players[`pid-${m.i}`] = Object.assign(Object.assign({}, m), {
+                                fetched: false
+                            });
                             ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {
                                 id: m.i,
                             }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, this, this.onGetPublicPlayerInfo), null);
