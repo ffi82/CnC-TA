@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CnCTA Base Finder
 // @namespace   https://github.com/bloofi/CnC_TA
-// @version     2025.03.02
+// @version     2025.03.23
 // @description Scan and mark main and/or ghost player bases of the selected alliance on region view.
 // @author      bloofi
 // @contributor ffi82
@@ -10,9 +10,10 @@
 // @updateURL   https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnCTA-Base-Finder.meta.js
 // @grant       none
 // ==/UserScript==
-"use strict";
+/* global qx, ClientLib, webfrontend */
+'use strict';
 (function () {
-    const script = () => {
+    const BaseFinderScript = () => {
         const scriptName = 'CnCTA Base Finder';
         const storageKey = 'cncta-base-finder';
         const init = () => {
@@ -50,11 +51,9 @@
                     // Init
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     initialize: function () {
-                        const ScriptsButton = qx.core.Init.getApplication().getMenuBar().getScriptsButton();
-                        ScriptsButton.Add('Bases Finder');
-                        const children = ScriptsButton.getMenu().getChildren();
-                        const lastChild = children[children.length - 1];
-                        lastChild.addListener('execute', this.onOpenMainWindow, this);
+                        const baseFinderButton = new qx.ui.menu.Button("Base Finder");
+                        baseFinderButton.addListener('execute', this.onOpenMainWindow, this);
+                        qx.core.Init.getApplication().getMenuBar().getScriptsButton().getMenu().add(baseFinderButton);
                     },
                     onOpenMainWindow: function () {
                         if (!this.mainWindow) {
@@ -439,17 +438,5 @@
         }
         checkForInit();
     };
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // Script injection
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    if (/commandandconquer\.com/i.test(document.domain)) {
-        try {
-            const script_block = document.createElement("script");
-            script_block.textContent = `(${script})();`;
-            script_block.type = "text/javascript";
-            document.head.appendChild(script_block);
-        } catch (e) {
-            console.log(`%cCnCTA Base Finder init error:`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
-        }
-    }
+    BaseFinderScript();
 })();
