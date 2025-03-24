@@ -2,26 +2,27 @@
 // @name        C&C-TA_xTr1m_Base_Overlay
 // @description While in own base view, press CTRL or AltGr key on your keyboard to show ROI on the needed buildings.
 // @match       https://*.alliances.commandandconquer.com/*/index.aspx*
-// @version     2025.03.02
+// @version     2025.03.24
 // @author      xTr1m ( https://github.com/xTr1m/ )
 // @contributor DLwarez, NetquiK, c4l10s, ffi82
 // @downloadURL https://github.com/ffi82/CnC-TA/raw/refs/heads/master/C&C-TA_xTr1m_Base_Overlay.user.js
 // @updateURL   https://github.com/ffi82/CnC-TA/raw/refs/heads/master/C&C-TA_xTr1m_Base_Overlay.meta.js
 // ==/UserScript==
+/* global qx, ClientLib, webfrontend, xTr1m_Base_Overlay */
+'use strict';
 (function () {
-    var injectFunction = function () {
+    const injectFunction = () => {
         const scriptName = 'C&C:TA xTr1m Base Overlay';
-
-        function createClass() {
+        const createClass = () => {
             qx.Class.define("xTr1m_Base_Overlay", {
                 type: "singleton",
                 extend: qx.core.Object,
                 construct: function () {
                     try {
-                        var app = qx.core.Init.getApplication();
+                        const app = qx.core.Init.getApplication();
                         this.__window = new xTr1m_Base_Overlay.Window();
-                        var onKeyDown = function (e) {
-                            var xt = xTr1m_Base_Overlay.getInstance();
+                        const onKeyDown = (e) => {
+                            const xt = xTr1m_Base_Overlay.getInstance();
                             if (!!e.ctrlKey && !xt.__windowOpened) {
                                 switch (ClientLib.Vis.VisMain.GetInstance().get_Mode()) {
                                 case ClientLib.Vis.Mode.City:
@@ -29,8 +30,8 @@
                                 }
                             }
                         };
-                        var onKeyUp = function (e) {
-                            var xt = xTr1m_Base_Overlay.getInstance();
+                        const onKeyUp = (e) => {
+                            const xt = xTr1m_Base_Overlay.getInstance();
                             if (!e.ctrlKey && xt.__windowOpened) {
                                 switch (ClientLib.Vis.VisMain.GetInstance().get_Mode()) {
                                 case ClientLib.Vis.Mode.City:
@@ -63,7 +64,7 @@
                 extend: qx.ui.container.Composite,
                 construct: function () {
                     this.base(arguments);
-                    var layout = new qx.ui.layout.Canvas();
+                    const layout = new qx.ui.layout.Canvas();
                     this._setLayout(layout);
                     this.__background = new qx.ui.container.Composite(new qx.ui.layout.Canvas());
                     this._add(this.__background, {
@@ -80,31 +81,30 @@
                     __background: null,
                     __buildings: [],
                     open: function () {
-                        var app = qx.core.Init.getApplication();
-                        var mainOverlay = app.getMainOverlay();
+                        const app = qx.core.Init.getApplication();
+                        const mainOverlay = app.getMainOverlay();
                         this.setWidth(mainOverlay.getWidth());
                         this.setMaxWidth(mainOverlay.getMaxWidth());
                         this.setHeight(mainOverlay.getHeight());
                         this.setMaxHeight(mainOverlay.getMaxHeight());
                         this.__background.removeAll();
                         this.__background.setThemedBackgroundColor("#00000080");
-                        var data = ClientLib.Data.MainData.GetInstance();
-                        var cities = data.get_Cities();
-                        var ownCity = cities.get_CurrentOwnCity();
-                        var buildings = ownCity.get_Buildings();
-                        var visMain = ClientLib.Vis.VisMain.GetInstance();
-                        var visCity = visMain.get_City();
-                        var zoomFactor = visCity.get_ZoomFactor();
-                        var hudEntities = [];
-                        var maxRes = 0;
-                        var minRes = Number.MAX_VALUE;
-                        var width = (visCity.get_GridWidth() * zoomFactor);
-                        var height = (visCity.get_GridHeight() * zoomFactor);
+                        const data = ClientLib.Data.MainData.GetInstance();
+                        const cities = data.get_Cities();
+                        const ownCity = cities.get_CurrentOwnCity();
+                        const buildings = ownCity.get_Buildings();
+                        const visMain = ClientLib.Vis.VisMain.GetInstance();
+                        const visCity = visMain.get_City();
+                        const zoomFactor = visCity.get_ZoomFactor();
+                        let hudEntities = [];
+                        let maxRes = 0;
+                        let minRes = Number.MAX_VALUE;
+                        const width = (visCity.get_GridWidth() * zoomFactor);
+                        const height = (visCity.get_GridHeight() * zoomFactor);
                         this.collectData(ownCity);
-                        for (var ri in this.__buildings) {
-                            var building = this.__buildings[ri];
-                            var x = building.PosX * width;
-                            var y = building.PosY * height;
+                        for (const building of Object.values(this.__buildings)) {
+                            let x = building.PosX * width;
+                            let y = building.PosY * height;
                             x -= visCity.get_MinXPosition() * zoomFactor;
                             y -= visCity.get_MinYPosition() * zoomFactor;
                             maxRes = Math.max(maxRes, building.Ratio);
@@ -115,25 +115,25 @@
                                 "Y": y
                             });
                         }
-                        var deltaRes = maxRes - minRes;
-                        for (var i in hudEntities) {
-                            var entity = hudEntities[i];
-                            var relRes = (entity.Ratio - minRes) / deltaRes;
-                            var relHex = Math.round(relRes * 15);
-                            var red = (15 - relHex).toString(16);
-                            var green = relHex.toString(16);
-                            var box = new qx.ui.layout.HBox();
-                            var overlay = new qx.ui.container.Composite(box).set({
+                        let deltaRes = maxRes - minRes;
+                        for (const entity of hudEntities) {
+                            const relRes = (entity.Ratio - minRes) / deltaRes;
+                            const relHex = Math.round(relRes * 15);
+                            const red = (15 - relHex).toString(16);
+                            const green = relHex.toString(16);
+                            const box = new qx.ui.layout.HBox().set({
+                                alignX: "center",
+                                alignY: "middle"
+                            });
+                            const overlay = new qx.ui.container.Composite(box).set({
                                 decorator: new qx.ui.decoration.Decorator(1, "solid", "#000000").set({
-                                    backgroundColor: "#" + red + green + "0"
+                                    backgroundColor: `#${red}${green}0`
                                 }),
                                 opacity: 0.55,
                                 width: width - 2,
                                 height: height - 2
                             });
-                            box.setAlignX("center");
-                            box.setAlignY("middle");
-                            var label = new qx.ui.basic.Label(entity.Ratio.toFixed(6)).set({
+                            const label = new qx.ui.basic.Label(entity.Ratio.toFixed(6)).set({
                                 allowGrowX: false,
                                 allowGrowY: false,
                                 textColor: "black",
@@ -151,22 +151,20 @@
                         });
                     },
                     close: function () {
-                        var app = qx.core.Init.getApplication();
+                        const app = qx.core.Init.getApplication();
                         app.getDesktop().remove(this);
                     },
                     collectData: function (city) {
                         try {
-                            var resList = [];
+                            let resList = [];
                             resList.push(this.getResList(city, [ClientLib.Base.ETechName.Harvester, ClientLib.Base.ETechName.Silo], ClientLib.Base.EModifierType.TiberiumPackageSize, ClientLib.Base.EModifierType.TiberiumProduction));
                             resList.push(this.getResList(city, [ClientLib.Base.ETechName.Harvester, ClientLib.Base.ETechName.Silo], ClientLib.Base.EModifierType.CrystalPackageSize, ClientLib.Base.EModifierType.CrystalProduction));
                             resList.push(this.getResList(city, [ClientLib.Base.ETechName.PowerPlant, ClientLib.Base.ETechName.Accumulator], ClientLib.Base.EModifierType.PowerPackageSize, ClientLib.Base.EModifierType.PowerProduction));
                             resList.push(this.getResList(city, [ClientLib.Base.ETechName.Refinery, ClientLib.Base.ETechName.PowerPlant], ClientLib.Base.EModifierType.CreditsPackageSize, ClientLib.Base.EModifierType.CreditsProduction));
                             this.__buildings = [];
-                            for (var i in resList) {
-                                var resEntry = resList[i];
-                                for (var b in resEntry) {
-                                    var building = resEntry[b];
-                                    var index = building.PosY * 10 + building.PosX;
+                            for (const resEntry of Object.values(resList)) {
+                                for (const building of Object.values(resEntry)) {
+                                    const index = building.PosY * 10 + building.PosX;
                                     if (!(index in this.__buildings)) {
                                         this.__buildings[index] = building;
                                     } else {
@@ -174,8 +172,8 @@
                                     }
                                 }
                             }
-                            for (var j in this.__buildings) {
-                                this.__buildings[j].Ratio = this.__buildings[j].Gain / this.__buildings[j].Cost;
+                            for (const j of Object.values(this.__buildings)) {
+                                j.Ratio = j.Gain / j.Cost;
                             }
                         } catch (e) {
                             console.error("xTr1m_Base_Overlay.Window.collectData:", e);
@@ -183,33 +181,26 @@
                     },
                     getResList: function (city, arTechtypes, eModPackageSize, eModProduction) {
                         try {
-                            var i = 0;
-                            var buildings = city.get_Buildings().d;
-                            var resAll = [];
-                            var objbuildings = [];
-                            if (PerforceChangelist >= 376877) {
-                                for (var o in buildings) {
-                                    objbuildings.push(buildings[o]);
-                                }
-                            } //new
-                            else {
-                                for (i = 0; i < buildings.length; i++) {
-                                    objbuildings.push(buildings[i]);
-                                }
-                            } //old
+                            let i = 0;
+                            const buildings = city.get_Buildings().d;
+                            let resAll = [];
+                            let objbuildings = [];
+                            for (const o of Object.values(buildings)) {
+                                objbuildings.push(o);
+                            }
                             for (i = 0; i < objbuildings.length; i++) {
-                                var Cost = 0;
-                                var resbuilding = [];
-                                var city_building = objbuildings[i];
-                                var city_buildingdetailview = city.GetBuildingDetailViewInfo(city_building);
-                                var iTechType = city_building.get_TechName();
-                                var bindex = city_building.get_Id();
-                                var TechLevelData = ClientLib.Base.Util.GetTechLevelResourceRequirements_Obj(city_building.get_CurrentLevel() + 1, city_building.get_TechGameData_Obj());
-                                var buildingLevel = city_building.get_CurrentLevel();
-                                var maxLevel = ClientLib.Data.MainData.GetInstance().get_Server().get_PlayerUpgradeCap();
-                                var bSkip = true;
-                                for (var iTypeKey in arTechtypes) {
-                                    if (arTechtypes[iTypeKey] == iTechType) {
+                                let Cost = 0;
+                                let resbuilding = [];
+                                const city_building = objbuildings[i];
+                                const city_buildingdetailview = city.GetBuildingDetailViewInfo(city_building);
+                                const iTechType = city_building.get_TechName();
+                                const bindex = city_building.get_Id();
+                                const TechLevelData = ClientLib.Base.Util.GetTechLevelResourceRequirements_Obj(city_building.get_CurrentLevel() + 1, city_building.get_TechGameData_Obj());
+                                const buildingLevel = city_building.get_CurrentLevel();
+                                const maxLevel = ClientLib.Data.MainData.GetInstance().get_Server().get_PlayerUpgradeCap();
+                                let bSkip = true;
+                                for (const iTypeKey of arTechtypes) {
+                                    if (iTypeKey == iTechType) {
                                         if (buildingLevel < maxLevel) {
                                             bSkip = false;
                                             break;
@@ -225,15 +216,15 @@
                                 resbuilding.PosX = city_building.get_CoordX();
                                 resbuilding.PosY = city_building.get_CoordY();
                                 resbuilding.Gain = 0;
-                                for (var ModifierType in city_buildingdetailview.OwnProdModifiers.d) {
+                                for (const ModifierType in city_buildingdetailview.OwnProdModifiers.d) {
                                     switch (parseInt(ModifierType, 10)) {
                                     case eModPackageSize: {
-                                        var ModOj = city_buildingdetailview.OwnProdModifiers.d[city_building.get_MainModifierTypeId()];
-                                        var CurrentDelay = (ModOj.TotalValue) / ClientLib.Data.MainData.GetInstance().get_Time().get_StepsPerHour();
-                                        var NextDelay = (ModOj.TotalValue + ModOj.NewLvlDelta) / ClientLib.Data.MainData.GetInstance().get_Time().get_StepsPerHour();
-                                        var mtProd = city_buildingdetailview.OwnProdModifiers.d[ModifierType];
-                                        var CurrentProd = mtProd.TotalValue / CurrentDelay;
-                                        var NextProd = (mtProd.TotalValue + mtProd.NewLvlDelta) / NextDelay;
+                                        const ModOj = city_buildingdetailview.OwnProdModifiers.d[city_building.get_MainModifierTypeId()];
+                                        const CurrentDelay = (ModOj.TotalValue) / ClientLib.Data.MainData.GetInstance().get_Time().get_StepsPerHour();
+                                        const NextDelay = (ModOj.TotalValue + ModOj.NewLvlDelta) / ClientLib.Data.MainData.GetInstance().get_Time().get_StepsPerHour();
+                                        const mtProd = city_buildingdetailview.OwnProdModifiers.d[ModifierType];
+                                        const CurrentProd = mtProd.TotalValue / CurrentDelay;
+                                        const NextProd = (mtProd.TotalValue + mtProd.NewLvlDelta) / NextDelay;
                                         resbuilding.Gain += NextProd - CurrentProd;
                                         break;
                                     }
@@ -243,14 +234,14 @@
                                     }
                                     }
                                 }
-                                for (var costtype in TechLevelData) {
-                                    if (typeof (TechLevelData[costtype]) == "function" || TechLevelData[costtype].Type == "0") {
+                                for (const costtype of TechLevelData) {
+                                    if (typeof costtype == "function" || costtype.Type == "0") {
                                         continue;
                                     }
-                                    if (parseInt(TechLevelData[costtype].Count) <= 0) {
+                                    if (parseInt(costtype.Count) <= 0) {
                                         continue;
                                     }
-                                    Cost += TechLevelData[costtype].Count;
+                                    Cost += costtype.Count;
                                 }
                                 resbuilding.Cost = Cost;
                                 resAll.push(resbuilding);
@@ -273,7 +264,6 @@
                 console.error(`%c${scriptName} error:`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
             }
         };
-
         checkForInit();
     };
     try {
