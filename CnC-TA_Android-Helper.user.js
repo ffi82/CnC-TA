@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnC-TA Android helper
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025.03.03
+// @version      2025.03.24
 // @description  Alternative directional controls and zoom for the region view.
 // @author       ffi82
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
@@ -10,103 +10,56 @@
 // @downloadURL  https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnC-TA_Android-Helper.user.js
 // @grant        none
 // ==/UserScript==
-
+/* global qx, ClientLib*/
+'use strict';
 (function () {
-    'use strict';
-
     const androidHelper = () => {
         const scriptName = 'CnC-TA Android Helper';
-        // Wait for game resources to load
-        try {
+        try {// Wait for game resources to load
             if (typeof qx === 'undefined' || typeof qx.core.Init.getApplication !== 'function' || !qx?.core?.Init?.getApplication()?.initDone || typeof ClientLib === 'undefined' || !ClientLib?.Vis?.VisMain?.GetInstance()?.get_Region() || !ClientLib?.Config?.Main?.GetInstance() || !ClientLib?.Data?.MainData?.GetInstance()?.get_Player()?.get_Faction()) {
                 return setTimeout(androidHelper, 1000);
             }
-        } catch {
+        } catch (e) {
             console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
         }
 
         const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
-
         // Ensure minimum zoom settings
         const cfg = ClientLib.Config.Main.GetInstance();
         cfg.SetConfig(cfg.CONFIG_VIS_REGION_MINZOOM, false);
         cfg.SaveToDB();
         ClientLib.Vis.Region.Region[region.get_MinZoomFactor.toString().match(/\$I\.[A-Z]{6}\.([A-Z]{6});?}/)?.[1]] = 0.01;
-
         // Helper: Calculate center coordinates
         const getRegionCenter = () => {
             const [gridWidth, gridHeight] = [region.get_GridWidth(), region.get_GridHeight()];
             const [posX, posY] = [region.get_PosX(), region.get_PosY()];
             const [viewWidth, viewHeight] = [region.get_ViewWidth(), region.get_ViewHeight()];
             const zoom = region.get_ZoomFactor();
-
             return {
                 x: Math.floor((posX + viewWidth / (2 * zoom)) / gridWidth - 0.5),
                 y: Math.floor((posY + viewHeight / (2 * zoom)) / gridHeight - 0.5)
             };
         };
-
         // Helper: Move the region view
         const moveRegion = (xOffset, yOffset) => {
-            const {
-                x,
-                y
-            } = getRegionCenter();
+            const {x, y} = getRegionCenter();
             region.CenterGridPosition(x + xOffset, y + yOffset);
         };
-
         // Create UI elements
-        const mainContainer = new qx.ui.container.Composite(new qx.ui.layout.VBox()).set({
-            opacity: 0.7
-        });
+        const mainContainer = new qx.ui.container.Composite(new qx.ui.layout.VBox()).set({opacity: 0.7});
         const buttonContainer = new qx.ui.container.Composite(new qx.ui.layout.Grid());
         const iconF = ClientLib.Data.MainData.GetInstance().get_Player().get_Faction() == ClientLib.Base.EFactionType.GDIFaction ? "gdi" : "nod";
-        const directions = [{
-                icon: `webfrontend/ui/${iconF}/icons/icon_step_up_button.png`,
-                xOffset: 0,
-                yOffset: -1,
-                row: 0,
-                col: 1
-            },
-            {
-                icon: `webfrontend/ui/${iconF}/icons/icon_step_down_button.png`,
-                xOffset: 0,
-                yOffset: 1,
-                row: 2,
-                col: 1
-            },
-            {
-                icon: `webfrontend/ui/${iconF}/icons/icon_step_left_button.png`,
-                xOffset: -1,
-                yOffset: 0,
-                row: 1,
-                col: 0
-            },
-            {
-                icon: `webfrontend/ui/${iconF}/icons/icon_step_right_button.png`,
-                xOffset: 1,
-                yOffset: 0,
-                row: 1,
-                col: 2
-            }
+        const directions = [
+            {icon: `webfrontend/ui/${iconF}/icons/icon_step_up_button.png`, xOffset: 0, yOffset: -1, row: 0, col: 1},
+            {icon: `webfrontend/ui/${iconF}/icons/icon_step_down_button.png`, xOffset: 0, yOffset: 1, row: 2, col: 1},
+            {icon: `webfrontend/ui/${iconF}/icons/icon_step_left_button.png`, xOffset: -1, yOffset: 0, row: 1, col: 0},
+            {icon: `webfrontend/ui/${iconF}/icons/icon_step_right_button.png`, xOffset: 1, yOffset: 0, row: 1, col: 2}
         ];
-
-        directions.forEach(({
-            icon,
-            xOffset,
-            yOffset,
-            row,
-            col
-        }) => {
+        directions.forEach(({icon, xOffset, yOffset, row, col}) => {
             const button = new qx.ui.form.Button(null, icon);
             button.addListener("execute", () => moveRegion(xOffset, yOffset));
-            buttonContainer.add(button, {
-                row,
-                column: col
-            });
+            buttonContainer.add(button, {row, column: col});
         });
-
-        // Zoom Spinner
         const zoomSpinner = new qx.ui.form.Spinner().set({
             value: region.get_ZoomFactor(),
             minimum: region.get_MinZoomFactor(),
@@ -114,21 +67,11 @@
             singleStep: 0.05,
             toolTipText: "Adjust zoom factor"
         });
-
         zoomSpinner.addListener("changeValue", e => region.set_ZoomFactor(e.getData()));
-
-        // Combine UI components
         mainContainer.add(buttonContainer);
         mainContainer.add(zoomSpinner);
-
-        // Add to the game UI
-        qx.core.Init.getApplication().getBackgroundArea().add(mainContainer, {
-            right: 125,
-            bottom: 5
-        });
-
+        qx.core.Init.getApplication().getBackgroundArea().add(mainContainer, {right: 125, bottom: 5});
         console.log(`%c${scriptName} loaded`, "background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;");
     };
-
     androidHelper();
 })();
