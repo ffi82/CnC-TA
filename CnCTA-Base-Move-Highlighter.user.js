@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnCTA Base Move Highlighter
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025.03.30
+// @version      2025.04.01
 // @description  Wavy++ (advice: disable the other 'wavy' scripts before trying this)
 // @author       Bloofi
 // @contributor  ffi82, pouet?, petui, NetquiK
@@ -13,7 +13,7 @@
 /* global qx, ClientLib, webfrontend, wavy */
 "use strict";
 (() => {
-    const wavy_main = () => {
+    const CnCTA_Base_Move_Highlighter = () => {
         const Createwavy = () => {
             qx.Class.define("wavy", {
                 type: "singleton",
@@ -100,7 +100,6 @@
                                     const baseY = visObject.get_RawY();
                                     const distance = Math.hypot(startX - baseX, startY - baseY);
                                     const needcp = Math.floor(3 + distance);
-
                                     if (distance <= attackDistance) {
                                         switch (visObject.get_VisObjectType()) {
                                             case ClientLib.Vis.VisObject.EObjectType.RegionNPCBase:
@@ -109,19 +108,21 @@
                                                     const baseLevel = parseInt(visObject.get_BaseLevel(), 10);
                                                     result[baseLevel] = (result[baseLevel] || 0) + 1;
                                                     found = true;
-                                                    this.addMarker(baseX, baseY, "yellowgreen", Math.floor(10 + distance * 3), "black", null);
+                                                    this.addMarker(baseX, baseY, "yellowgreen", Math.floor(10 + distance * 3), "black", "label");
                                                 }
                                                 break;
                                             case ClientLib.Vis.VisObject.EObjectType.RegionCityType:
-                                                if (visObject.get_PlayerId() !== currentCity?.get_PlayerId()) {
+                                                if (visObject.get_PlayerId() === currentCity?.get_PlayerId()) {
+                                                    visObject.IsOwnBase() ? null : this.addMarker(baseX, baseY, "white", needcp, "black", "icon"); // No markers on own bases and white markers on same player bases on "Plan move base"
+                                                } else {
                                                     const isOwnAlliance = visObject.get_AllianceId() === ownAlliance?.get_Id();
-                                                    const color = isOwnAlliance ? "royalblue" : "salmon";
-                                                    distance >= supportRange ? this.addMarker(baseX, baseY, color, needcp, "black", null) : this.addMarker(baseX, baseY, color, needcp, "black");
+                                                    const color = isOwnAlliance ? "royalblue" : "salmon";// "cornflowerblue" : "crimson"; // "blue" : "red";
+                                                    distance >= supportRange ? this.addMarker(baseX, baseY, color, needcp, "black", "label") : this.addMarker(baseX, baseY, color, needcp, "white", "both");
                                                 }
                                                 break;
                                         }
-                                    } else if (distance < supportRange && visObject.get_VisObjectType() === ClientLib.Vis.VisObject.EObjectType.RegionCityType && visObject.get_PlayerId() !== currentCity?.get_PlayerId()) {
-                                        this.addMarker(baseX, baseY, "transparent", needcp, "black");
+                                    } else {
+                                        (distance < supportRange && visObject.get_VisObjectType() === ClientLib.Vis.VisObject.EObjectType.RegionCityType && visObject.get_PlayerId() !== currentCity?.get_PlayerId()) ? this.addMarker(baseX, baseY, "transparent", needcp, "black", "icon") : null; // On player bases out of attack range, but in range of support weapons: transparent markers with support icon only (Ion Cannon Support: vs. vehicles for GDI; Blade of Kane: vs. infantry for NOD)
                                     }
                                 }
                             }
@@ -133,43 +134,33 @@
                         this.regionCityMoveInfoAddonExists = true;
                         webfrontend.gui.region.RegionCityMoveInfo.getInstance().add(this.wavyPanel.grid);
                     },
-
-                    screenPosFromWorldPosX(x) {
-                        return this._VisMain.ScreenPosFromWorldPosX(x * this.gridWidth);
-                    },
-
-                    screenPosFromWorldPosY(y) {
-                        return this._VisMain.ScreenPosFromWorldPosY(y * this.gridHeight);
-                    },
-
-                    addMarker(bx, by, color, cpNeeded, textColor, iconS = `webfrontend/${ClientLib?.Data?.MainData?.GetInstance()?.get_Cities()?.get_CurrentCity()?.get_SupportWeapon()?.i?.green}.png`) {
+                    addMarker(bx, by, color, cpNeeded, textColor, show) {
                         const marker = new qx.ui.container.Composite(new qx.ui.layout.HBox(1)).set({
                             decorator: new qx.ui.decoration.Decorator(1, "solid", "black").set({ backgroundColor: color }),
                             width: this.baseMarkerWidth,
                             height: this.baseMarkerHeight,
                             opacity: 0.7
                         });
-                        marker.add(new qx.ui.basic.Atom(String(cpNeeded), iconS).set({
+                        marker.add(new qx.ui.basic.Atom(String(cpNeeded), `webfrontend/${ClientLib?.Data?.MainData?.GetInstance()?.get_Cities()?.get_CurrentCity()?.get_SupportWeapon()?.i?.green}.png`).set({
                             textColor: textColor,
                             font: "bold",
                             iconPosition: "top",
                             width: this.baseMarkerWidth,
                             rich: true,
-                            center: true
+                            center: true,
+                            show : show
                         }));
 
                         this._App.getDesktop().addAfter(marker, this._App.getBackgroundArea(), {
-                            left: this.screenPosFromWorldPosX(bx),
-                            top: this.screenPosFromWorldPosY(by)
+                            left: this._VisMain.ScreenPosFromWorldPosX(bx * this.gridWidth),
+                            top: this._VisMain.ScreenPosFromWorldPosY(by * this.gridHeight)
                         });
                         this.baseMarkerList.push({ element: marker, x: bx, y: by });
                     },
-
                     removeMarkers() {
                         this.baseMarkerList.forEach(markerData => this._App.getDesktop().remove(markerData.element));
                         this.baseMarkerList = [];
                     },
-
                     getRegionZoomFactorAndSetMarkerSize() {
                         const region = this._VisMain.get_Region();
                         this.gridWidth = region.get_GridWidth();
@@ -178,14 +169,12 @@
                         this.baseMarkerWidth = this.gridWidth * this.regionZoomFactor;
                         this.baseMarkerHeight = this.gridHeight * this.regionZoomFactor;
                     },
-
                     repositionMarkers() {
                         this.baseMarkerList.forEach(markerData => {
-                            markerData.element.setDomLeft(this.screenPosFromWorldPosX(markerData.x));
-                            markerData.element.setDomTop(this.screenPosFromWorldPosY(markerData.y));
+                            markerData.element.setDomLeft(this._VisMain.ScreenPosFromWorldPosX(markerData.x * this.gridWidth));
+                            markerData.element.setDomTop(this._VisMain.ScreenPosFromWorldPosY(markerData.y * this.gridHeight));
                         });
                     },
-
                     resizeMarkers() {
                         this.getRegionZoomFactorAndSetMarkerSize();
                         this.baseMarkerList.forEach(markerData => {
@@ -195,13 +184,13 @@
                     }
                 }
             });
+            wavy.getInstance().initialize();
         }
         const checkForInit = () => {
             const scriptName = 'CnCTA Base Move Highlighter';
             try {
                 if (typeof qx === 'undefined' || !qx?.core?.Init?.getApplication()?.initDone) return setTimeout(checkForInit, 1000);
                 Createwavy();
-                wavy.getInstance().initialize();
                 console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
             } catch (e) {
                 console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
@@ -209,5 +198,5 @@
         };
         checkForInit();
     }
-    wavy_main();
+    CnCTA_Base_Move_Highlighter();
 })();
