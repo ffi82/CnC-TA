@@ -141,7 +141,8 @@
                             height: this.baseMarkerHeight,
                             opacity: 0.7
                         });
-                        marker.add(new qx.ui.basic.Atom(String(cpNeeded), `webfrontend/${ClientLib?.Data?.MainData?.GetInstance()?.get_Cities()?.get_CurrentCity()?.get_SupportWeapon()?.i?.green}.png`).set({
+                        const iconSupport = ClientLib?.Data?.MainData?.GetInstance()?.get_Cities()?.get_CurrentCity()?.get_SupportWeapon() ? `webfrontend/${ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentCity().get_SupportWeapon().i.green}.png` : null;
+                        marker.add(new qx.ui.basic.Atom(String(cpNeeded), iconSupport).set({
                             textColor: textColor,
                             font: "bold",
                             iconPosition: "top",
