@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnCTA Base Move Highlighter
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025.04.01
+// @version      2025.04.02
 // @description  Wavy++ (advice: disable the other 'wavy' scripts before trying this)
 // @author       Bloofi
 // @contributor  ffi82, pouet?, petui, NetquiK
@@ -76,7 +76,7 @@
                         this.removeMarkers();
                     },
                     baseMoveToolCellChange(startX, startY) {
-                        this.regionCityMoveInfoAddonExists ? webfrontend.gui.region.RegionCityMoveInfo.getInstance().remove(this.wavyPanel.grid) : null;
+                        this.regionCityMoveInfoAddonExists ? webfrontend.gui.region.RegionCityMoveInfo.getInstance()?.remove(this.wavyPanel.grid) : null;
                         this.removeMarkers();
                         this.findBases(startX, startY);
                     },
@@ -84,11 +84,11 @@
                         let result = [];
                         let total = 0;
                         const region = this._VisMain.get_Region();
-                        const ownAlliance = ClientLib.Data.MainData.GetInstance().get_Alliance();
-                        const currentCity = ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentCity();
-                        const attackDistance = ClientLib.Data.MainData.GetInstance().get_Server().get_MaxAttackDistance();;
+                        const ownAlliance = this._MainData.get_Alliance();
+                        const currentCity = this._MainData.get_Cities().get_CurrentCity();
+                        const supportRange = currentCity.get_SupportWeapon() ? currentCity.get_SupportWeapon().r : 0;
+                        const attackDistance = this._MainData.get_Server().get_MaxAttackDistance();;
                         const scanDistance = Math.ceil(attackDistance);
-                        const supportRange = currentCity?.get_SupportWeapon()?.r ?? 0;
                         let found = false;
                         let detailString = "";
                         let waveCount;
@@ -132,7 +132,7 @@
                         this._MainData.get_Server().get_ForgottenAttacksEnabled() ? this.wavyPanel.labelNbVal.setValue(`${total} (${waveCount} wave${waveCount === 1 ? '' : 's'})`) : this.wavyPanel.labelNbVal.setValue(total);
                         this.wavyPanel.labelDetailVal.setValue(detailString);
                         this.regionCityMoveInfoAddonExists = true;
-                        webfrontend.gui.region.RegionCityMoveInfo.getInstance().add(this.wavyPanel.grid);
+                        webfrontend.gui.region.RegionCityMoveInfo.getInstance()?.add(this.wavyPanel.grid);
                     },
                     addMarker(bx, by, color, cpNeeded, textColor, show) {
                         const marker = new qx.ui.container.Composite(new qx.ui.layout.HBox(1)).set({
@@ -141,7 +141,8 @@
                             height: this.baseMarkerHeight,
                             opacity: 0.7
                         });
-                        const iconSupport = ClientLib?.Data?.MainData?.GetInstance()?.get_Cities()?.get_CurrentCity()?.get_SupportWeapon() ? `webfrontend/${ClientLib.Data.MainData.GetInstance().get_Cities().get_CurrentCity().get_SupportWeapon().i.green}.png` : null;
+                        const currentCitySW = this._MainData.get_Cities().get_CurrentCity().get_SupportWeapon();
+                        const iconSupport = currentCitySW ? `webfrontend/${currentCitySW.i.green}.png` : null;
                         marker.add(new qx.ui.basic.Atom(String(cpNeeded), iconSupport).set({
                             textColor: textColor,
                             font: "bold",
