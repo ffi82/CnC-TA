@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         CnCTA Base Move Highlighter
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025.04.05
-// @description  Wavy++ (advice: disable the other 'wavy' scripts before trying this)
+// @version      2025.04.06
+// @description  Highlights viable base move targets, shows CP cost label for bases (player and NPC) in attack range, shows support icon if selected city has any for player bases in support range, shows tooltip with number of NPC bases in attack range and details plus waves (waves on forgotten attacks worlds only).
 // @author       Bloofi
-// @contributor  ffi82, pouet?, petui, NetquiK
+// @contributor  petui, NetquiK, ffi82
 // @updateURL    https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnCTA-Base-Move-Highlighter.meta.js
 // @downloadURL  https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnCTA-Base-Move-Highlighter.user.js
 // @match        https://*.alliances.commandandconquer.com/*/index.aspx*
@@ -70,7 +70,6 @@
                         this.wavyPanel.grid.add(this.wavyPanel.labelDetailVal, { row: 1, column: 1 });
                     },
                     baseMoveToolActivate() {
-                        //ClientLib.Net.CommunicationManager.GetInstance().$Poll();
                         this.getRegionZoomFactorAndSetMarkerSize();
                         webfrontend?.phe?.cnc?.Util?.attachNetEvent(this._VisMain?.get_Region(), "PositionChange", ClientLib?.Vis?.PositionChange, this, this.repositionMarkers);
                         webfrontend?.phe?.cnc?.Util?.attachNetEvent(this._VisMain?.get_Region(), "ZoomFactorChange", ClientLib?.Vis?.ZoomFactorChange, this, this.resizeMarkers);
@@ -86,76 +85,66 @@
                         this.findBases(startX, startY);
                     },
                     findBases(startX, startY) {
-                        let result = [];
-                        let total = 0;
-                        const region = this._VisMain?.get_Region();
-                        const selectedCity = this._VisMain?.get_SelectedObject();
-                        const supportRange = selectedCity?.get_SupportWeapon() ? selectedCity.get_SupportWeapon().r : 0;
-                        let found = false;
-                        let detailString = "";
-                        let waveCount;
-                        for (let x = startX - Math.max(this.scanDistance,supportRange); x < (startX + Math.max(this.scanDistance,supportRange)); x++) {
-                            for (let y = startY - Math.max(this.scanDistance,supportRange); y < (startY + Math.max(this.scanDistance,supportRange)); y++) {
-                                const visObject = region?.GetObjectFromPosition(x * region?.get_GridWidth(), y * region?.get_GridHeight());
-                                const baseX = visObject?.get_RawX();
-                                const baseY = visObject?.get_RawY();
-                                const distance = Math.hypot(startX - baseX, startY - baseY);
-                                const needcp = Math.floor(3 + distance);
+                        const region = this._VisMain.get_Region();
+                        const selectedCity = this._VisMain.get_SelectedObject();
+                        const { EObjectType } = ClientLib.Vis.VisObject;// Destructure for clarity
+                        const results = { total: 0, levels: {}};
+                        const selectedCitySupportRange = selectedCity.get_VisObjectType() === EObjectType.RegionGhostCity || !selectedCity.get_SupportWeapon() ? 0 : selectedCity.get_SupportWeapon()?.r;
+                        const scanRadius = Math.max(this.scanDistance, selectedCitySupportRange);
+                        const selectedPlayerId = selectedCity.get_PlayerId();
+                        const selectedAllianceId = selectedCity.get_AllianceId();
+                        const minX = startX - scanRadius, maxX = startX + scanRadius, minY = startY - scanRadius, maxY = startY + scanRadius;
+                        for (let x = minX; x < maxX; x++) {
+                            for (let y = minY; y < maxY; y++) {
+                                const visObject = region.GetObjectFromPosition(x * this.gridWidth, y * this.gridHeight);
                                 if (!visObject) continue;
-                                if (distance <= this.attackDistance) {
-                                    switch (visObject?.get_VisObjectType()) {
-                                        case ClientLib?.Vis?.VisObject?.EObjectType?.RegionNPCBase:
-                                            total++;
-                                            if (visObject?.get_BaseLevel() > 0) {
-                                                const baseLevel = parseInt(visObject?.get_BaseLevel(), 10);
-                                                result[baseLevel] = (result[baseLevel] || 0) + 1;
-                                                found = true;
-                                                this.addMarker(baseX, baseY, "yellowgreen", Math.floor(10 + distance * 3), "black", "label");
-                                            }
-                                            break;
-                                        case ClientLib?.Vis?.VisObject?.EObjectType?.RegionCityType:
-                                            if (visObject?.get_PlayerId() === selectedCity?.get_PlayerId()) {
-                                                visObject?.IsOwnBase() ? null : this.addMarker(baseX, baseY, "white", needcp, "black", "icon"); // No markers on own bases and white markers on same player bases on "Plan move base"
-                                            } else {
-                                                const isOwnAlliance = visObject?.get_AllianceId() === selectedCity?.get_AllianceId();
-                                                const color = isOwnAlliance ? "royalblue" : "salmon";// "cornflowerblue" : "crimson"; // "blue" : "red";
-                                                distance >= supportRange ? this.addMarker(baseX, baseY, color, needcp, "black", "label") : this.addMarker(baseX, baseY, color, needcp, "white", "both");
-                                            }
-                                            break;
-                                    }
-                                } else {
-                                    (distance < supportRange && visObject?.get_VisObjectType() === ClientLib?.Vis?.VisObject?.EObjectType?.RegionCityType && visObject?.get_PlayerId() !== selectedCity?.get_PlayerId()) ? this.addMarker(baseX, baseY, "transparent", needcp, "black", "icon") : null; // On player bases out of attack range, but in range of support weapons: transparent markers with support icon only (Ion Cannon Support: vs. vehicles for GDI; Blade of Kane: vs. infantry for NOD)
-                                }
+                                const visBaseX = visObject.get_RawX();
+                                const visBaseY = visObject.get_RawY();
+                                const distance = Math.hypot(startX - visBaseX, startY - visBaseY);
+                                const visObjType = visObject.get_VisObjectType();
+                                const cpNeeded = this._MainData.get_World().GetTerritoryTypeByCoordinates(visBaseX, visBaseY) === ClientLib.Data.ETerritoryType.Alliance || visObjType === EObjectType.RegionCityType ? Math.floor(3 + distance) : Math.floor(10 + distance * 3);
+                                const baseLevel = visObjType === EObjectType.RegionNPCBase ? parseInt(visObject?.get_BaseLevel(), 10) : null;
+                                const isOwnBase = visObjType === EObjectType.RegionCityType ? visObject.IsOwnBase() : null;
+                                const visPlayerId = visObjType === EObjectType.RegionCityType ? visObject.get_PlayerId() : null;
+                                const visAllianceId = visObjType === EObjectType.RegionCityType ? visObject.get_AllianceId() : null;
+                                const isSameAlliance = visAllianceId !== 0 && visAllianceId === selectedAllianceId;
+                                const color = distance <= this.attackDistance ? visObjType === EObjectType.RegionNPCBase ? (results.total++, results.levels[baseLevel] = (results.levels[baseLevel] ?? 0) + 1, "yellowgreen") : visObjType === EObjectType.RegionCityType && !isOwnBase ? visPlayerId === selectedPlayerId ? "white" : isSameAlliance ? "royalblue" : "salmon" : null : visObjType === EObjectType.RegionCityType && distance < selectedCitySupportRange ? "transparent" : null;
+                                const showType = visObjType === EObjectType.RegionCityType ? distance <= selectedCitySupportRange && distance <= this.attackDistance ? "both" : distance <= selectedCitySupportRange && distance > this.attackDistance ? "icon" : "label" : EObjectType.RegionNPCBase === selectedCity.get_VisObjectType() ? "icon" : EObjectType.RegionGhostCity === selectedCity.get_VisObjectType() ? "label" : null;
+                                const textColor = visObjType === EObjectType.RegionCityType ? "white" : "black";
+                                color ? this.addMarker(visBaseX, visBaseY, color, cpNeeded, textColor, showType) : null;
                             }
                         }
-                        found ? detailString = Object.entries(result).map(([level, count]) => `[${count} x ${level}]`).join("   ") : detailString = "Nothing !";
-                        waveCount = Math.max(1, Math.min(5, Math.floor(total / 10)));
-                        this._MainData?.get_Server()?.get_ForgottenAttacksEnabled() ? this.wavyPanel?.labelNbVal?.setValue(`${total} (${waveCount} wave${waveCount === 1 ? '' : 's'})`) : this.wavyPanel?.labelNbVal?.setValue(total);
-                        this.wavyPanel?.labelDetailVal?.setValue(detailString);
-                        this.regionCityMoveInfoAddonExists = true;
+                        const detailString = Object.entries(results.levels).sort(([lvlA], [lvlB]) => lvlB - lvlA).map(([level, count]) => `[${count} x ${level}]`).join("  ");
+
+                        this.wavyPanel.labelDetailVal.setValue(detailString || "Nothing!");
+                        const waveCount = Math.max(1, Math.min(5, Math.floor(results.total / 10)));
+                        const waveStr = this._MainData.get_Server().get_ForgottenAttacksEnabled() ? `${results.total} (${waveCount} wave${waveCount > 1 ? 's' : ''})` : `${results.total}`;
+                        this.wavyPanel.labelNbVal.setValue(waveStr);
                         webfrontend?.gui?.region?.RegionCityMoveInfo?.getInstance()?.add(this.wavyPanel.grid);
                     },
-                    addMarker(bx, by, color, cpNeeded, textColor, show) {
+                    addMarker(bx, by, color, cpNeeded, textColor, showType) {
                         const marker = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({
                             decorator: new qx.ui.decoration.Decorator(1, "solid", "black").set({ backgroundColor: color }),
                             width: this.baseMarkerWidth,
                             height: this.baseMarkerHeight,
-                            opacity: 0.7
+                            opacity: 0.7,
                         });
-                        const SW = this._VisMain?.get_SelectedObject()?.get_SupportWeapon();
-                        const iconSW = SW ? `webfrontend/${SW?.i?.orange}.png` : null;
-                        marker.add(new qx.ui.basic.Atom(String(cpNeeded), iconSW).set({
+                        const supportWeapon = this._VisMain.get_SelectedObject().get_VisObjectType() === ClientLib.Vis.VisObject.EObjectType.RegionGhostCity ? null : this._VisMain.get_SelectedObject().get_SupportWeapon();
+                        const iconPath = supportWeapon ? `webfrontend/${supportWeapon.i?.orange}.png` : null;
+                        const atom = new qx.ui.basic.Atom(String(cpNeeded), iconPath).set({
                             textColor: textColor,
                             font: "bold",
                             iconPosition: "top",
                             width: this.baseMarkerWidth,
+                            height : this.baseMarkerHeight,
                             rich: true,
                             center: true,
-                            show : show
-                        }));
-                        this._App?.getDesktop()?.addAfter(marker, this._App?.getBackgroundArea(), {
-                            left: this._VisMain?.ScreenPosFromWorldPosX(bx * this.gridWidth),
-                            top: this._VisMain?.ScreenPosFromWorldPosY(by * this.gridHeight)
+                            show: showType
+                        });
+                        marker.add(atom);;
+                        this._App.getDesktop().addAfter(marker, this._App.getBackgroundArea(), {
+                            left: this._VisMain.ScreenPosFromWorldPosX(bx * this.gridWidth),
+                            top: this._VisMain.ScreenPosFromWorldPosY(by * this.gridHeight)
                         });
                         this.baseMarkerList.push({ element: marker, x: bx, y: by });
                     },
@@ -193,9 +182,9 @@
             try {
                 if (typeof qx === 'undefined' || !qx?.core?.Init?.getApplication()?.initDone) return window.setTimeout(checkForInit, 1000);
                 Createwavy();
-                window.console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
+                console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
             } catch (e) {
-                window.console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
+                console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
             }
         };
         checkForInit();
