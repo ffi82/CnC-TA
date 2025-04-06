@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnCTA Base Move Highlighter
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025.04.06
+// @version      2025.04.07
 // @description  Highlights viable base move targets, shows CP cost label for bases (player and NPC) in attack range, shows support icon if selected city has any for player bases in support range, shows tooltip with number of NPC bases in attack range and details plus waves (waves on forgotten attacks worlds only).
 // @author       Bloofi
 // @contributor  petui, NetquiK, ffi82
@@ -109,7 +109,7 @@
                                 const visAllianceId = visObjType === EObjectType.RegionCityType ? visObject.get_AllianceId() : null;
                                 const isSameAlliance = visAllianceId !== 0 && visAllianceId === selectedAllianceId;
                                 const color = distance <= this.attackDistance ? visObjType === EObjectType.RegionNPCBase ? (results.total++, results.levels[baseLevel] = (results.levels[baseLevel] ?? 0) + 1, "yellowgreen") : visObjType === EObjectType.RegionCityType && !isOwnBase ? visPlayerId === selectedPlayerId ? "white" : isSameAlliance ? "royalblue" : "salmon" : null : visObjType === EObjectType.RegionCityType && distance < selectedCitySupportRange ? "transparent" : null;
-                                const showType = visObjType === EObjectType.RegionCityType ? distance <= selectedCitySupportRange && distance <= this.attackDistance ? "both" : distance <= selectedCitySupportRange && distance > this.attackDistance ? "icon" : "label" : EObjectType.RegionNPCBase === selectedCity.get_VisObjectType() ? "icon" : EObjectType.RegionGhostCity === selectedCity.get_VisObjectType() ? "label" : null;
+                                const showType = visObjType === EObjectType.RegionCityType ? (distance <= selectedCitySupportRange && distance <= this.attackDistance ? "both" : (distance <= selectedCitySupportRange && distance > this.attackDistance ? "icon" : "label")) : (visObjType === EObjectType.RegionNPCBase || visObjType === EObjectType.RegionGhostCity ? "label" : null);
                                 const textColor = visObjType === EObjectType.RegionCityType ? "white" : "black";
                                 color ? this.addMarker(visBaseX, visBaseY, color, cpNeeded, textColor, showType) : null;
                             }
