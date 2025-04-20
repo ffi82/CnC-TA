@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         CnCTA Base Move Highlighter
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025.04.11
-// @description  Highlights viable base move targets, shows CP cost label for bases (player and NPC) in attack range, shows support icon if selected city has any for player bases in support range, shows tooltip with number of NPC bases in attack range and details plus waves (waves on forgotten attacks worlds only).
+// @version      2025.04.25
+// @description  Highlights viable base move targets in the visible area (zoom out to load/view all targets in range), shows CP cost label for bases (player and NPC) in attack range, shows support icon if selected city has any for player bases in support range, shows tooltip with number of NPC bases in attack range and details plus waves (waves on forgotten attacks worlds only).
 // @author       Bloofi
 // @contributor  petui, NetquiK, ffi82
 // @updateURL    https://github.com/ffi82/CnC-TA/raw/refs/heads/master/CnCTA-Base-Move-Highlighter.meta.js
@@ -20,104 +20,130 @@
                 extend: qx.core.Object,
                 construct: () => {},
                 members: {
-                    _App: null,
-                    _MainData: null,
-                    _VisMain: null,
-                    maxAttackDistance : null,
-                    scanDistance : null,
-                    wavyPanel: {
-                        grid: null,
-                        labelNb: null,
-                        labelNbVal: null,
-                        labelDetail: null,
-                        labelDetailVal: null
-                    },
-                    configPanel: {
-                        configTitle: null,
-                        npcLevelGroup: null,
-                        checkboxHideAllies: null,
-                        checkboxHideNonAllies: null,
-                        checkboxHideSupportIcon: null,
-                        checkboxignoreLowLevelNpc: null,
-                        ignoreLowLevelNpcSpinner: null
-                    },
-                    regionCityMoveInfoAddonExists: null,
+                    _App: qx.core.Init.getApplication(),
+                    _MainData: ClientLib.Data.MainData.GetInstance(),
+                    _VisMain: ClientLib.Vis.VisMain.GetInstance(),
+                    region: ClientLib.Vis.VisMain.GetInstance().get_Region(),
+                    server: ClientLib.Data.MainData.GetInstance().get_Server(),
+                    maxAttackDistance: ClientLib.Data.MainData.GetInstance().get_Server().get_MaxAttackDistance(),
+                    forgottenAttacksEnabled: ClientLib.Data.MainData.GetInstance().get_Server().get_ForgottenAttacksEnabled(),
+                    scanDistance: Math.ceil(ClientLib.Data.MainData.GetInstance().get_Server().get_MaxAttackDistance()),
                     gridWidth: null,
                     gridHeight: null,
                     baseMarkerWidth: null,
                     baseMarkerHeight: null,
-                    regionZoomFactor: null,
-                    baseMarkerList: null,
+                    baseMarkerList: [],
+                    wavyPanel: {
+                        container: new qx.ui.container.Composite(new qx.ui.layout.VBox()).set({
+                            font: "bold",
+                            textColor: "white",
+                            decorator: "pane-frame-clear"
+                        }),
+                        labelNbVal: new qx.ui.basic.Label(),
+                        labelDetailVal: new qx.ui.basic.Label()
+                    },
+                    configPanel: {
+                        container: new qx.ui.container.Composite(new qx.ui.layout.VBox()).set({
+                            backgroundColor: "rgba(0,0,0,0.5)",
+                            padding: 5,
+                            decorator: "main",
+                            opacity: 0.8,
+                            zIndex: qx.core.Init.getApplication().getBackgroundArea().getZIndex() + 1,
+                            visibility: "excluded"
+                        }),
+                        configTitle: new qx.ui.basic.Label("Base Move Highlighter Settings").set({
+                            font: "bold",
+                            textColor: "white",
+                            alignX: "center",
+                            paddingBottom: 5,
+                            toolTipText: "Highlights viable base move targets in the <b>visible area</b>.<hr>Zoom out to load/view all targets for <i>proper count of bases in attack range</i> from the base move point .<br>Drag/drop the base move point to the center of the screen also helps.<br>Bigger screen size or browser zoom are other options if the previous <i>tricks</i> are still not enough..."
+                        }),
+                        npcLevelGroup: new qx.ui.container.Composite(new qx.ui.layout.HBox()),
+                        checkboxHideAllies: new qx.ui.form.CheckBox("Hide alliance bases").set({
+                            value: false,
+                            textColor: "white"
+                        }),
+                        checkboxHideNonAllies: new qx.ui.form.CheckBox("Hide non alliance bases").set({
+                            value: false,
+                            textColor: "white"
+                        }),
+                        checkboxHideSupportIcon: new qx.ui.form.CheckBox("Hide support icon").set({
+                            value: false,
+                            textColor: "white"
+                        }),
+                        checkboxignoreLowLevelNpc: new qx.ui.form.CheckBox("Hide NPC bases < level:").set({
+                            value: false,
+                            textColor: "white",
+                            toolTipText: "Disables wave count!"
+                        }),
+                        ignoreLowLevelNpcSpinner: new qx.ui.form.Spinner(ClientLib.Data.MainData.GetInstance().get_Server().get_NpcLevelAtBorder() - 2, 20, ClientLib.Data.MainData.GetInstance().get_Server().get_MaxCenterLevel() + 1).set({
+                            width: 50,
+                            visibility: "excluded"
+                        })
+                    },
                     initialize() {
-                        this._App = qx.core.Init.getApplication();
-                        this._MainData = ClientLib.Data.MainData.GetInstance();
-                        this._VisMain = ClientLib.Vis.VisMain.GetInstance();
-                        const server = this._MainData?.get_Server?.();
-                        this.maxAttackDistance = server.get_MaxAttackDistance();
-                        this.scanDistance = Math.ceil(this.maxAttackDistance);
-                        this.baseMarkerList = [];
                         const moveTool = this._VisMain.GetMouseTool(ClientLib.Vis.MouseTool.EMouseTool.MoveBase);
-                        webfrontend.phe.cnc.Util.attachNetEvent(moveTool, "OnCellChange", ClientLib.Vis.MouseTool.OnCellChange, this, this.baseMoveToolCellChange);
-                        webfrontend.phe.cnc.Util.attachNetEvent(moveTool, "OnActivate", ClientLib.Vis.MouseTool.OnActivate, this, this.baseMoveToolActivate);
-                        webfrontend.phe.cnc.Util.attachNetEvent(moveTool, "OnDeactivate", ClientLib.Vis.MouseTool.OnDeactivate, this, this.baseMoveToolDeactivate);
-                        this.wavyPanel.grid = new qx.ui.container.Composite(new qx.ui.layout.Grid(2, 2));
-                        const createLabel = text => new qx.ui.basic.Label(text).set({font: "bold", textColor: "white", alignY: "top", alignX: "right"});
-                        this.wavyPanel.labelNb = createLabel("NPC Bases : ");
-                        this.wavyPanel.labelDetail = createLabel("Detail : ");
-                        this.wavyPanel.labelNbVal = new qx.ui.basic.Label("").set({ textColor: "white", alignY: "top", alignX: "left" });
-                        this.wavyPanel.labelDetailVal = new qx.ui.basic.Label("").set({ textColor: "white", alignY: "top", alignX: "left" });
-                        this.wavyPanel.grid.add(this.wavyPanel.labelNb, { row: 0, column: 0 });
-                        this.wavyPanel.grid.add(this.wavyPanel.labelNbVal, { row: 0, column: 1 });
-                        this.wavyPanel.grid.add(this.wavyPanel.labelDetail, { row: 1, column: 0 });
-                        this.wavyPanel.grid.add(this.wavyPanel.labelDetailVal, { row: 1, column: 1 });
-                        this.configPanel = new qx.ui.container.Composite(new qx.ui.layout.VBox()).set({backgroundColor: "rgba(0,0,0,0.5)", padding: 5, decorator: "main", opacity: 0.8, visibility: "excluded"});
-                        this.configPanel.configTitle = new qx.ui.basic.Label("Base Move Highlighter Settings").set({font: "bold", textColor: "white", alignX: "center", paddingBottom: 5});
-                        this.configPanel.add(this.configPanel.configTitle);
-                        this.configPanel.npcLevelGroup = new qx.ui.container.Composite(new qx.ui.layout.HBox());
-                        this.configPanel.npcLevelGroup.add(this.configPanel.checkboxignoreLowLevelNpc = new qx.ui.form.CheckBox("Hide NPC bases < level:").set({value: false, textColor: "white", toolTipText: "Disables wave count!"}));
-                        this.configPanel.npcLevelGroup.add(this.configPanel.ignoreLowLevelNpcSpinner = new qx.ui.form.Spinner(server.get_NpcLevelAtBorder() - 2, 20, server.get_MaxCenterLevel() + 1).set({width: 50, visibility: "excluded"}));
-                        this.configPanel.checkboxHideAllies = new qx.ui.form.CheckBox("Hide alliance bases").set({ value: false, textColor: "white" });
-                        this.configPanel.checkboxHideNonAllies = new qx.ui.form.CheckBox("Hide non alliance bases").set({ value: false, textColor: "white" });
-                        this.configPanel.checkboxHideSupportIcon = new qx.ui.form.CheckBox("Hide support icon").set({ value: false, textColor: "white" });
-                        this.configPanel.add(this.configPanel.checkboxHideAllies);
-                        this.configPanel.add(this.configPanel.checkboxHideNonAllies);
-                        this.configPanel.add(this.configPanel.checkboxHideSupportIcon);
-                        this.configPanel.add(this.configPanel.npcLevelGroup);
-                        this._App.getBackgroundArea().add(this.configPanel, { left: 128, top: 30 });
+                        const {
+                            OnCellChange,
+                            OnActivate,
+                            OnDeactivate
+                        } = ClientLib.Vis.MouseTool;
+                        webfrontend.phe.cnc.Util.attachNetEvent(moveTool, "OnCellChange", OnCellChange, this, this.baseMoveToolCellChange);
+                        webfrontend.phe.cnc.Util.attachNetEvent(moveTool, "OnActivate", OnActivate, this, this.baseMoveToolActivate);
+                        webfrontend.phe.cnc.Util.attachNetEvent(moveTool, "OnDeactivate", OnDeactivate, this, this.baseMoveToolDeactivate);
+                        this.wavyPanel.container.add(this.wavyPanel.labelNbVal);
+                        this.wavyPanel.container.add(this.wavyPanel.labelDetailVal);
+                        this.configPanel.npcLevelGroup.add(this.configPanel.checkboxignoreLowLevelNpc);
+                        this.configPanel.npcLevelGroup.add(this.configPanel.ignoreLowLevelNpcSpinner);
+                        this.configPanel.container.add(this.configPanel.configTitle);
+                        this.configPanel.container.add(this.configPanel.checkboxHideAllies);
+                        this.configPanel.container.add(this.configPanel.checkboxHideNonAllies);
+                        this.configPanel.container.add(this.configPanel.checkboxHideSupportIcon);
+                        this.configPanel.container.add(this.configPanel.npcLevelGroup);
+                        this._App.getBackgroundArea().add(this.configPanel.container, {
+                            left: 128,
+                            top: 30
+                        });
                     },
                     baseMoveToolActivate() {
                         this.getRegionZoomFactorAndSetMarkerSize();
-                        this.configPanel.setVisibility("visible");
-                        webfrontend.phe.cnc.Util.attachNetEvent(this._VisMain.get_Region(), "PositionChange", ClientLib.Vis.PositionChange, this, this.repositionMarkers);
-                        webfrontend.phe.cnc.Util.attachNetEvent(this._VisMain.get_Region(), "ZoomFactorChange", ClientLib.Vis.ZoomFactorChange, this, this.resizeMarkers);
+                        this.configPanel.container.setVisibility("visible");
+                        webfrontend.phe.cnc.Util.attachNetEvent(this.region, "PositionChange", ClientLib.Vis.PositionChange, this, this.repositionMarkers);
+                        webfrontend.phe.cnc.Util.attachNetEvent(this.region, "ZoomFactorChange", ClientLib.Vis.ZoomFactorChange, this, this.resizeMarkers);
                     },
                     baseMoveToolDeactivate() {
-                        this.configPanel.setVisibility("excluded");
-                        webfrontend.phe.cnc.Util.detachNetEvent(this._VisMain.get_Region(), "PositionChange", ClientLib.Vis.PositionChange, this, this.repositionMarkers);
-                        webfrontend.phe.cnc.Util.detachNetEvent(this._VisMain.get_Region(), "ZoomFactorChange", ClientLib.Vis.ZoomFactorChange, this, this.resizeMarkers);
+                        this.configPanel.container.setVisibility("excluded");
+                        webfrontend.phe.cnc.Util.detachNetEvent(this.region, "PositionChange", ClientLib.Vis.PositionChange, this, this.repositionMarkers);
+                        webfrontend.phe.cnc.Util.detachNetEvent(this.region, "ZoomFactorChange", ClientLib.Vis.ZoomFactorChange, this, this.resizeMarkers);
                         this.removeMarkers();
                     },
                     baseMoveToolCellChange(startX, startY) {
-                        this.regionCityMoveInfoAddonExists ? webfrontend.gui.region.RegionCityMoveInfo.getInstance()?.remove(this.wavyPanel.grid) : null;
+                        this.slideFadeScaleOutAndRemove(this.wavyPanel.container);
                         this.removeMarkers();
                         this.findBases(startX, startY);
                     },
                     findBases(startX, startY) {
-                        const region = this._VisMain.get_Region();
                         const selectedCity = this._VisMain.get_SelectedObject();
-                        const { EObjectType } = ClientLib.Vis.VisObject;// Destructure for clarity
-                        const results = { total: 0, levels: {}};
+                        const {
+                            EObjectType
+                        } = ClientLib.Vis.VisObject;
+                        const results = {
+                            total: 0,
+                            levels: {}
+                        };
                         const supportWeapon = selectedCity.get_VisObjectType() === EObjectType.RegionGhostCity ? null : selectedCity.get_SupportWeapon();
                         const selectedCitySupportRange = supportWeapon ? supportWeapon.r : 0;
                         const icon = supportWeapon && !this.configPanel.checkboxHideSupportIcon.getValue() ? `webfrontend/${supportWeapon.i.orange}.png` : null;
                         const scanRadius = Math.max(this.scanDistance, selectedCitySupportRange);
                         const selectedPlayerId = selectedCity.get_PlayerId();
                         const selectedAllianceId = selectedCity.get_AllianceId();
-                        const minX = startX - scanRadius, maxX = startX + scanRadius;
-                        const minY = startY - scanRadius, maxY = startY + scanRadius;
+                        const minX = startX - scanRadius,
+                            maxX = startX + scanRadius;
+                        const minY = startY - scanRadius,
+                            maxY = startY + scanRadius;
                         for (let x = minX; x < maxX; x++) {
                             for (let y = minY; y < maxY; y++) {
-                                const visObject = region.GetObjectFromPosition(x * this.gridWidth, y * this.gridHeight);
+                                const visObject = this.region.GetObjectFromPosition(x * this.gridWidth, y * this.gridHeight);
                                 if (!visObject) continue;
                                 const visObjType = visObject.get_VisObjectType();
                                 const baseLevel = visObjType === EObjectType.RegionNPCBase ? Math.round(visObject.get_BaseLevel()) : null;
@@ -126,7 +152,7 @@
                                 const visAllianceId = visObjType === EObjectType.RegionCityType ? visObject.get_AllianceId() : null;
                                 const isSameAlliance = visAllianceId !== 0 && visAllianceId === selectedAllianceId;
                                 this.configPanel.checkboxignoreLowLevelNpc.getValue() ? this.configPanel.ignoreLowLevelNpcSpinner.setVisibility("visible") : this.configPanel.ignoreLowLevelNpcSpinner.setVisibility("excluded");
-                                if (isOwnBase || (this.configPanel.checkboxHideAllies.getValue() && isSameAlliance) || ( this.configPanel.checkboxHideNonAllies.getValue() && !isSameAlliance && visObjType === EObjectType.RegionCityType) || (visObjType === EObjectType.RegionNPCBase && this.configPanel.checkboxignoreLowLevelNpc.getValue() && baseLevel < this.configPanel.ignoreLowLevelNpcSpinner.getValue())) continue;
+                                if (isOwnBase || (this.configPanel.checkboxHideAllies.getValue() && isSameAlliance) || (this.configPanel.checkboxHideNonAllies.getValue() && !isSameAlliance && visObjType === EObjectType.RegionCityType) || (visObjType === EObjectType.RegionNPCBase && this.configPanel.checkboxignoreLowLevelNpc.getValue() && baseLevel < this.configPanel.ignoreLowLevelNpcSpinner.getValue())) continue;
                                 const visBaseX = visObject.get_RawX();
                                 const visBaseY = visObject.get_RawY();
                                 const distance = Math.hypot(startX - visBaseX, startY - visBaseY);
@@ -138,15 +164,26 @@
                             }
                         }
                         const detailString = Object.entries(results.levels).sort(([lvlA], [lvlB]) => lvlB - lvlA).map(([level, count]) => `[${count} x ${level}]`).join("  ");
-                        this.wavyPanel.labelDetailVal.setValue(detailString || "Nothing!");
+                        this.wavyPanel.labelDetailVal.setValue(detailString);
                         const waveCount = Math.max(1, Math.min(5, Math.floor(results.total / 10)));
-                        const waveStr = this._MainData.get_Server().get_ForgottenAttacksEnabled() && !this.configPanel.checkboxignoreLowLevelNpc.getValue() ? `${results.total} (${waveCount} wave${waveCount > 1 ? 's' : ''})` : `${results.total}`;
-                        this.wavyPanel.labelNbVal.setValue(waveStr);
-                        webfrontend.gui.region.RegionCityMoveInfo.getInstance()?.add(this.wavyPanel.grid);
+                        const waveStr = this.forgottenAttacksEnabled && !this.configPanel.checkboxignoreLowLevelNpc.getValue() ? `${results.total} (${waveCount} wave${waveCount != 1 ? 's' : ''})` : `${results.total}`;
+                        this.wavyPanel.labelNbVal.setValue(`NPC Bases : ${waveStr}`);
+                        const regionCityMoveInfo = webfrontend.gui.region.RegionCityMoveInfo.getInstance();
+                        regionCityMoveInfo.setZIndex(this._App.getBackgroundArea().getZIndex() + 1);
+                        regionCityMoveInfo.add(this.wavyPanel.container);
                     },
                     addMarker(bx, by, color, cpCost, textColor, showType, icon) {
                         const marker = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({
-                            decorator: new qx.ui.decoration.Decorator(1, "solid", "black").set({ backgroundColor: color }),
+                            decorator: new qx.ui.decoration.Decorator().set({
+                                width: 1,
+                                style: "solid",
+                                color: "black",
+                                backgroundColor: color,
+                                shadowColor: color,
+                                radius: 6,
+                                shadowLength: 4,
+                                shadowBlurRadius: 2,
+                            }),
                             width: this.baseMarkerWidth,
                             height: this.baseMarkerHeight,
                             opacity: 0.7,
@@ -156,7 +193,7 @@
                             font: "bold",
                             iconPosition: "top",
                             width: this.baseMarkerWidth,
-                            height : this.baseMarkerHeight,
+                            height: this.baseMarkerHeight,
                             rich: true,
                             center: true,
                             show: showType
@@ -166,24 +203,27 @@
                             left: this._VisMain.ScreenPosFromWorldPosX(bx * this.gridWidth),
                             top: this._VisMain.ScreenPosFromWorldPosY(by * this.gridHeight)
                         });
-                        this.baseMarkerList.push({element: marker, x: bx, y: by});
+                        this.baseMarkerList.push({
+                            element: marker,
+                            x: bx,
+                            y: by
+                        });
                     },
                     removeMarkers() {
                         this.baseMarkerList.forEach(markerData => this._App.getBackgroundArea().remove(markerData.element));
                         this.baseMarkerList = [];
                     },
                     getRegionZoomFactorAndSetMarkerSize() {
-                        const region = this._VisMain.get_Region();
-                        this.gridWidth = region.get_GridWidth();
-                        this.gridHeight = region.get_GridHeight();
-                        this.regionZoomFactor = region.get_ZoomFactor();
-                        this.baseMarkerWidth = this.gridWidth * this.regionZoomFactor;
-                        this.baseMarkerHeight = this.gridHeight * this.regionZoomFactor;
+                        this.gridWidth = this.region.get_GridWidth();
+                        this.gridHeight = this.region.get_GridHeight();
+                        const zoomFactor = this.region.get_ZoomFactor();
+                        this.baseMarkerWidth = this.gridWidth * zoomFactor;
+                        this.baseMarkerHeight = this.gridHeight * zoomFactor;
                     },
                     repositionMarkers() {
                         this.baseMarkerList.forEach(markerData => {
-                            markerData?.element?.setDomLeft(this._VisMain?.ScreenPosFromWorldPosX(markerData.x * this.gridWidth));
-                            markerData?.element?.setDomTop(this._VisMain?.ScreenPosFromWorldPosY(markerData.y * this.gridHeight));
+                            markerData.element.setDomLeft(this._VisMain.ScreenPosFromWorldPosX(markerData.x * this.gridWidth));
+                            markerData.element.setDomTop(this._VisMain.ScreenPosFromWorldPosY(markerData.y * this.gridHeight));
                         });
                     },
                     resizeMarkers() {
@@ -192,10 +232,29 @@
                             markerData.element.setWidth(this.baseMarkerWidth);
                             markerData.element.setHeight(this.baseMarkerHeight);
                         });
+                    },
+                    slideFadeScaleOutAndRemove(widget) {
+                        const el = widget.getContentElement().getDomElement();
+                        if (!el) return;
+                        qx.bom.element.Animation.animate(el, {
+                            duration: 400,
+                            timing: "ease-out",
+                            keyFrames: {
+                                0: {
+                                    opacity: 1,
+                                    transform: "translateY(0px) scale(1)"
+                                },
+                                100: {
+                                    opacity: 0,
+                                    transform: "translateY(20px) scale(0.1)"
+                                }
+                            },
+                            onEnd: widget.getLayoutParent()?.remove(widget)
+                        });
                     }
                 }
             });
-            baseMoveHighlighter?.getInstance()?.initialize();
+            baseMoveHighlighter.getInstance().initialize();
         }
         const checkForInit = () => {
             const scriptName = 'CnCTA Base Move Highlighter';
