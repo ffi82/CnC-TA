@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CnCTA Base Scanner
 // @namespace   https://github.com/bloofi
-// @version	    2025.03.23
+// @version	    2025.04.22
 // @description bloofi's layout scanner
 // @author      bloofi
 // @contributor ffi82
@@ -10,7 +10,7 @@
 // @match       https://*.alliances.commandandconquer.com/*/index.aspx*
 // @grant       none
 // ==/UserScript==
-/* global qx, ClientLib, webfrontend, _ */
+/* global qx, ClientLib, webfrontend */
 "use strict";
 (function () {
     const BaseScannerScript = () => {
@@ -76,15 +76,19 @@
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     initialize: function () {
                         this.debouncedFilterResults = this._debounce(this.filterResults, 100);
-                        const baseScannerButton = new qx.ui.menu.Button("Base Scanner");
+                        const baseScannerButton = (new qx.ui.menu.Button).set({
+                            label: "Base Scanner",
+                            toolTip: (new qx.ui.tooltip.ToolTip(`Layout scanner<br>(by <a target="_blank" href="https://github.com/bloofi/CnC_TA" style="color:white">bloofi</a>)`)).set({ rich: true }),
+                            blockToolTip: false
+                        });
                         baseScannerButton.addListener('execute', this.onOpenMainWindow, this);
                         qx.core.Init.getApplication().getMenuBar().getScriptsButton().getMenu().add(baseScannerButton);
                     },
-                    _debounce: function (func, wait) {
+                    _debounce: function(func, wait) {
                         let timeout;
-                        return function (...args) {
+                        return function(...args) {
                             const context = this;
-                            const later = function () {
+                            const later = function() {
                                 timeout = null;
                                 func.apply(context, args);
                             };
@@ -192,7 +196,10 @@
                         this.filterScoreTibLabel = new qx.ui.basic.Label('20').set({
                             font: new qx.bom.Font(14),
                             width: 20,
-                            toolTipText: ['Score is calculated as follow :', ...Object.entries(scoreTibMap).map(s => `<b>${s[1]} points</b> for each ${s[0]}`), ].join('<br>'),
+                            toolTipText: [
+                                'Score is calculated as follow :',
+                                ...Object.entries(scoreTibMap).map(s => `<b>${s[1]} points</b> for each ${s[0]}`),
+                            ].join('<br>'),
                         });
                         rowTib.add(this.filterScoreTibLabel);
                         scanFilterScore.add(rowTib);
@@ -212,7 +219,10 @@
                         this.filterScorePowerLabel = new qx.ui.basic.Label('0').set({
                             font: new qx.bom.Font(14),
                             width: 20,
-                            toolTipText: ['Score is calculated as follow :', ...Object.entries(scorePowerMap).map(s => `<b>${s[1]} points</b> for each ${s[0]}`), ].join('<br>'),
+                            toolTipText: [
+                                'Score is calculated as follow :',
+                                ...Object.entries(scorePowerMap).map(s => `<b>${s[1]} points</b> for each ${s[0]}`),
+                            ].join('<br>'),
                         });
                         rowPower.add(this.filterScorePowerLabel);
                         scanFilterScore.add(rowPower);
@@ -248,39 +258,41 @@
                         }
                         this.filterFromSelect.removeAll();
                         this.filterFromSelect.add(new qx.ui.form.ListItem('All bases', null, 'all'));
-                        Object.values(ClientLib.Data.MainData.GetInstance().get_Cities().get_AllCities().d).forEach((c) => {
+                        Object.values(ClientLib.Data.MainData.GetInstance()
+                                      .get_Cities()
+                                      .get_AllCities().d).forEach((c) => {
                             this.filterFromSelect.add(new qx.ui.form.ListItem(c.get_Name(), null, c));
                         });
                     },
                     refreshLabel: function () {
                         const detail = [`Status : <b>${this.scanStatus}</b>`];
                         switch (this.scanStatus) {
-                        case 'READY':
-                            detail.push('Ready to scan', `<b>${Object.keys(this.storage.cache).length}</b> layouts in cache.`);
-                            break;
-                        case 'SCANNING':
-                            detail.push('Retrieving all reachable items...');
-                            break;
-                        case 'FETCHING':
-                            if (this.currentScanID) {
-                                const b = this.bases[this.currentScanID];
-                                const nbScanned = Object.values(this.bases).filter(r => ['FETCHED'].includes(r.status)).length;
+                            case 'READY':
+                                detail.push('Ready to scan', `<b>${Object.keys(this.storage.cache).length}</b> layouts in cache.`);
+                                break;
+                            case 'SCANNING':
+                                detail.push('Retrieving all reachable items...');
+                                break;
+                            case 'FETCHING':
+                                if (this.currentScanID) {
+                                    const b = this.bases[this.currentScanID];
+                                    const nbScanned = Object.values(this.bases).filter(r => ['FETCHED'].includes(r.status)).length;
+                                    const nbTotal = Object.values(this.bases).filter(r => r.status !== 'CANCELED').length;
+                                    const nbFiltered = Object.values(this.bases).filter(r => r.isFiltered).length;
+                                    const nbCanceled = Object.values(this.bases).filter(r => r.isCanceled).length;
+                                    detail.push(`Items : <b>${nbScanned}</b> / <b>${nbTotal}</b> (${nbTotal - nbFiltered - nbCanceled} displayed)`);
+                                    detail.push(`Currently scanning : <b>${b.type} ${b.x}:${b.y}</b> from <b>${b.from.get_Name()}</b> (${b.retry})`);
+                                }
+                                break;
+                            case 'END': {
                                 const nbTotal = Object.values(this.bases).filter(r => r.status !== 'CANCELED').length;
                                 const nbFiltered = Object.values(this.bases).filter(r => r.isFiltered).length;
-                                const nbCanceled = Object.values(this.bases).filter(r => r.isCanceled).length;
-                                detail.push(`Items : <b>${nbScanned}</b> / <b>${nbTotal}</b> (${nbTotal - nbFiltered - nbCanceled} displayed)`);
-                                detail.push(`Currently scanning : <b>${b.type} ${b.x}:${b.y}</b> from <b>${b.from.get_Name()}</b> (${b.retry})`);
+                                detail.push(`<b>${nbTotal}</b> item(s) scanned. <b>${nbTotal - nbFiltered}</b> item(s) displayed.`);
+                                break;
                             }
-                            break;
-                        case 'END': {
-                            const nbTotal = Object.values(this.bases).filter(r => r.status !== 'CANCELED').length;
-                            const nbFiltered = Object.values(this.bases).filter(r => r.isFiltered).length;
-                            detail.push(`<b>${nbTotal}</b> item(s) scanned. <b>${nbTotal - nbFiltered}</b> item(s) displayed.`);
-                            break;
-                        }
-                        default:
-                            detail.push('Unknown scan status');
-                            break;
+                            default:
+                                detail.push('Unknown scan status');
+                                break;
                         }
                         this.mainLabel.set({
                             value: detail.join('<br>'),
@@ -400,87 +412,122 @@
                         });
                         this.scanStatus = 'SCANNING';
                         this.refreshLabel();
-                        const filters = {
-                            scanCamps: this.filterCampCheckbox.getValue(),
-                            scanOutposts: this.filterOutpostCheckbox.getValue(),
-                            scanBases: this.filterBaseCheckbox.getValue(),
-                            scanPlayers: this.filterPlayerCheckbox.getValue(),
-                        };
-                        const from = this.filterFromSelect.getModelSelection().getItem(0);
-                        const bases = from === 'all' ? this.getOwnCitiesAsArray() : [from];
-                        bases.forEach(b => {
-                            ClientLib.Vis.VisMain.GetInstance().CenterGridPosition(b.get_PosX(), b.get_PosY());
-                            ClientLib.Vis.VisMain.GetInstance().Update();
-                            ClientLib.Vis.VisMain.GetInstance().ViewUpdate();
-                            const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
-                            for (let x = b.get_PosX() - 11; x < b.get_PosX() + 11; x++) {
-                                for (let y = b.get_PosY() - 11; y < b.get_PosY() + 11; y++) {
-                                    const obj = region.GetObjectFromPosition(x * region.get_GridWidth(), y * region.get_GridHeight());
-                                    if (obj && obj.get_Id) {
-                                        const distance = ClientLib.Base.Util.CalculateDistance(b.get_PosX(), b.get_PosY(), obj.get_RawX(), obj.get_RawY());
-                                        if (parseInt(distance) < 11) {
-                                            switch (obj.get_VisObjectType()) {
-                                            case ClientLib.Vis.VisObject.EObjectType.RegionNPCBase:
-                                                if (filters.scanBases && !this.scanIds.includes(obj.get_Id())) {
-                                                    this.addPanel({
-                                                        scanID: `${obj.get_Id()}`,
-                                                        from: b,
-                                                        type: 'BASE',
-                                                        faction: 'F',
-                                                        city: obj,
-                                                        x: obj.get_RawX(),
-                                                        y: obj.get_RawY(),
-                                                        retry: 0,
-                                                        status: 'WAITING',
-                                                        isCached: false,
-                                                    });
-                                                    this.scanIds.push(obj.get_Id());
+                        const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
+                        this.waitForMapAreaResize(region).then(() => {
+                            const filters = {
+                                scanCamps: this.filterCampCheckbox.getValue(),
+                                scanOutposts: this.filterOutpostCheckbox.getValue(),
+                                scanBases: this.filterBaseCheckbox.getValue(),
+                                scanPlayers: this.filterPlayerCheckbox.getValue(),
+                            };
+                            const from = this.filterFromSelect.getModelSelection().getItem(0);
+                            const bases = from === 'all' ? Object.values(ClientLib.Data.MainData.GetInstance().get_Cities().get_AllCities().d) : [from];
+                            const maxAttackDistance = ClientLib.Data.MainData.GetInstance().get_Server().get_MaxAttackDistance();
+                            bases.forEach(b => {
+                                ClientLib.Vis.VisMain.GetInstance().CenterGridPosition(b.get_PosX(), b.get_PosY());
+                                ClientLib.Vis.VisMain.GetInstance().Update();
+                                ClientLib.Vis.VisMain.GetInstance().ViewUpdate();
+                                //qx.core.Init.getApplication().getPlayArea().setView(ClientLib.Data.PlayerAreaViewMode.pavmNone, b.get_Id(), 0, 0);
+                                for (let x = b.get_PosX() - 11; x < b.get_PosX() + 11; x++) {
+                                    for (let y = b.get_PosY() - 11; y < b.get_PosY() + 11; y++) {
+                                        const obj = region.GetObjectFromPosition(x * region.get_GridWidth(), y * region.get_GridHeight());
+                                        if (obj && obj.get_Id) {
+                                            const distance = ClientLib.Base.Util.CalculateDistance(b.get_PosX(), b.get_PosY(), obj.get_RawX(), obj.get_RawY());
+                                            if (distance <= maxAttackDistance) {
+                                                switch (obj.get_VisObjectType()) {
+                                                    case ClientLib.Vis.VisObject.EObjectType.RegionNPCBase:
+                                                        if (filters.scanBases && !this.scanIds.includes(obj.get_Id())) {
+                                                            this.addPanel({
+                                                                scanID: `${obj.get_Id()}`,
+                                                                from: b,
+                                                                type: 'BASE',
+                                                                faction: 'F',
+                                                                city: obj,
+                                                                x: obj.get_RawX(),
+                                                                y: obj.get_RawY(),
+                                                                retry: 0,
+                                                                status: 'WAITING',
+                                                                isCached: false,
+                                                            });
+                                                            this.scanIds.push(obj.get_Id());
+                                                        }
+                                                        break;
+                                                    case ClientLib.Vis.VisObject.EObjectType.RegionNPCCamp:
+                                                        if ((filters.scanOutposts || filters.scanCamps) && !this.scanIds.includes(obj.get_Id())) {
+                                                            this.addPanel({
+                                                                scanID: `${obj.get_Id()}`,
+                                                                from: b,
+                                                                type: 'CAMP',
+                                                                faction: 'F',
+                                                                city: obj,
+                                                                x: obj.get_RawX(),
+                                                                y: obj.get_RawY(),
+                                                                retry: 0,
+                                                                status: 'WAITING',
+                                                                isCached: false,
+                                                            });
+                                                            this.scanIds.push(obj.get_Id());
+                                                        }
+                                                        break;
+                                                    case ClientLib.Vis.VisObject.EObjectType.RegionCityType:
+                                                        if (filters.scanPlayers && !this.scanIds.includes(obj.get_Id())) {
+                                                            this.addPanel({
+                                                                scanID: `${obj.get_Id()}`,
+                                                                from: b,
+                                                                type: 'PLAYER',
+                                                                faction: obj.get_Faction ? obj.get_Faction() : '?',
+                                                                city: obj,
+                                                                x: obj.get_RawX(),
+                                                                y: obj.get_RawY(),
+                                                                retry: 0,
+                                                                status: 'WAITING',
+                                                                isCached: false,
+                                                            });
+                                                            this.scanIds.push(obj.get_Id());
+                                                        }
+                                                        break;
+                                                    default:
+                                                        break;
                                                 }
-                                                break;
-                                            case ClientLib.Vis.VisObject.EObjectType.RegionNPCCamp:
-                                                if ((filters.scanOutposts || filters.scanCamps) && !this.scanIds.includes(obj.get_Id())) {
-                                                    this.addPanel({
-                                                        scanID: `${obj.get_Id()}`,
-                                                        from: b,
-                                                        type: 'CAMP',
-                                                        faction: 'F',
-                                                        city: obj,
-                                                        x: obj.get_RawX(),
-                                                        y: obj.get_RawY(),
-                                                        retry: 0,
-                                                        status: 'WAITING',
-                                                        isCached: false,
-                                                    });
-                                                    this.scanIds.push(obj.get_Id());
-                                                }
-                                                break;
-                                            case ClientLib.Vis.VisObject.EObjectType.RegionCityType:
-                                                if (filters.scanPlayers && !this.scanIds.includes(obj.get_Id())) {
-                                                    this.addPanel({
-                                                        scanID: `${obj.get_Id()}`,
-                                                        from: b,
-                                                        type: 'PLAYER',
-                                                        faction: obj.get_Faction ? obj.get_Faction() : '?',
-                                                        city: obj,
-                                                        x: obj.get_RawX(),
-                                                        y: obj.get_RawY(),
-                                                        retry: 0,
-                                                        status: 'WAITING',
-                                                        isCached: false,
-                                                    });
-                                                    this.scanIds.push(obj.get_Id());
-                                                }
-                                                break;
-                                            default:
-                                                break;
                                             }
                                         }
                                     }
                                 }
-                            }
+                            });
+                            this.scanStatus = 'FETCHING';
+                            this.checkAndFetch();
                         });
-                        this.scanStatus = 'FETCHING';
-                        this.checkAndFetch();
+                    },
+                    waitForMapAreaResize : function (region) {
+                        //const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
+                        const cfg = ClientLib.Config.Main;
+                        const server = ClientLib.Data.MainData.GetInstance().get_Server();
+                        const maxAttackDistance = server.get_MaxAttackDistance();
+                        const worldWidth = server.get_WorldWidth();
+                        const worldHeight = server.get_WorldHeight();
+                        const fullMapWidth = region.get_MaxXPosition(); // 102400 on 800 fields worlds
+                        const fullMapHeight = region.get_MaxYPosition(); // 76800
+                        const viewableWidth = window.innerWidth;
+                        const viewableHeight = window.innerHeight;
+                        const zoomFactorWidth = Math.ceil(viewableWidth / fullMapWidth * 1000) / 1000;
+                        const zoomFactorHeight = Math.ceil(viewableHeight / fullMapHeight * 1000) / 1000;
+                        const zX = viewableWidth / (fullMapWidth / worldWidth * maxAttackDistance * 2);//const fieldSizeX = fullMapWidth / worldWidth;
+                        const zY = viewableHeight / (fullMapHeight / worldHeight * maxAttackDistance * 2);
+                        const newMinZoomFactor = Math.max(zoomFactorWidth, zoomFactorHeight);// lower then this and region.get_VisAreaComplete() won't return "true" due to the black area
+                        const neededZoomFactor = Math.min(zX, zY); // to be able to view the entire attack range of your base
+                        cfg.GetInstance().SetConfig(cfg.CONFIG_VIS_REGION_MINZOOM, false); // Uncheck 'Allow max zoom out' in game video options
+                        cfg.GetInstance().SaveToDB(); //Save settings
+                        const getMinZoomMethod = region.get_MinZoomFactor.toString().match(/\$I\.[A-Z]{6}\.([A-Z]{6});?}/)?.[1]; // Extract the `getMinZoomFactor` method dynamically.
+                        ClientLib.Vis.Region.Region[getMinZoomMethod] = newMinZoomFactor; // Modify the MinZoomFactor to be able to zoom out further
+                        region.set_ZoomFactor(neededZoomFactor); // Zoom out the region view to view the entire attack range for each own base
+                        return new Promise((resolve) => {
+                            const checkResizeComplete = setInterval(() => {
+                                if (region.get_VisAreaComplete()) {
+                                    clearInterval(checkResizeComplete);
+                                    resolve();
+                                }
+                            }, 100);
+                        });
                     },
                     addPanel: function (sr) {
                         if (!this.bases[sr.scanID]) {
@@ -500,6 +547,7 @@
                                 color: sr.isCached ? 'black' : 'white',
                                 style: 'solid',
                                 width: 1,
+                                radius: 4,
                             }),
                         });
                         const header = new qx.ui.container.Composite(new qx.ui.layout.HBox(5)).set({
@@ -519,107 +567,107 @@
                             backgroundColor: '#555555',
                         });
                         switch (sr.status) {
-                        case 'FETCHED': {
-                            const scores = new qx.ui.container.Composite(new qx.ui.layout.HBox());
-                            scores.add(this.createImage(icons.tib));
-                            scores.add(new qx.ui.basic.Label().set({
-                                value: `${sr.tibScore}`,
-                                font: new qx.bom.Font(10),
-                                textColor: 'black',
-                            }));
-                            scores.add(this.createImage(icons.power));
-                            scores.add(new qx.ui.basic.Label().set({
-                                value: `${sr.powerScore}`,
-                                font: new qx.bom.Font(10),
-                                textColor: 'black',
-                            }));
-                            header.add(scores);
-                            for (let y = 0; y < 8; y++) {
-                                for (let x = 0; x < 9; x++) {
-                                    const cell = new qx.ui.core.Widget();
-                                    cell.set({
+                            case 'FETCHED': {
+                                const scores = new qx.ui.container.Composite(new qx.ui.layout.HBox());
+                                scores.add(this.createImage(icons.tib));
+                                scores.add(new qx.ui.basic.Label().set({
+                                    value: `${sr.tibScore}`,
+                                    font: new qx.bom.Font(10),
+                                    textColor: 'black',
+                                }));
+                                scores.add(this.createImage(icons.power));
+                                scores.add(new qx.ui.basic.Label().set({
+                                    value: `${sr.powerScore}`,
+                                    font: new qx.bom.Font(10),
+                                    textColor: 'black',
+                                }));
+                                header.add(scores);
+                                for (let y = 0; y < 8; y++) {
+                                    for (let x = 0; x < 9; x++) {
+                                        const cell = new qx.ui.core.Widget();
+                                        cell.set({
+                                            width: 10,
+                                            height: 10,
+                                        });
+                                        switch (sr.layout[y][x]) {
+                                            case 't':
+                                                cell.set({
+                                                    backgroundColor: 'green'
+                                                });
+                                                break;
+                                            case 'c':
+                                                cell.set({
+                                                    backgroundColor: 'blue'
+                                                });
+                                                break;
+                                            default:
+                                                cell.set({
+                                                    backgroundColor: '#ffdea3'
+                                                });
+                                                break;
+                                        }
+                                        grid.add(cell, {
+                                            row: y,
+                                            column: x
+                                        });
+                                    }
+                                }
+                                break;
+                            }
+                            case 'WAITING':
+                            case 'FETCHING':
+                            case 'CANCELED':
+                            default: {
+                                const borderColor = sr.status === 'CANCELED' ? 'red' : 'gray';
+                                for (let y = 0; y < 8; y++) {
+                                    grid.add(new qx.ui.core.Widget().set({
                                         width: 10,
                                         height: 10,
-                                    });
-                                    switch (sr.layout[y][x]) {
-                                    case 't':
-                                        cell.set({
-                                            backgroundColor: 'green'
-                                        });
-                                        break;
-                                    case 'c':
-                                        cell.set({
-                                            backgroundColor: 'blue'
-                                        });
-                                        break;
-                                    default:
-                                        cell.set({
-                                            backgroundColor: '#ffdea3'
-                                        });
-                                        break;
-                                    }
-                                    grid.add(cell, {
+                                        backgroundColor: borderColor
+                                    }), {
                                         row: y,
+                                        column: 0
+                                    });
+                                    grid.add(new qx.ui.core.Widget().set({
+                                        width: 10,
+                                        height: 10,
+                                        backgroundColor: borderColor
+                                    }), {
+                                        row: y,
+                                        column: 8
+                                    });
+                                }
+                                for (let x = 1; x < 8; x++) {
+                                    grid.add(new qx.ui.core.Widget().set({
+                                        width: 10,
+                                        height: 10,
+                                        backgroundColor: borderColor
+                                    }), {
+                                        row: 0,
+                                        column: x
+                                    });
+                                    grid.add(new qx.ui.core.Widget().set({
+                                        width: 10,
+                                        height: 10,
+                                        backgroundColor: borderColor
+                                    }), {
+                                        row: 7,
                                         column: x
                                     });
                                 }
+                                grid.add(new qx.ui.basic.Label().set({
+                                    value: [`${sr.status}`, `${sr.type}`].join('<br>'),
+                                    rich: true,
+                                    textColor: sr.status === 'CANCELED' ? 'red' : 'black',
+                                    textAlign: 'center',
+                                }), {
+                                    row: 1,
+                                    column: 1,
+                                    rowSpan: 6,
+                                    colSpan: 7
+                                });
+                                break;
                             }
-                            break;
-                        }
-                        case 'WAITING':
-                        case 'FETCHING':
-                        case 'CANCELED':
-                        default: {
-                            const borderColor = sr.status === 'CANCELED' ? 'red' : 'gray';
-                            for (let y = 0; y < 8; y++) {
-                                grid.add(new qx.ui.core.Widget().set({
-                                    width: 10,
-                                    height: 10,
-                                    backgroundColor: borderColor
-                                }), {
-                                    row: y,
-                                    column: 0
-                                });
-                                grid.add(new qx.ui.core.Widget().set({
-                                    width: 10,
-                                    height: 10,
-                                    backgroundColor: borderColor
-                                }), {
-                                    row: y,
-                                    column: 8
-                                });
-                            }
-                            for (let x = 1; x < 8; x++) {
-                                grid.add(new qx.ui.core.Widget().set({
-                                    width: 10,
-                                    height: 10,
-                                    backgroundColor: borderColor
-                                }), {
-                                    row: 0,
-                                    column: x
-                                });
-                                grid.add(new qx.ui.core.Widget().set({
-                                    width: 10,
-                                    height: 10,
-                                    backgroundColor: borderColor
-                                }), {
-                                    row: 7,
-                                    column: x
-                                });
-                            }
-                            grid.add(new qx.ui.basic.Label().set({
-                                value: [`${sr.status}`, `${sr.type}`].join('<br>'),
-                                rich: true,
-                                textColor: sr.status === 'CANCELED' ? 'red' : 'black',
-                                textAlign: 'center',
-                            }), {
-                                row: 1,
-                                column: 1,
-                                rowSpan: 6,
-                                colSpan: 7
-                            });
-                            break;
-                        }
                         }
                         res.add(grid, {
                             flex: 1
@@ -636,7 +684,7 @@
                             maxWidth: 16,
                             maxHeight: 16,
                         });
-                        bTarget.addListener('execute', this.centerTo(sr.x, sr.y), this);
+                        bTarget.addListener('execute', () => qx.core.Init.getApplication().getPlayArea().setView(ClientLib.Data.PlayerAreaViewMode.pavmCombatSetupBase, sr.scanID, 0, 0), this);
                         footer.add(bTarget);
                         if (sr.status === 'FETCHED') {
                             const bCnclv = new qx.ui.form.Button('', icons.cnclv).set({
@@ -676,65 +724,67 @@
                                 this.refreshLabel();
                                 const currentScan = this.bases[this.currentScanID];
                                 switch (currentScan.status) {
-                                case 'WAITING':
-                                    this.bases[this.currentScanID] = currentScan;
-                                    if (this.storage.cache[`${this.currentWid}-${currentScan.x}:${currentScan.y}`]) {
-                                        currentScan.layout = this.cncoptToLayout(this.storage.cache[`${this.currentWid}-${currentScan.x}:${currentScan.y}`]);
-                                        currentScan.isCached = true;
-                                        currentScan.status = 'FETCHED';
-                                    } else {
-                                        ClientLib.Data.MainData.GetInstance().get_Cities().set_CurrentCityId(currentScan.city.get_Id());
-                                        ClientLib.Net.CommunicationManager.GetInstance().UserAction();
-                                        currentScan.status = 'FETCHING';
-                                    }
-                                    this.checkAndFetch();
-                                    break;
-                                case 'FETCHING': {
-                                    const data = ClientLib.Data.MainData.GetInstance().get_Cities().GetCity(currentScan.city.get_Id());
-                                    if (data && data.get_OwnerId()) {
-                                        currentScan.layout = this.getCityLayout(data);
-                                        currentScan.status = 'FETCHED';
-                                        this.checkAndFetch();
-                                    } else {
-                                        if (currentScan.retry > scanMaxRetries) {
-                                            currentScan.status = 'CANCELED';
-                                            currentScan.panel.removeAll();
-                                            // currentScan.panel.add(this.getGridLayout(currentScan), { edge: 'center' });
-                                            this.bases[this.currentScanID] = currentScan;
-                                            this.findNext();
+                                    case 'WAITING':
+                                        this.bases[this.currentScanID] = currentScan;
+                                        if (this.storage.cache[`${this.currentWid}-${currentScan.x}:${currentScan.y}`]) {
+                                            currentScan.layout = this.cncoptToLayout(this.storage.cache[`${this.currentWid}-${currentScan.x}:${currentScan.y}`]);
+                                            currentScan.isCached = true;
+                                            currentScan.status = 'FETCHED';
                                         } else {
-                                            currentScan.retry++;
-                                            this.bases[this.currentScanID] = currentScan;
-                                            setTimeout(() => {
-                                                this.checkAndFetch();
-                                                ClientLib.Net.CommunicationManager.GetInstance().$Poll();
-                                            }, 20);
+                                            ClientLib.Data.MainData.GetInstance().get_Cities().set_CurrentCityId(currentScan.city.get_Id());
+                                            ClientLib.Net.CommunicationManager.GetInstance().UserAction();
+                                            currentScan.status = 'FETCHING';
                                         }
+                                        this.checkAndFetch();
+                                        break;
+                                    case 'FETCHING': {
+                                        const data = ClientLib.Data.MainData.GetInstance().get_Cities().GetCity(currentScan.city.get_Id());
+                                        if (data && data.get_OwnerId()) {
+                                            currentScan.layout = this.getCityLayout(data);
+                                            currentScan.status = 'FETCHED';
+                                            this.checkAndFetch();
+                                        } else {
+                                            if (currentScan.retry > scanMaxRetries) {
+                                                currentScan.status = 'CANCELED';
+                                                currentScan.panel.removeAll();
+                                                // currentScan.panel.add(this.getGridLayout(currentScan), { edge: 'center' });
+                                                this.bases[this.currentScanID] = currentScan;
+                                                this.findNext();
+                                            } else {
+                                                currentScan.retry++;
+                                                this.bases[this.currentScanID] = currentScan;
+                                                setTimeout(() => {
+                                                    this.checkAndFetch();
+                                                    ClientLib.Net.CommunicationManager.GetInstance().$Poll();
+                                                }, 20);
+                                            }
+                                        }
+                                        break;
                                     }
-                                    break;
-                                }
-                                case 'FETCHED': {
-                                    const scores = this.computeScores(currentScan.layout);
-                                    currentScan.tibScore = scores[0];
-                                    currentScan.powerScore = scores[1];
-                                    currentScan.isFiltered = currentScan.tibScore < this.filterScoreTibSlider.getValue() || currentScan.powerScore < this.filterScorePowerSlider.getValue();
-                                    currentScan.panel.removeAll();
-                                    if (!currentScan.isFiltered && !currentScan.isCanceled) {
-                                        currentScan.panel.add(this.getGridLayout(currentScan), {
-                                            edge: 'center'
-                                        });
+                                    case 'FETCHED': {
+                                        const scores = this.computeScores(currentScan.layout);
+                                        currentScan.tibScore = scores[0];
+                                        currentScan.powerScore = scores[1];
+                                        currentScan.isFiltered =
+                                            currentScan.tibScore < this.filterScoreTibSlider.getValue() ||
+                                            currentScan.powerScore < this.filterScorePowerSlider.getValue();
+                                        currentScan.panel.removeAll();
+                                        if (!currentScan.isFiltered && !currentScan.isCanceled) {
+                                            currentScan.panel.add(this.getGridLayout(currentScan), {
+                                                edge: 'center'
+                                            });
+                                        }
+                                        this.bases[this.currentScanID] = currentScan;
+                                        this.storage.cache[`${this.currentWid}-${currentScan.x}:${currentScan.y}`] = this.layoutToCncopt(currentScan.layout);
+                                        this.flushStorage();
+                                        this.findNext();
+                                        break;
                                     }
-                                    this.bases[this.currentScanID] = currentScan;
-                                    this.storage.cache[`${this.currentWid}-${currentScan.x}:${currentScan.y}`] = this.layoutToCncopt(currentScan.layout);
-                                    this.flushStorage();
-                                    this.findNext();
-                                    break;
-                                }
-                                case 'CANCELED':
-                                    this.findNext();
-                                    break;
-                                default:
-                                    break;
+                                    case 'CANCELED':
+                                        this.findNext();
+                                        break;
+                                    default:
+                                        break;
                                 }
                             } else {
                                 this.findNext();
@@ -750,9 +800,6 @@
                             this.stopScan();
                         }
                     },
-                    getOwnCitiesAsArray: function () {
-                        return Object.values(ClientLib.Data.MainData.GetInstance().get_Cities().get_AllCities().d);
-                    },
                     createImage: function (icon, w = 16, h = 16) {
                         const image = new qx.ui.basic.Image(icon);
                         image.setScale(true);
@@ -767,27 +814,27 @@
                         for (let y = 0; y < 20; y++) {
                             for (let x = 0; x < 9; x++) {
                                 switch (y > 16 ? 0 : city.GetResourceType(x, y)) {
-                                case 1: // Crystal
-                                    res[y][x] = 'c';
-                                    break;
-                                case 2: // Tiberium
-                                    res[y][x] = 't';
-                                    break;
-                                case 4: // Woods
-                                    res[y][x] = 'j';
-                                    break;
-                                case 5: // Scrub
-                                    res[y][x] = 'h';
-                                    break;
-                                case 6: // Oil
-                                    res[y][x] = 'l';
-                                    break;
-                                case 7: // Swamp
-                                    res[y][x] = 'k';
-                                    break;
-                                default:
-                                    res[y][x] = '.';
-                                    break;
+                                    case 1: // Crystal
+                                        res[y][x] = 'c';
+                                        break;
+                                    case 2: // Tiberium
+                                        res[y][x] = 't';
+                                        break;
+                                    case 4: // Woods
+                                        res[y][x] = 'j';
+                                        break;
+                                    case 5: // Scrub
+                                        res[y][x] = 'h';
+                                        break;
+                                    case 6: // Oil
+                                        res[y][x] = 'l';
+                                        break;
+                                    case 7: // Swamp
+                                        res[y][x] = 'k';
+                                        break;
+                                    default:
+                                        res[y][x] = '.';
+                                        break;
                                 }
                             }
                         }
@@ -799,7 +846,8 @@
                         return `${res}${includeOff ? emptyOff : ''}`;
                     },
                     layoutToFullCncopt: function (baseFaction, offFaction, name, layout) {
-                        const res = ['3',
+                        const res = [
+                            '3',
                             baseFaction,
                             offFaction,
                             encodeURI(name),
@@ -816,13 +864,6 @@
                         }, Array.from({
                             length: 16
                         }, () => []));
-                    },
-                    centerTo: function (x, y) {
-                        return function () {
-                            ClientLib.Vis.VisMain.GetInstance().CenterGridPosition(x, y);
-                            ClientLib.Vis.VisMain.GetInstance().Update();
-                            ClientLib.Vis.VisMain.GetInstance().ViewUpdate();
-                        };
                     },
                     openCncLV: function (sr) {
                         return function () {
