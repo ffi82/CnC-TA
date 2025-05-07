@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnCTA Base Move Highlighter
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025.05.05
+// @version      2025.05.07
 // @description  Highlights viable targets in the visible area on base move: shows CP cost label for bases (player and NPC) in attack range, shows support icon if selected city has any for player bases in support range, shows tooltip with number of NPC bases in attack range and details plus waves (waves on forgotten attacks worlds only).
 // @author       Bloofi
 // @contributor  petui, NetquiK, ffi82
@@ -46,7 +46,7 @@
                         checkboxHideSupportIcon: new qx.ui.form.CheckBox("Hide support icon").set({ value: false, textColor: "white" }),
                         checkboxignoreLowLevelNpc: new qx.ui.form.CheckBox("Hide NPC bases < level:").set({ value: false, textColor: "white", toolTipText: "Disables wave count!" }),
                         ignoreLowLevelNpcSpinner: new qx.ui.form.Spinner(ClientLib.Data.MainData.GetInstance().get_Server().get_NpcLevelAtBorder() - 2, 20, ClientLib.Data.MainData.GetInstance().get_Server().get_MaxCenterLevel() + 1).set({ width: 50, visibility: "excluded" }),
-                        checkboxAutoZoom: new qx.ui.form.CheckBox("Auto Zoom").set({ value: true, textColor: "white", toolTipText: "Adjusts the zoom factor to show all targets in move (20.5) + attack (10.5) range.<br>(shows at least 62 fields width or height)" }),
+                        checkboxAutoZoom: new qx.ui.form.CheckBox("Auto Zoom").set({ value: true, textColor: "white", toolTipText: "Adjusts the zoom factor to show all targets in move (20.5) + attack (10.5) range.<br>(shows at least 62 fields width or height)", visibility: "excluded" }),
                     },
                     initialize() {
                         const moveTool = this._VisMain.GetMouseTool(ClientLib.Vis.MouseTool.EMouseTool.MoveBase);
@@ -67,29 +67,20 @@
                         this._App.getBackgroundArea().add(this.configPanel.container, { left: 128, top: 30 })
                     },
                     baseMoveToolActivate() {
-                        if (this.configPanel.checkboxAutoZoom.getValue()) {
-                            this._ConfigMain.SetConfig(ClientLib.Config.Main.CONFIG_VIS_REGION_MINZOOM, false);
-                            this._ConfigMain.SaveToDB();
-                            const newMinZoomFactor = Math.max(window.innerWidth / this.region.get_MaxXPosition(), window.innerHeight / this.region.get_MaxYPosition());
-                            const neededZoomFactor = Math.min( window.innerWidth / this.region.get_MaxXPosition() * this.server.get_WorldWidth() / (this.server.get_MaxBaseMoveDistance() + this.server.get_MaxAttackDistance()) / 2, window.innerHeight / this.region.get_MaxYPosition() * this.server.get_WorldHeight() / (this.server.get_MaxBaseMoveDistance() + this.server.get_MaxAttackDistance()) / 2); // Auto zoom (enough to view move+attack range fields in any direction) to the minimum safe factor in order to show all targets... might acceleerate one's cooler :P)
-                            const getMinZoomMethod = this.region.get_MinZoomFactor.toString().match(/\$I\.[A-Z]{6}\.([A-Z]{6});?}/)?.[1];
-                            ClientLib.Vis.Region.Region[getMinZoomMethod] = newMinZoomFactor;
-                            this.zoomFactor = this.region.get_ZoomFactor();
-                            this.region.set_ZoomFactor(neededZoomFactor);
-                        }
+                        if (this._MainData.get_Cities().get_CurrentCity().IsOwnBase()) {
+                            this.configPanel.checkboxAutoZoom.setVisibility("visible");
+                            if (this.configPanel.checkboxAutoZoom.getValue()) {
+                                this.zoomFactor = this.region.get_ZoomFactor();
+                                this.waitForMapAreaResize(this.region);
+                            }
+                        } else this.configPanel.checkboxAutoZoom.setVisibility("excluded");
                         this.getRegionZoomFactorAndSetMarkerSize();
                         this.configPanel.container.setVisibility("visible");
                         webfrontend.phe.cnc.Util.attachNetEvent(this.region, "PositionChange", ClientLib.Vis.PositionChange, this, this.repositionMarkers);
                         webfrontend.phe.cnc.Util.attachNetEvent(this.region, "ZoomFactorChange", ClientLib.Vis.ZoomFactorChange, this, this.resizeMarkers)
                     },
                     baseMoveToolDeactivate() {
-                        if (this.configPanel.checkboxAutoZoom.getValue()) {
-                            this.region.set_ZoomFactor(this.zoomFactor);
-                            const currentOwnCity = this._MainData.get_Cities().get_CurrentOwnCity();
-                            this._VisMain.CenterGridPosition(currentOwnCity.get_X(), currentOwnCity.get_Y());
-                            this._VisMain.Update();
-                            this._VisMain.ViewUpdate();
-                        }
+                        this.region.set_ZoomFactor(this.zoomFactor);
                         this.configPanel.container.setVisibility("excluded");
                         webfrontend.phe.cnc.Util.detachNetEvent(this.region, "PositionChange", ClientLib.Vis.PositionChange, this, this.repositionMarkers);
                         webfrontend.phe.cnc.Util.detachNetEvent(this.region, "ZoomFactorChange", ClientLib.Vis.ZoomFactorChange, this, this.resizeMarkers);
@@ -99,6 +90,21 @@
                         this.slideFadeScaleOutAndRemove(this.wavyPanel.container);
                         this.removeMarkers();
                         this.findBases(startX, startY)
+                    },
+                    waitForMapAreaResize(region) {
+                        this._ConfigMain.SetConfig(ClientLib.Config.Main.CONFIG_VIS_REGION_MINZOOM, false);
+                        this._ConfigMain.SaveToDB();
+                        const newMinZoomFactor = Math.max(window.innerWidth / region.get_MaxXPosition(), window.innerHeight / region.get_MaxYPosition());
+                        ClientLib.Vis.Region.Region[region.get_MinZoomFactor.toString().match(/\$I\.[A-Z]{6}\.([A-Z]{6});?}/)?.[1]] = newMinZoomFactor;
+                        region.set_ZoomFactor(Math.min( window.innerWidth / region.get_MaxXPosition() * this.server.get_WorldWidth() / (this.server.get_MaxBaseMoveDistance() + this.server.get_MaxAttackDistance()) / 2, window.innerHeight / region.get_MaxYPosition() * this.server.get_WorldHeight() / (this.server.get_MaxBaseMoveDistance() + this.server.get_MaxAttackDistance()) / 2));
+                        return new Promise((resolve) => {
+                            const checkResizeComplete = setInterval(() => {
+                                if (region.get_VisAreaComplete()) {
+                                    clearInterval(checkResizeComplete);
+                                    resolve();
+                                }
+                            }, 10);
+                        });
                     },
                     findBases(startX, startY) {
                         const selectedCity = this._VisMain.get_SelectedObject();
