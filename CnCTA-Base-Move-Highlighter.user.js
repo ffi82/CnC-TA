@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnCTA Base Move Highlighter
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025.05.07
+// @version      2025.05.08
 // @description  Highlights viable targets in the visible area on base move: shows CP cost label for bases (player and NPC) in attack range, shows support icon if selected city has any for player bases in support range, shows tooltip with number of NPC bases in attack range and details plus waves (waves on forgotten attacks worlds only).
 // @author       Bloofi
 // @contributor  petui, NetquiK, ffi82
@@ -45,8 +45,8 @@
                         checkboxHideNonAllies: new qx.ui.form.CheckBox("Hide non alliance bases").set({ value: false, textColor: "white" }),
                         checkboxHideSupportIcon: new qx.ui.form.CheckBox("Hide support icon").set({ value: false, textColor: "white" }),
                         checkboxignoreLowLevelNpc: new qx.ui.form.CheckBox("Hide NPC bases < level:").set({ value: false, textColor: "white", toolTipText: "Disables wave count!" }),
-                        ignoreLowLevelNpcSpinner: new qx.ui.form.Spinner(ClientLib.Data.MainData.GetInstance().get_Server().get_NpcLevelAtBorder() - 2, 20, ClientLib.Data.MainData.GetInstance().get_Server().get_MaxCenterLevel() + 1).set({ width: 50, visibility: "excluded" }),
-                        checkboxAutoZoom: new qx.ui.form.CheckBox("Auto Zoom").set({ value: true, textColor: "white", toolTipText: "Adjusts the zoom factor to show all targets in move (20.5) + attack (10.5) range.<br>(shows at least 62 fields width or height)", visibility: "excluded" }),
+                        ignoreLowLevelNpcSpinner: new qx.ui.form.Spinner(ClientLib.Data.MainData.GetInstance().get_Server().get_NpcLevelAtBorder() - 2, 20, ClientLib.Data.MainData.GetInstance().get_Server().get_MaxCenterLevel() + 1).set({ width: 50}),
+                        checkboxAutoZoom: new qx.ui.form.CheckBox("Auto Zoom").set({ value: true, textColor: "white", toolTipText: "Adjusts the zoom factor to show all targets in move (20.5) + attack (10.5) range.<br>(shows at least 62 fields width or height)", visibility: "visible" }),
                     },
                     initialize() {
                         const moveTool = this._VisMain.GetMouseTool(ClientLib.Vis.MouseTool.EMouseTool.MoveBase);
@@ -67,24 +67,22 @@
                         this._App.getBackgroundArea().add(this.configPanel.container, { left: 128, top: 30 })
                     },
                     baseMoveToolActivate() {
-                        if (this._MainData.get_Cities().get_CurrentCity().IsOwnBase()) {
-                            this.configPanel.checkboxAutoZoom.setVisibility("visible");
-                            if (this.configPanel.checkboxAutoZoom.getValue()) {
-                                this.zoomFactor = this.region.get_ZoomFactor();
-                                this.waitForMapAreaResize(this.region);
-                            }
-                        } else this.configPanel.checkboxAutoZoom.setVisibility("excluded");
+                        if (this.configPanel.checkboxAutoZoom.getValue()) {
+                            this.zoomFactor = this.region.get_ZoomFactor();
+                            this.waitForMapAreaResize(this.region);
+                        }
                         this.getRegionZoomFactorAndSetMarkerSize();
+                        this.repositionMarkers();
                         this.configPanel.container.setVisibility("visible");
                         webfrontend.phe.cnc.Util.attachNetEvent(this.region, "PositionChange", ClientLib.Vis.PositionChange, this, this.repositionMarkers);
-                        webfrontend.phe.cnc.Util.attachNetEvent(this.region, "ZoomFactorChange", ClientLib.Vis.ZoomFactorChange, this, this.resizeMarkers)
+                        webfrontend.phe.cnc.Util.attachNetEvent(this.region, "ZoomFactorChange", ClientLib.Vis.ZoomFactorChange, this, this.resizeMarkers);
                     },
                     baseMoveToolDeactivate() {
-                        this.region.set_ZoomFactor(this.zoomFactor);
+                        if (this.zoomFactor != null) this.region.set_ZoomFactor(this.zoomFactor);
+                        this.removeMarkers();
                         this.configPanel.container.setVisibility("excluded");
                         webfrontend.phe.cnc.Util.detachNetEvent(this.region, "PositionChange", ClientLib.Vis.PositionChange, this, this.repositionMarkers);
                         webfrontend.phe.cnc.Util.detachNetEvent(this.region, "ZoomFactorChange", ClientLib.Vis.ZoomFactorChange, this, this.resizeMarkers);
-                        this.removeMarkers()
                     },
                     baseMoveToolCellChange(startX, startY) {
                         this.slideFadeScaleOutAndRemove(this.wavyPanel.container);
@@ -92,18 +90,19 @@
                         this.findBases(startX, startY)
                     },
                     waitForMapAreaResize(region) {
-                        this._ConfigMain.SetConfig(ClientLib.Config.Main.CONFIG_VIS_REGION_MINZOOM, false);
-                        this._ConfigMain.SaveToDB();
-                        const newMinZoomFactor = Math.max(window.innerWidth / region.get_MaxXPosition(), window.innerHeight / region.get_MaxYPosition());
-                        ClientLib.Vis.Region.Region[region.get_MinZoomFactor.toString().match(/\$I\.[A-Z]{6}\.([A-Z]{6});?}/)?.[1]] = newMinZoomFactor;
-                        region.set_ZoomFactor(Math.min( window.innerWidth / region.get_MaxXPosition() * this.server.get_WorldWidth() / (this.server.get_MaxBaseMoveDistance() + this.server.get_MaxAttackDistance()) / 2, window.innerHeight / region.get_MaxYPosition() * this.server.get_WorldHeight() / (this.server.get_MaxBaseMoveDistance() + this.server.get_MaxAttackDistance()) / 2));
+                        this._ConfigMain.SetConfig(ClientLib.Config.Main.CONFIG_VIS_REGION_MINZOOM, false); // Uncheck the "Allow max zoom out" option in game Video settings
+                        this._ConfigMain.SaveToDB(); // Save settings
                         return new Promise((resolve) => {
                             const checkResizeComplete = setInterval(() => {
+                                if (!this._newMinZoomFactor) this._newMinZoomFactor = Math.max(window.innerWidth / region.get_MaxXPosition(), window.innerHeight / region.get_MaxYPosition()); // Calculate and chache the needed zoom factor for a full map view without black borders (null area) in order for region.get_VisAreaComplete() to return "true" after load completes.
+                                if (!this._minZoomKey) this._minZoomKey = region.get_MinZoomFactor?.toString()?.match(/\$I\.[A-Z0-9]{6}\.([A-Z0-9]{6})/)?.[1]; // Extract and cache the obfuscated key after first lookup (to avoid running regex each time)... this is because there is no deafault region.set_MinZoomFactor() ... yet.
+                                this._minZoomKey && ClientLib.Vis.Region.Region[this._minZoomKey] !== undefined ? ClientLib.Vis.Region.Region[this._minZoomKey] = this._newMinZoomFactor : console.warn("⚠ Failed to patch MinZoomFactor – game update may have changed obfuscation keys."); // Fallback-safe version that logs a warning if the internal key can't be found, just to avoid silent failures on game updates.
+                                region.set_ZoomFactor(Math.min( window.innerWidth / region.get_MaxXPosition() * this.server.get_WorldWidth() / (this.server.get_MaxBaseMoveDistance() + this.server.get_MaxAttackDistance()) / 2, window.innerHeight / region.get_MaxYPosition() * this.server.get_WorldHeight() / (this.server.get_MaxBaseMoveDistance() + this.server.get_MaxAttackDistance()) / 2)); // Sets the zoom factor to view at least 62 fields (move + attack range = 31 in any direction) width or heigit.
                                 if (region.get_VisAreaComplete()) {
                                     clearInterval(checkResizeComplete);
                                     resolve();
                                 }
-                            }, 10);
+                            }, 100);
                         });
                     },
                     findBases(startX, startY) {
