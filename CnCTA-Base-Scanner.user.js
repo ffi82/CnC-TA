@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        CnCTA Base Scanner
 // @namespace   https://github.com/bloofi
-// @version	    2025.04.23
+// @version	    2025.05.12
 // @description bloofi's layout scanner
 // @author      bloofi
 // @contributor ffi82
@@ -36,6 +36,11 @@
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     // Globals
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                    qxApp: qx.core.Init.getApplication(),
+                    mainData: ClientLib.Data.MainData.GetInstance(),
+                    visMain: ClientLib.Vis.VisMain.GetInstance(),
+                    configMain: ClientLib.Config.Main.GetInstance(),
+                    communicationManager: ClientLib.Net.CommunicationManager.GetInstance(),
                     scanStatus: 'READY',
                     scanResults: [],
                     storage: {},
@@ -64,13 +69,33 @@
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     initialize: function () {
                         this.debouncedFilterResults = this._debounce(this.filterResults, 100);
-                        const baseScannerButton = (new qx.ui.menu.Button).set({
-                            label: "Base Scanner",
-                            toolTip: (new qx.ui.tooltip.ToolTip(`Layout scanner<br>(by <a target="_blank" href="https://github.com/bloofi/CnC_TA" style="color:white">bloofi</a>)`)).set({ rich: true }),
-                            blockToolTip: false
-                        });
-                        baseScannerButton.addListener('execute', this.onOpenMainWindow, this);
-                        qx.core.Init.getApplication().getMenuBar().getScriptsButton().getMenu().add(baseScannerButton);
+                        const PollFunctionName = this.findPollFunction();
+                        if (PollFunctionName) {
+                            console.log('Poll function name:', PollFunctionName);
+                            // Attach to prototype for easy use
+                            Object.defineProperty(ClientLib.Net.CommunicationManager.prototype, '$Poll', {
+                                configurable: true,
+                                get: function () {
+                                    return this[PollFunctionName];
+                                }
+                            });
+                        } else {
+                            console.error('Could not find Poll function');
+                        }
+                        /*
+                        //Example usage: (Set view on an object on region view and run a Poll on demand for quick scan)
+                        //If findPollFunction() returns the reference:
+                        const PollFunction = this.findPollFunction();
+                        PollFunction.call(ClientLib.Net.CommunicationManager.GetInstance());
+
+                        // If findPollFunction() returns the function name:
+                        ClientLib.Net.CommunicationManager.GetInstance().$Poll()
+                        */
+                        const scriptsButton = this.qxApp.getMenuBar().getScriptsButton();
+                        const baseScannerMenuItem = scriptsButton.Add("Base Scanner");
+                        const baseScannerItem = scriptsButton.getMenu().getChildren().find(item => item.getLabel() === "Base Scanner");
+                        baseScannerItem.set({toolTip: (new qx.ui.tooltip.ToolTip(`Layout scanner<br>(by <a target="_blank" href="https://github.com/bloofi/CnC_TA" style="color:white">bloofi</a>)`)).set({ rich: true }), blockToolTip: false});
+                        baseScannerItem.addListener('execute', this.onOpenMainWindow, this);
                     },
                     _debounce: function(func, wait) {
                         let timeout;
@@ -84,6 +109,17 @@
                             timeout = setTimeout(later, wait)
                         }
                     },
+                    findPollFunction: function() {
+                        const proto = ClientLib.Net.CommunicationManager.prototype;
+                        for (const key of Object.keys(proto)) {
+                            const fn = proto[key];
+                            if (typeof fn === 'function' && fn.toString().includes('"Poll"')) {
+                                return key; // This is the obfuscated name for "Poll"
+                                //return fn; // This is the reference for "Poll"
+                            }
+                        }
+                        return null;
+                    },
                     onOpenMainWindow: function () {
                         if (!this.mainWindow) {
                             this.loadStorage();
@@ -95,17 +131,7 @@
                         this.refreshLabel()
                     },
                     createMainWindow: function () {
-                        this.mainWindow = new qx.ui.window.Window('Base Scanner').set({
-                            contentPadding: 0,
-                            width: 1000,
-                            height: 700,
-                            showMaximize: false,
-                            showMinimize: false,
-                            allowMaximize: false,
-                            allowMinimize: false,
-                            allowClose: true,
-                            resizable: true
-                        });
+                        this.mainWindow = new qx.ui.window.Window('Base Scanner').set({ contentPadding: 0, width: 1000, height: 700, showMaximize: false, showMinimize: false, allowMaximize: false, allowMinimize: false, allowClose: true, resizable: true });
                         this.mainWindow.setLayout(new qx.ui.layout.Canvas());
                         this.storage && this.storage.mainWindow && this.storage.mainWindow.x && this.storage.mainWindow.y ? this.mainWindow.moveTo(this.storage.mainWindow.x, this.storage.mainWindow.y) : this.mainWindow.center();
                         const container = new qx.ui.container.Composite(new qx.ui.layout.VBox());
@@ -177,7 +203,7 @@
                         if (!this.mainWindow) { return }
                         this.filterFromSelect.removeAll();
                         this.filterFromSelect.add(new qx.ui.form.ListItem('All bases', null, 'all'));
-                        Object.values(ClientLib.Data.MainData.GetInstance().get_Cities().get_AllCities().d).forEach((c) => { this.filterFromSelect.add(new qx.ui.form.ListItem(c.get_Name(), null, c)) })
+                        Object.values(this.mainData.get_Cities().get_AllCities().d).forEach((c) => { this.filterFromSelect.add(new qx.ui.form.ListItem(c.get_Name(), null, c)) })
                     },
                     refreshLabel: function () {
                         const detail = [`Status : <b>${this.scanStatus}</b>`];
@@ -215,7 +241,7 @@
                     // Buttons events
                     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                     onWindowMove: function (e) { this.saveToStorage({ window: { x: e.getData().left, y: e.getData().top }})},
-                    onButtonScan: function () { this.scanStatus === 'READY' || this.scanStatus === 'END' ? (qx.core.Init.getApplication().showMainOverlay(false), this.startScan()) : this.stopScan() },
+                    onButtonScan: function () { this.scanStatus === 'READY' || this.scanStatus === 'END' ? (this.qxApp.showMainOverlay(false), this.startScan()) : this.stopScan() },
                     onButtonClear: function () {
                         this.storage.cache = {};
                         this.flushStorage();
@@ -265,16 +291,16 @@
                         this.buttonClear.set({ enabled: false });
                         this.scanStatus = 'SCANNING';
                         this.refreshLabel();
-                        const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
+                        const region = this.visMain.get_Region();
                         this.mapAreaResize(region);
                         const filters = { scanCamps: this.filterCampCheckbox.getValue(), scanOutposts: this.filterOutpostCheckbox.getValue(), scanBases: this.filterBaseCheckbox.getValue(), scanPlayers: this.filterPlayerCheckbox.getValue() };
                         const from = this.filterFromSelect.getModelSelection().getItem(0);
-                        const bases = from === 'all' ? Object.values(ClientLib.Data.MainData.GetInstance().get_Cities().get_AllCities().d) : [from];
-                        const maxAttackDistance = ClientLib.Data.MainData.GetInstance().get_Server().get_MaxAttackDistance();
+                        const bases = from === 'all' ? Object.values(this.mainData.get_Cities().get_AllCities().d) : [from];
+                        const maxAttackDistance = this.mainData.get_Server().get_MaxAttackDistance();
                         for (const b of bases) {
-                            ClientLib.Vis.VisMain.GetInstance().CenterGridPosition(b.get_PosX(), b.get_PosY());
-                            ClientLib.Vis.VisMain.GetInstance().Update();
-                            ClientLib.Vis.VisMain.GetInstance().ViewUpdate();
+                            this.visMain.CenterGridPosition(b.get_PosX(), b.get_PosY());
+                            this.visMain.Update();
+                            this.visMain.ViewUpdate();
                             await this.waitUntilRegionReady(region);
                             for (let x = b.get_PosX() - 11; x < b.get_PosX() + 11; x++) {
                                 for (let y = b.get_PosY() - 11; y < b.get_PosY() + 11; y++) {
@@ -287,52 +313,19 @@
                                             switch (obj.get_VisObjectType()) {
                                                 case ClientLib.Vis.VisObject.EObjectType.RegionNPCBase:
                                                     if (filters.scanBases) {
-                                                        this.addPanel({
-                                                            scanID: `${objId}`,
-                                                            from: b,
-                                                            type: 'BASE',
-                                                            faction: 'F',
-                                                            city: obj,
-                                                            x: obj.get_RawX(),
-                                                            y: obj.get_RawY(),
-                                                            retry: 0,
-                                                            status: 'WAITING',
-                                                            isCached: false,
-                                                        });
+                                                        this.addPanel({ scanID: `${objId}`, from: b, type: 'BASE', faction: 'F', city: obj, x: obj.get_RawX(), y: obj.get_RawY(), retry: 0, status: 'WAITING', isCached: false });
                                                         this.scanIds.push(objId)
                                                     }
                                                     break;
                                                 case ClientLib.Vis.VisObject.EObjectType.RegionNPCCamp:
                                                     if (filters.scanOutposts || filters.scanCamps) {
-                                                        this.addPanel({
-                                                            scanID: `${objId}`,
-                                                            from: b,
-                                                            type: 'CAMP',
-                                                            faction: 'F',
-                                                            city: obj,
-                                                            x: obj.get_RawX(),
-                                                            y: obj.get_RawY(),
-                                                            retry: 0,
-                                                            status: 'WAITING',
-                                                            isCached: false,
-                                                        });
+                                                        this.addPanel({ scanID: `${objId}`, from: b, type: 'CAMP', faction: 'F', city: obj, x: obj.get_RawX(), y: obj.get_RawY(), retry: 0, status: 'WAITING', isCached: false });
                                                         this.scanIds.push(objId)
                                                     }
                                                     break;
                                                 case ClientLib.Vis.VisObject.EObjectType.RegionCityType:
                                                     if (filters.scanPlayers) {
-                                                        this.addPanel({
-                                                            scanID: `${objId}`,
-                                                            from: b,
-                                                            type: 'PLAYER',
-                                                            faction: obj.get_Faction ? obj.get_Faction() : '?',
-                                                            city: obj,
-                                                            x: obj.get_RawX(),
-                                                            y: obj.get_RawY(),
-                                                            retry: 0,
-                                                            status: 'WAITING',
-                                                            isCached: false,
-                                                        });
+                                                        this.addPanel({ scanID: `${objId}`, from: b, type: 'PLAYER', faction: obj.get_Faction ? obj.get_Faction() : '?', city: obj, x: obj.get_RawX(), y: obj.get_RawY(), retry: 0, status: 'WAITING', isCached: false });
                                                         this.scanIds.push(objId)
                                                     }
                                                     break
@@ -346,23 +339,11 @@
                         this.checkAndFetch()
                     },
                     mapAreaResize : function (region) {
-                        const cfg = ClientLib.Config.Main;
-                        const server = ClientLib.Data.MainData.GetInstance().get_Server();
-                        const maxAttackDistance = server.get_MaxAttackDistance();
-                        const worldWidth = server.get_WorldWidth();
-                        const worldHeight = server.get_WorldHeight();
-                        const fullMapWidth = region.get_MaxXPosition(); // 102400 on 800 fields worlds
-                        const fullMapHeight = region.get_MaxYPosition(); // 76800
-                        const viewableWidth = window.innerWidth;
-                        const viewableHeight = window.innerHeight;
-                        const zoomFactorWidth = Math.ceil(viewableWidth / fullMapWidth * 1000) / 1000;
-                        const zoomFactorHeight = Math.ceil(viewableHeight / fullMapHeight * 1000) / 1000;
-                        const zX = viewableWidth / (fullMapWidth / worldWidth * maxAttackDistance * 2);//const fieldSizeX = fullMapWidth / worldWidth;
-                        const zY = viewableHeight / (fullMapHeight / worldHeight * maxAttackDistance * 2);
-                        const newMinZoomFactor = Math.max(zoomFactorWidth, zoomFactorHeight);// lower then this and region.get_VisAreaComplete() won't return "true" due to the black area
-                        const neededZoomFactor = Math.min(zX, zY); // to be able to view the entire attack range of your base
-                        cfg.GetInstance().SetConfig(cfg.CONFIG_VIS_REGION_MINZOOM, false); // Uncheck 'Allow max zoom out' in game video options
-                        cfg.GetInstance().SaveToDB(); //Save settings
+                        this.configMain.SetConfig(ClientLib.Config.Main.CONFIG_VIS_REGION_MINZOOM, false); // Uncheck 'Allow max zoom out' in game video options
+                        this.configMain.SaveToDB(); //Save settings
+                        const server = this.mainData.get_Server();
+                        const newMinZoomFactor = Math.max(window.innerWidth / region.get_MaxXPosition(), window.innerHeight / region.get_MaxYPosition());// lower then this and region.get_VisAreaComplete() won't return "true" due to the black area
+                        const neededZoomFactor = Math.min(window.innerWidth / (region.get_MaxXPosition() / server.get_WorldWidth() * server.get_MaxAttackDistance() * 2), window.innerHeight / (region.get_MaxYPosition() / server.get_WorldHeight() * server.get_MaxAttackDistance() * 2)); // to be able to view the entire attack range of your base
                         const getMinZoomMethod = region.get_MinZoomFactor.toString().match(/\$I\.[A-Z]{6}\.([A-Z]{6});?}/)?.[1]; // Extract the `getMinZoomFactor` method dynamically.
                         ClientLib.Vis.Region.Region[getMinZoomMethod] = newMinZoomFactor; // Modify the MinZoomFactor to be able to zoom out further
                         region.set_ZoomFactor(neededZoomFactor) // Zoom out the region view to view the entire attack range for each own base
@@ -375,7 +356,7 @@
                                     resolve()
                                 }
                             }, 20)
-                        })
+                            })
                     },
                     addPanel: function (sr) {
                         if (!this.bases[sr.scanID]) {
@@ -441,7 +422,7 @@
                         res.add(grid, { flex: 1 });
                         const footer = new qx.ui.container.Composite(new qx.ui.layout.HBox(5)).set({ paddingLeft: 5, height: 20 });
                         const bTarget = new qx.ui.form.Button('', icons.target).set({ decorator: null, backgroundColor: 'transparent', margin: 0, padding: 0, maxWidth: 16, maxHeight: 16 });
-                        bTarget.addListener('execute', () => qx.core.Init.getApplication().getPlayArea().setView(ClientLib.Data.PlayerAreaViewMode.pavmCombatSetupBase, sr.scanID, 0, 0), this);
+                        bTarget.addListener('execute', () => this.qxApp.getPlayArea().setView(ClientLib.Data.PlayerAreaViewMode.pavmCombatSetupBase, sr.scanID, 0, 0), this);
                         footer.add(bTarget);
                         if (sr.status === 'FETCHED') {
                             const bCnclv = new qx.ui.form.Button('', icons.cnclv).set({ decorator: null, backgroundColor: 'transparent', margin: 0, padding: 0, maxWidth: 16, maxHeight: 16 });
@@ -477,14 +458,14 @@
                                             currentScan.isCached = true;
                                             currentScan.status = 'FETCHED'
                                         } else {
-                                            ClientLib.Data.MainData.GetInstance().get_Cities().set_CurrentCityId(currentScan.city.get_Id());
-                                            ClientLib.Net.CommunicationManager.GetInstance().UserAction();
+                                            this.mainData.get_Cities().set_CurrentCityId(currentScan.city.get_Id());
+                                            this.communicationManager.UserAction();
                                             currentScan.status = 'FETCHING'
                                         }
                                         this.checkAndFetch();
                                         break;
                                     case 'FETCHING': {
-                                        const data = ClientLib.Data.MainData.GetInstance().get_Cities().GetCity(currentScan.city.get_Id());
+                                        const data = this.mainData.get_Cities().GetCity(currentScan.city.get_Id());
                                         if (data && data.get_OwnerId()) {
                                             currentScan.layout = this.getCityLayout(data);
                                             currentScan.status = 'FETCHED';
@@ -501,7 +482,7 @@
                                                 this.bases[this.currentScanID] = currentScan;
                                                 setTimeout(() => {
                                                     this.checkAndFetch();
-                                                    ClientLib.Net.CommunicationManager.GetInstance().$Poll()
+                                                    this.communicationManager.$Poll()
                                                 }, 20)
                                             }
                                         }
@@ -574,13 +555,7 @@
                         return `${res}${includeOff ? emptyOff : ''}`
                     },
                     layoutToFullCncopt: function (baseFaction, offFaction, name, layout) {
-                        const res = [
-                            '3',
-                            baseFaction,
-                            offFaction,
-                            encodeURI(name),
-                            this.layoutToCncopt(layout, true),
-                        ];
+                        const res = [ '3', baseFaction, offFaction, encodeURI(name), this.layoutToCncopt(layout, true) ];
                         return res.join('|')
                     },
                     cncoptToLayout: function (layout) {
