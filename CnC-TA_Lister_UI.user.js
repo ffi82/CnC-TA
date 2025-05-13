@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnC-TA Lister UI
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025-03-02
+// @version      2025-05-13
 // @description  Some data tables...
 // @author       ffi82
 // @contributor  leo7044 (https://github.com/leo7044), 4o (ChatGPT)
@@ -11,15 +11,13 @@
 // @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAhlJREFUeF7tmtFtwzAMRJPBukD36RTdpwtksBb+EGAItu4okYcyYn/tSrzHI2UReT42/3turv9RAMoBmxOoEtjcANUE3Uvg+/X521z19fFzu/75vSgXjvZve7oCuBJ1F4QCwCESQXADcCfoKgCVeBmAkaCtAbxVD2hZ7kVZsx/V8GbXhT1g1Niyiz+gTQN4B/HTAEZ2Q8fOrFWj/m/KAVsBOMSy53a27FMlwAKwimehrlifiQmWQAvAs+kpxDP3EdoByAUM6XMmUwK4g2AVzzhqxfb9/6L46BK4ChwtPhKicAETnxkAyg47D0DrqJ67ArDMA1QC0T5uACzzABSU8rkLAM8jUinedAzONDSmCakF9/vRDoiYB0SeBCx8CCBqHhAp/pxlBGIawErdq8QfIEIArF6HtweA7haejXHZAZZg0Wa9sEgnsLHAHsACYDf0zK7HWhQABCGreNOH0ErX98hU1Bq0A7znAVGCrOuaAPQQMlu/gTIDQITZeUDkCdBiZBLkCsAyD1AAcPkSRBlvzy3zAJV4GQDrCbENgPp9wOBHUmxpRb8Hm2DUPCBaGLv+NABr3bMBqd+bArA6D1CLHO1XAJhssMcW8+XF7Kd8BzoAXYUtn51nYSzUFRhMQigACAKzkVo8m5gCYLGY5bKD1lWUQMhdgL3u/gcATGnSJYAEZX1eALJmzivucoAXyazrlAOyZs4r7u0d8AfcG0xQF263twAAAABJRU5ErkJggg==
 // @grant        none
 // ==/UserScript==
+/* global qx, ClientLib, webfrontend, Lister */
 'use strict';
 (() => {
     const ListerUIScript = async () => {
         const scriptName = 'CnC-TA Lister UI';
-        try {
-            if (typeof qx === 'undefined' || typeof qx.core.Init.getApplication !== 'function' || !qx?.core?.Init?.getApplication()?.initDone || typeof ClientLib === 'undefined' || !ClientLib?.Data?.MainData?.GetInstance()?.get_EndGame()?.GetCenter()) return setTimeout(ListerUIScript, 1000);
-        } catch (e) {
-            console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e);
-        }
+        try {if (typeof qx === 'undefined' || typeof qx.core.Init.getApplication !== 'function' || !qx?.core?.Init?.getApplication()?.initDone || typeof ClientLib === 'undefined' || !ClientLib?.Data?.MainData?.GetInstance()?.get_EndGame()?.GetCenter()) return setTimeout(ListerUIScript, 1000)}
+        catch (e) {console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e)}
         window.Lister = { // Exposing Lister globally
             db: null,
             async init(dbName = "Lister") {
@@ -27,10 +25,8 @@
                 const request = indexedDB.open(dbName, 1);
                 request.onupgradeneeded = (event) => {
                     const db = event.target.result;
-                    if (!db.objectStoreNames.contains("storage")) {
-                        db.createObjectStore("storage");
-                    }
-                };
+                    if (!db.objectStoreNames.contains("storage")) {db.createObjectStore("storage")}
+                }
                 return new Promise((resolve, reject) => {
                     request.onsuccess = (event) => {
                         this.db = event.target.result;
@@ -46,43 +42,35 @@
                     const store = transaction.objectStore("storage");
                     let request;
                     transaction.onerror = (event) => reject(`Transaction failed: ${event.target.error}`);
-                    transaction.oncomplete = () => console.log(`Transaction completed: ${operation} on ${key}`);
+                    //transaction.oncomplete = () => console.log(`Transaction completed: ${operation} on ${key}`);
                     switch (operation) {
-                    case "get":
-                        request = store.get(key);
-                        request.onsuccess = () => resolve(request.result || null);
-                        break;
-                    case "set":
-                        request = store.put(value, key);
-                        request.onsuccess = () => resolve(true);
-                        break;
-                    case "remove":
-                        request = store.delete(key);
-                        request.onsuccess = () => resolve(true);
-                        break;
-                    case "clear":
-                        request = store.clear();
-                        request.onsuccess = () => resolve(true);
-                        break;
-                    default:
-                        reject(`Unsupported operation: ${operation}`);
+                        case "get":
+                            request = store.get(key);
+                            request.onsuccess = () => resolve(request.result || null);
+                            break;
+                        case "set":
+                            request = store.put(value, key);
+                            request.onsuccess = () => resolve(true);
+                            break;
+                        case "remove":
+                            request = store.delete(key);
+                            request.onsuccess = () => resolve(true);
+                            break;
+                        case "clear":
+                            request = store.clear();
+                            request.onsuccess = () => resolve(true);
+                            break;
+                        default:
+                            reject(`Unsupported operation: ${operation}`);
                     }
                     request.onerror = (event) => reject(`Request failed: ${event.target.error}`);
                 });
             },
-            get(key) {
-                return this.performTransaction("get", key);
-            },
-            set(key, value) {
-                return this.performTransaction("set", key, value);
-            },
-            remove(key) {
-                return this.performTransaction("remove", key);
-            },
-            clear() {
-                return this.performTransaction("clear");
-            },
-        };
+            get(key) {return this.performTransaction("get", key)},
+            set(key, value) {return this.performTransaction("set", key, value)},
+            remove(key) {return this.performTransaction("remove", key)},
+            clear() {return this.performTransaction("clear")},
+        }
         const qxApp = qx.core.Init.getApplication();
         const cfg = ClientLib.Config.Main;
         const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
@@ -150,7 +138,7 @@
         };
         const Icons = {
             Refresh: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAaBJREFUOE+l0j1ok1EUxvHf25amiUJKvzeXUmhxUOiqmw6CrgFxdfNjE1fBwUVFcVM3HbSTkyI6qDiJFCnFWgVxsKXV1BjTpE3e3FdaqSb2I4IXLhcu5zyc53+eyH+eaJv+6PLHEN4XEwuVxHKNxwc6tqzd9Hlhppq8nF81nY99LuwiH1OpEdeNTl059PbBxSe9974n+Vx2vbdJ4NRkObmxP3MMs0g7/mxSHH6V9Y4SYkKVUOH22CaBHixtYWlM7tG09nYG9iIQxVzds3mCHXiOOP38nUyKwRE6Es70tCHZDmKz1vkXicE+0im6Ohno50jqnwX6cBCVhruKN40TRMOzcSjNxxYXY2Emz5dvXN83iMWdorJhIco8DaE8VWSuylKRW8NDWGiVs98Crq0EcwmlH1QKVIvcGW/J6E/BuXyiFFNbob5CeY56jYnDW4l0o9AcpJMfEjeHM068KqsvE2p0drH6lSihVqaS5+HZHO5vWGtUb0cdbY7era+nLZ0lO8TuftLdXBoax+tGLjt5zGAN5Npbwqe1tf0NtSWkVlv4CYSGmRHjxxGoAAAAAElFTkSuQmCC',
-            DownloadCSV: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAWNJREFUOE+lk8Erg3EYxz+blKImGeGqdvNHUC6OFGo5KIc5zVFaIrbDUo4sl+XgJBzHCSlSUlxMLdTMLG3v3u3du3d730fiIl68ea6/5/d5nt/3+/25+Ge5frofvBDZjOZ52Wqz7bM9mLsTqRahuwK5FETGXd/22gLm0yK6+g54SkJk1CFgIfsBqMLjFUTGHAIWcyJ6Aboq8HAJ0QmHgPlHEV0BrwqZJKz4/wgIF0XCk88EVzuoadCah8Y+CPszWKpGYb/3k25fRAwrIoYBdR3eNvD0QOoEdmNptMNTqsrIz4C3XISyIoYK5QJUFNhZz1E6OMbID38ZaGtj8FpEy8N2TEHZTVBXR53lwDsrMtQP8cE1RAJ/T2J7wJTCRhzLzCCSBopAC263D9Oc+f0JU+citTLoJTDKcJTQwLKwSmWWljuZ9n2203Y1z8CNNHi9uJuboF6jenuPdraHaYZ+d8HJD38FkCelEdQP/XcAAAAASUVORK5CYII=',
+            Download: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAWNJREFUOE+lk8Erg3EYxz+blKImGeGqdvNHUC6OFGo5KIc5zVFaIrbDUo4sl+XgJBzHCSlSUlxMLdTMLG3v3u3du3d730fiIl68ea6/5/d5nt/3+/25+Ge5frofvBDZjOZ52Wqz7bM9mLsTqRahuwK5FETGXd/22gLm0yK6+g54SkJk1CFgIfsBqMLjFUTGHAIWcyJ6Aboq8HAJ0QmHgPlHEV0BrwqZJKz4/wgIF0XCk88EVzuoadCah8Y+CPszWKpGYb/3k25fRAwrIoYBdR3eNvD0QOoEdmNptMNTqsrIz4C3XISyIoYK5QJUFNhZz1E6OMbID38ZaGtj8FpEy8N2TEHZTVBXR53lwDsrMtQP8cE1RAJ/T2J7wJTCRhzLzCCSBopAC263D9Oc+f0JU+citTLoJTDKcJTQwLKwSmWWljuZ9n2203Y1z8CNNHi9uJuboF6jenuPdraHaYZ+d8HJD38FkCelEdQP/XcAAAAASUVORK5CYII=',
             ClearCache: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAYZJREFUOE+1k0FrE0EUx38zm5g22WAa0zY0uB9ACOLFi+lVqqHgQXop1kMp8ahfQA1CIz0YNGIPFcSvUJAam+zBQ2svaQrSox6EklAQPQjBbPbJLqgsaUyg+JjDm5n3/zHvPzzFKUOdUs8/AZe/fBUtLh+s1MC6wYCj78LMWf/+wreOHCbGTqwNHGbrOzJ26aLfVafrcMbQaK356eXhEC6QcoVqyvyjC1I/fpbEZBINKBRhEVztZd4eHAHLUDRS8QEAYL7cEZSH8EL89dsphbB5N9hKX1+31kXMCJz7dJ+j80Ve7+1SX+ry5CDHVNTg5YoKaPoAiy9E4hHkYb6tStVpKltvsO+YrO7nyEQNXhWGABaei0yMQzHfxgfUatjL4dEBNyuOJKMGxestHr9LU3m7hV2I8qhxBSsWGv6CG08dSccNHlxrsbad5pn9ntptl1JzFsscwYO5ck8ypsbpwWQMjn9AdhqaLRgPwcYwE73Pu1p25K+7glIaEaF6L9Rn+v8dplEm9Rcp/HsRO0tPngAAAABJRU5ErkJggg==',
             Power: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAzdJREFUOE+VlFtvVFUYht+19tqzp51DO6XgNM7YmQotVAoxMZomSkCbmFZAsFITDWiNgVgi4eSNN265MPbCSNCQFIoXNdFmkNYTSEKglYQCoaSN0ZY0pZhyGDul7DJ2Zp/XMvvCRO2AuH7Ak+d7v/V+BP/jqULQ2hEwhCEZMqh/BvbIUTiqSjh5UE4qJSRjFfxmPhe0wUqlRfJ6mqFduovZHUuI+UAgtU+wshiKmWRWkAirv3Z1Yt/EpSsPN2xueiuvSd27YzD+E9QnBBudRMjH7ITjl1ZphvZRx7uf+fceeS9L0+KZDPGNqUlyf1DHoJDtKMLUtRMkRDYOXxjaPnr6cmlpMioat6xvp7N2ZySuXG8hxLqnkQcpiiHyh+lUkwBfO3RucOfEwC9KtLwcJcviU3W1K3dQwS9A86e3PUHseSAhBDkKyLnfUGYwZykW0DcHevo3mjduB5ufr0d7x9dobX97kOXkA9RxBsCU9LYK6PNAXiZjaZSCO3V2kLed7jqxzm84yq7WtfhpaBzfnzyHZQ2PI1ZbaQbkwO6IFfzyjQSy/wB5Nl9MoVjXrbiIyp8c2/9VQzxYwlpeXINAwA9dNzGjZZH69gyu/z6Nl/e8uv8hlH9QEHRwBAEe1Bt/7PkhpV2bworaxXjk0UrUVFfBdl1c7DuPscy0tW7XK+clzX1f5Nnw1qoCRocuo8iJ2tV37dmDruBJKpGy4wd6fdvbNuNY93cwZYLntrzQ67OLOhXD+rnEKsq0PFZga962aBxlrmEs52HW1N9zqq2YM//MrQyUWMRYvaHhG6bTTuKwEZ+A1pokhteOeWF7VdCqEOQLneVzLLfvZEfvs0bexJPNT2Px0iVdNEsPMZeNl+jQPJO/KjYP5BUzeRORfMBtGh3+9fDZ7lNKffPq2bqnVn4u3REpWMbViBPK/h1S0MgbjS3KLzQW+D79eOuHL7Xsfe1mIlF5RLrLu4lkTN0YD2fVNcT5d9kL/qNbkwhdmZ58J5+ba6xZUXOYzjlnXUuZTk8iVwhS0EhVBa18HT6LQ+GBOUW2ueNKYSNdAUMlhN/r7BTsmpcT+kErQiCRCfBNm8AJIeJ+t+tPo7JxHFEeK5MAAAAASUVORK5CYII=',
             Credit: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAA2pJREFUOE+tlG9sU1UYxp9z723v7d1Gt9La4pCOtS4hBkHd0EZxjKIyZSRD5wfMIGQYcMliyKISHWYNIUr8gExJ3NBkcUjMBqMDgkFEcGMfdOoyMsJYGWPD0bAV7rb+ub29/8wlqUE698nz9bznd573yfs+BP/TIfNxdF0ngYug3WvApOsKAGUNoBJC9Affzglq1HXKdh0mxgyeaEmrBjWXsrA2StamUnHlLmXjZ2sdSBBCtDQsA2RAFoXBKRIWUIy8hPC0L8Vq/htXR5c+/sTSEWZaa01JGIpr5vCzhYiXEaIYsAxQU0hnVVPCxvHM6nti7PXB34eW93ReKrIwNM1Ys2K+8pJQie+p44goXbJuHq/zImYoywA1j9yzqmz2sllabNhfe6Cc0kDZ83LwbaAGFbuakJRkvFztH/f7n2+iRDVY9Bg7Zqj6F8gw9/OxhIujmbVdwbP7Q79dy29trIHbmXffipSsoLN7AAc7zssNX793Vr8jNlqW8Fe2EZLMAH05hgLwybdbPjtSW+RycHtrKtj6g+1aWJiV1z7pZSv9xdj8YTO27Nk8sDjX1TATp3t2e8jMvCCP087Vb61gPz5wVBsP3yUz01FizeERTaXkD5rf7bfEmU+UeKq3zpsdmRNE0/JLwRM/BIb7hl176qvhyM0Gx7H32xsavY1D3wRRWOyZ2Phm+aeaKHU5ei23/xN09Ejnvuv9I3a3Ox+TdyIwmRgsdi3Ezu2bcOJUN85d+lMOHH5/H5lW2+y/smOZoFtYRExSZdvhYwFZkBbuqHsLfd19EGUFWRYWTz+3EsHjP+Ly4LD00Re79qYE5bv8Pu7WHHMUdZg5U8n5cz1NP3X1eta/VopVpav+2YbQ4DC+bzuJsqrVN/2vvNCoCNKZDI+M6kOTerYyGyvQrHT1hdO9b/T/MvBofDrGrSt/EWdO/qw77Lmqd4UnXLl9Q4c6JbVas7JuVDuRyFDU3q7TEyXIseiyGxx8sDGvfrW7Zd3N0TD7TOmKyKZ3Nl6m4topLYluVTRNLP8LQlnZQwNpKDKGsuUPMMgTeBm8k+EZr2pWlk1NCd5HnPaQHlUHVWCEldkIBCR2FBN5zl1Lm2Eogw/myViUJwsYniiUidZVUVD5RGEhxCpAfjBK5s2jtMIOgEp/UAVoD2eRcfc36WeHHqkkmHYAAAAASUVORK5CYII=',
@@ -169,22 +157,14 @@
         // Allow different parts of the application to communicate with each other without tight coupling.
         class EventBus {
             // Initializes an empty listeners object that will hold arrays of callbacks for each event.
-            constructor() {
-                this.listeners = {};
-            }
+            constructor() {this.listeners = {}}
             // Checks if an event already has a list of subscribers; if not, it initializes an empty array for that event name. Adds the provided callback function to the list of listeners for that specific event.
             subscribe(eventName, callback) {
-                if (!this.listeners[eventName]) {
-                    this.listeners[eventName] = [];
-                }
+                if (!this.listeners[eventName]) {this.listeners[eventName] = []}
                 this.listeners[eventName].push(callback);
             }
             // Remove specific callbacks, especially for cleanup purposes
-            unsubscribe(eventName, callback) {
-                if (this.listeners[eventName]) {
-                    this.listeners[eventName] = this.listeners[eventName].filter(cb => cb !== callback);
-                }
-            }
+            unsubscribe(eventName, callback) {if (this.listeners[eventName]) {this.listeners[eventName] = this.listeners[eventName].filter(cb => cb !== callback)}}
             // Allow listeners to automatically unsubscribe after the first event dispatch.
             once(eventName, callback) {
                 const wrapper = (event) => {
@@ -194,15 +174,7 @@
                 this.subscribe(eventName, wrapper);
             }
             // Checks if there are any listeners for the provided event. Calls each callback with an object that provides a getData(), eventName or a timestamp method, allowing listeners to retrieve the data associated with the event.
-            dispatch(eventName, data) {
-                if (this.listeners[eventName]) {
-                    this.listeners[eventName].forEach(callback => callback({
-                        getData: () => data,
-                        eventName,
-                        timestamp: performance.now()
-                    }));
-                }
-            }
+            dispatch(eventName, data) {if (this.listeners[eventName]) {this.listeners[eventName].forEach(callback => callback({getData: () => data, eventName, timestamp: performance.now()}))}}
         }
         const eventBus = new EventBus(); // Create an instance of the EventBus
         /*
@@ -211,9 +183,7 @@
         // Start alliance cities scan (logic: get alliance member IDs --> get alliance cities IDs --> load and grab each city data)
         async function getAllianceCities() {
             timestamp = performance.now();
-            for (const memberId of mainData.get_Alliance().getMemberIds().l) {
-                await getPublicPlayerInfoByIdAC(memberId);
-            }
+            for (const memberId of mainData.get_Alliance().getMemberIds().l) {await getPublicPlayerInfoByIdAC(memberId)}
             AllianceCitiesArr.sort((a, b) => b.Base_Score - a.Base_Score).sort((a, b) => a.Player_Id - b.Player_Id);
             await processCityIDs(AllianceCitiesArr.map(item => item.Base_Id));
             await Lister.set(wid + 'AllianceCitiesArr', AllianceCitiesArr);
@@ -221,18 +191,10 @@
         // Get public member info (about 75% of each alliance city data)
         async function getPublicPlayerInfoByIdAC(playerId) {
             try {
-                const data = await new Promise((resolve, reject) => {
-                    ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {
-                        id: playerId
-                    }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {
-                        resolve(data);
-                    }), reject);
-                });
+                const data = await new Promise((resolve, reject) => {ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {id: playerId}, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {resolve(data)}), reject)});
                 const s = mainData.get_Server().get_Name();
                 for (const city of data.c) {
-                    let cityData = {
-                        ...AllianceCitiesTemplate
-                    };
+                    let cityData = {...AllianceCitiesTemplate}
                     Object.assign(cityData, {
                         Server_Name: s,
                         Alliance_Name: data.an,
@@ -265,9 +227,7 @@
                         Base_Distance_from_Center: calculateMetric(city.x, city.y, 'distance')
                     });
                     //ghost bases values fix
-                    ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicCityInfoById', {
-                        id: city.i
-                    }, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, async (context, data) => {
+                    ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicCityInfoById', {id: city.i}, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, async (context, data) => {
                         if (data.g === true) {
                             Object.assign(cityData, {
                                 Base_Found_Step: -1,
@@ -293,19 +253,18 @@
                         }
                     }), null)
                     const cityExists = AllianceCitiesArr.some(existingCity => existingCity.Base_Id === cityData.Base_Id); // Check if cityData already exists in AllianceCitiesArr
-                    if (!cityExists) {
-                        AllianceCitiesArr.push(cityData);
-                    }
+                    if (!cityExists) {AllianceCitiesArr.push(cityData)}
                 }
-            } catch (error) {
-                console.error(`Error fetching player info for ID ${playerId}:`, error);
-            }
+            } catch (error) {console.error(`Error fetching player info for ID ${playerId}:`, error)}
         }
         // Set the play area view on the selected ID and wait for it's data to be loaded
         function loadCity(id) {
+            const comm = ClientLib.Net.CommunicationManager.GetInstance();
+            const PollFunction = getPollFunction();
             return new Promise((resolve) => {
                 ClientLib.API.Util.SetPlayAreaView(ClientLib.Data.PlayerAreaViewMode.pavmNone, id, 0, 0); // Set the play area view for the current city
-                ClientLib.Net.CommunicationManager.GetInstance().$Poll();
+                //comm.$Poll();
+                if (PollFunction) PollFunction.call(comm);
                 const checkLoading = setInterval(() => {
                     const loadedCity = mainData.get_Cities().get_CurrentCity();
                     // Check if the loaded city's ID matches the requested city ID
@@ -347,42 +306,27 @@
                     localStorage.setItem(wid + 'processedCityIds', JSON.stringify(processedCityIds));
                     eventBus.dispatch("cityDataAdded", cityData);
                     progressBar(processedCityIds.length, AllianceCitiesArr.length, "Alliance Cities");
-                } catch (error) {
-                    console.error(`Error loading City ID ${cityId}:`, error);
-                }
+                } catch (error) {console.error(`Error loading City ID ${cityId}:`, error)}
             }
-            if (remainingCityIds.length === 0) {
-                localStorage.removeItem(wid + 'processedCityIds'); // Clear processedCityIds from localStorage on completion to allow refresh
-            }
+            if (remainingCityIds.length === 0) {localStorage.removeItem(wid + 'processedCityIds')} // Clear processedCityIds from localStorage on completion to allow refresh
         }
         /*
          * Points Of Interest
          */
         function getPOIs() {
             timestamp = performance.now();
-            qxApp.showMainOverlay(false); // Switch to region view
-            webfrontend.gui.UtilView.centerCoordinatesOnRegionViewWindow(Math.floor(mainData.get_Server().get_WorldWidth() / 2), Math.floor(mainData.get_Server().get_WorldHeight() / 2)); // Center map on region view
-            waitForMapAreaResize(region).then(() => {
-                return processPOIs(region, timestamp)
-            }); // Wait for the map area resize to complete and process all RegionPointOfInterest (except tunnel exit)
-        }
-        // Calculate ZoomFactor for your window width and height. The bigger ZoomFactor is chosen to ensure the map fills the window and crops off whatever doesn't fit... get_VisAreaComplete() will return 'false' otherwise.
-        function calculateZoomFactor() {
-            const fullMapWidth = region.get_MaxXPosition(); // 102400
-            const fullMapHeight = region.get_MaxYPosition(); // 76800
-            const viewableWidth = window.innerWidth;
-            const viewableHeight = window.innerHeight;
-            const zoomFactorWidth = Math.ceil(viewableWidth / fullMapWidth * 1000) / 1000;
-            const zoomFactorHeight = Math.ceil(viewableHeight / fullMapHeight * 1000) / 1000;
-            return Math.max(zoomFactorWidth, zoomFactorHeight);
+            waitForMapAreaResize(region).then(() => {return processPOIs(region, timestamp)}); // Wait for the map area resize to complete and process all RegionPointOfInterest (except tunnel exit)
         }
         // Set the proper zoom on region view and wait for objects to be available... get_VisAreaComplete() must return "true"
         function waitForMapAreaResize(region) {
             cfg.GetInstance().SetConfig(cfg.CONFIG_VIS_REGION_MINZOOM, false); // Uncheck 'Allow max zoom out' in game video options
             cfg.GetInstance().SaveToDB(); //Save settings
             const getMinZoomMethod = region.get_MinZoomFactor.toString().match(/\$I\.[A-Z]{6}\.([A-Z]{6});?}/)?.[1]; // Extract the `getMinZoomFactor` method dynamically.
-            ClientLib.Vis.Region.Region[getMinZoomMethod] = calculateZoomFactor(); // Modify the MinZoomFactor to be able to zoom out further
-            region.set_ZoomFactor(calculateZoomFactor()); // Zoom out the region view to visualize the entire world... bird's eye view
+            const newMinZoomFactor = Math.max(window.innerWidth / region.get_MaxXPosition(), window.innerHeight / region.get_MaxYPosition()); // Calculate ZoomFactor for your window width and height. The bigger ZoomFactor is chosen to ensure the map fills the window and crops off whatever doesn't fit... get_VisAreaComplete() will return 'false' otherwise.
+            ClientLib.Vis.Region.Region[getMinZoomMethod] = newMinZoomFactor; // Modify the MinZoomFactor to be able to zoom out further
+            region.set_ZoomFactor(newMinZoomFactor); // Zoom out the region view to visualize the entire world... bird's eye view
+            //qxApp.showMainOverlay(false); // Switch to region view
+            webfrontend.gui.UtilView.centerCoordinatesOnRegionViewWindow(Math.floor(mainData.get_Server().get_WorldWidth() / 2), Math.floor(mainData.get_Server().get_WorldHeight() / 2)); // Switch to region view and center map
             return new Promise((resolve) => {
                 const checkResizeComplete = setInterval(() => {
                     if (region.get_VisAreaComplete()) {
@@ -397,9 +341,7 @@
             const rangeX = mainData.get_Server().get_WorldWidth();
             const rangeY = mainData.get_Server().get_WorldHeight();
             const maxLevel = mainData.get_Server().get_MaxCenterLevel();
-            const POIScore = Array.from({
-                length: maxLevel + 1
-            }, (_, i) => ClientLib.Base.PointOfInterestTypes.GetScoreByLevel(i));
+            const POIScore = Array.from({length: maxLevel + 1}, (_, i) => ClientLib.Base.PointOfInterestTypes.GetScoreByLevel(i));
             const gridWidth = region.get_GridWidth();
             const gridHeight = region.get_GridHeight();
             AllPOIs = [];
@@ -408,9 +350,7 @@
                     const xPos = x * gridWidth;
                     const yPos = y * gridHeight;
                     const visObject = region.GetObjectFromPosition(xPos, yPos);
-                    if (!visObject || visObject.get_VisObjectType() !== ClientLib.Vis.VisObject.EObjectType.RegionPointOfInterest || visObject.get_Name() === 'Tunnel exit') {
-                        continue;
-                    }
+                    if (!visObject || visObject.get_VisObjectType() !== ClientLib.Vis.VisObject.EObjectType.RegionPointOfInterest || visObject.get_Name() === 'Tunnel exit') {continue}
                     const poi = Object.assign({}, poiTemplate, {
                         Level: visObject.get_Level(),
                         Name: visObject.get_Name().split(' ')[0],
@@ -438,16 +378,12 @@
             const range = 2;
             const gridWidth = region.get_GridWidth();
             const gridHeight = region.get_GridHeight();
-
             for (let x = -range; x <= range; x++) {
                 for (let y = -range; y <= range; y++) {
                     const xPos = (poiX + x) * gridWidth;
                     const yPos = (poiY + y) * gridHeight;
                     const visObject = region.GetObjectFromPosition(xPos, yPos);
-
-                    if (!visObject || visObject.get_VisObjectType() !== ClientLib.Vis.VisObject.EObjectType.RegionCityType || calculateMetric(x, y, 'distance', 0, 0) >= range * Math.sqrt(2)) {
-                        continue;
-                    }
+                    if (!visObject || visObject.get_VisObjectType() !== ClientLib.Vis.VisObject.EObjectType.RegionCityType || calculateMetric(x, y, 'distance', 0, 0) >= range * Math.sqrt(2)) {continue}
                     holders.push({
                         Base: visObject.get_Name(),
                         Player: visObject.get_PlayerName(),
@@ -466,9 +402,7 @@
             const listerWindow = new qx.ui.window.Window("Lister");
             listerWindow.setLayout(new qx.ui.layout.VBox());
             const tabView = new qx.ui.tabview.TabView();
-            listerWindow.add(tabView, {
-                flex: 1
-            });
+            listerWindow.add(tabView, {flex: 1});
             // Add tabs
             const allianceTab = tabAllianceCities();
             tabView.add(allianceTab);
@@ -485,21 +419,14 @@
             const columnNames = Object.keys(AllianceCitiesTemplate);
             const tableModel = new qx.ui.table.model.Simple();
             tableModel.setColumns(columnNames);
-            const allianceCitiesTable = new qx.ui.table.Table(tableModel).set({
-                width: 1250,
-                height: 600,
-                decorator: "main",
-                showCellFocusIndicator: false,
-            });
+            const allianceCitiesTable = new qx.ui.table.Table(tableModel).set({width: 1250, height: 600, decorator: "main", showCellFocusIndicator: false});
             allianceCitiesTable.getChildControl("statusbar").setTextColor("darkgreen");
             allianceCitiesTable.setAdditionalStatusBarText(` / ${Object.values(mainData.get_Alliance().get_MemberData().d).reduce((sum, member) => sum + member.Bases, 0)} cities`);
             const tableColumnModel = allianceCitiesTable.getTableColumnModel();
             const cityRowMap = {}; // Map to track row indices by City ID
             // Default visible columns
             const defaultVisibleColumns = ["Player_Name", "Player_Faction", "Base_Name", "Base_Coords", "Base_Tiberium_per_Hour", "Base_Crystal_per_Hour", "Base_Power_per_Hour", "Base_Credit_per_Hour", "Base_Base_Level", "Base_Defense_Level", "Base_Offense_Level", "processedTimestamp"];
-            columnNames.forEach((columnName, index) => {
-                tableColumnModel.setColumnVisible(index, defaultVisibleColumns.includes(columnName));
-            });
+            columnNames.forEach((columnName, index) => {tableColumnModel.setColumnVisible(index, defaultVisibleColumns.includes(columnName))});
             // Renderer setup
             const createRenderer = (formatter) => {
                 const renderer = new qx.ui.table.cellrenderer.Default();
@@ -515,79 +442,42 @@
             tableColumnModel.setDataCellRenderer(3, createRenderer(cellInfo => webfrontend.gui.util.BBCode.createPlayerLinkText(cellInfo.value)));
             tableColumnModel.setDataCellRenderer(26, createRenderer(cellInfo => {
                 const [x, y] = cellInfo.value.split(":");
-                return webfrontend.gui.util.BBCode.createCoordsLinkText(cellInfo.value, parseInt(x), parseInt(y));
+                return webfrontend.gui.util.BBCode.createCoordsLinkText(cellInfo.value, parseInt(x), parseInt(y))
             }));
             tableColumnModel.setDataCellRenderer(5, createRenderer(cellInfo => {
-                const factionImages = {
-                    "0": Icons.TheForgotten,
-                    "1": Icons.GDI,
-                    "2": Icons.NOD
-                };
-                return factionImages[cellInfo.value] ? `<img src="${factionImages[cellInfo.value]}" style="height:20px;width:20px;">` : cellInfo.value;
+                const factionImages = {"0": Icons.TheForgotten, "1": Icons.GDI, "2": Icons.NOD}
+                return factionImages[cellInfo.value] ? `<img src="${factionImages[cellInfo.value]}" style="height:20px;width:20px;">` : cellInfo.value
             }));
-            allianceCitiesTab.add(allianceCitiesTable, {
-                flex: 1
-            });
+            allianceCitiesTab.add(allianceCitiesTable, {flex: 1});
             allianceCitiesTab.add(setupAllianceCitiesFooterContainer());
             //Production window
             function createPlayerResourceWindow() {
-                const resourceWindow = new qx.ui.window.Window("Alliance members total resource production per hour by type").set({
-                    width: 550,
-                    height: 600,
-                    layout: new qx.ui.layout.VBox(),
-                    showStatusbar: false
-                });
+                const resourceWindow = new qx.ui.window.Window("Alliance members total resource production per hour by type").set({width: 550, height: 600, layout: new qx.ui.layout.VBox(), showStatusbar: false});
                 resourceWindow.center();
-                const columnData = [{
-                    label: "Player",
-                    icon: "webfrontend/battleview/neutral/gui/player_icn_own_alliance.png"
-                }, {
-                    label: "Power",
-                    icon: Icons.Power
-                }, {
-                    label: "Credit",
-                    icon: Icons.Credit
-                }, {
-                    label: "Tiberium",
-                    icon: Icons.Tiberium
-                }, {
-                    label: "Crystal",
-                    icon: Icons.Crystal
-                }];
+                const columnData = [
+                    {label: "Player", icon: "webfrontend/battleview/neutral/gui/player_icn_own_alliance.png"},
+                    {label: "Power", icon: Icons.Power},
+                    {label: "Credit", icon: Icons.Credit},
+                    {label: "Tiberium", icon: Icons.Tiberium},
+                    {label: "Crystal", icon: Icons.Crystal}
+                ];
                 const playerData = {};
                 AllianceCitiesArr.forEach(city => {
                     const playerName = city.Player_Name;
-                    if (!playerData[playerName]) {
-                        playerData[playerName] = {
-                            power: 0,
-                            credits: 0,
-                            tiberium: 0,
-                            crystal: 0
-                        };
-                    }
+                    if (!playerData[playerName]) {playerData[playerName] = {power: 0, credits: 0, tiberium: 0, crystal: 0}}
                     playerData[playerName].power += city.Base_Power_per_Hour;
                     playerData[playerName].credits += city.Base_Credit_per_Hour;
                     playerData[playerName].tiberium += city.Base_Tiberium_per_Hour;
                     playerData[playerName].crystal += city.Base_Crystal_per_Hour;
                 });
                 const tableData = Object.entries(playerData).map(([player, resources]) => [player, resources.power, resources.credits, resources.tiberium, resources.crystal]);
-                const tableModel = new qx.ui.table.model.Simple().set({
-                    columns: columnData.map(col => col.label),
-                    data: tableData
-                });
-                const table = new qx.ui.table.Table(tableModel).set({
-                    showCellFocusIndicator: false
-                });
-                resourceWindow.add(table, {
-                    flex: 1
-                });
+                const tableModel = new qx.ui.table.model.Simple().set({columns: columnData.map(col => col.label), data: tableData});
+                const table = new qx.ui.table.Table(tableModel).set({showCellFocusIndicator: false});
+                resourceWindow.add(table, {flex: 1});
                 const tableColumnModel = table.getTableColumnModel();
                 tableColumnModel.setDataCellRenderer(0, createRenderer(cellInfo => webfrontend.gui.util.BBCode.createPlayerLinkText(cellInfo.value)));
                 [1, 2, 3, 4].forEach(index => tableColumnModel.setDataCellRenderer(index, createRenderer(cellInfo => webfrontend.phe.cnc.gui.util.Numbers.formatNumbersCompact(cellInfo.value))));
-                columnData.forEach((col, index) => {
-                    const headerRenderer = new qx.ui.table.headerrenderer.Icon(col.icon, col.label);
-                    tableColumnModel.setHeaderCellRenderer(index, headerRenderer);
-                });
+                columnData.forEach((col, index) => {tableColumnModel.setHeaderCellRenderer(index, new qx.ui.table.headerrenderer.Icon(col.icon, col.label))});
                 qxApp.getRoot().add(resourceWindow);
                 resourceWindow.open();
                 return resourceWindow;
@@ -620,10 +510,8 @@
                     tip: "Populate/Update table data."
                 }, {
                     label: "Download TSV",
-                    icon: Icons.DownloadTSV,
-                    handler: () => {
-                        getTSV(AllianceCitiesArr, "AllianceCities")
-                    },
+                    icon: Icons.Download,
+                    handler: () => {getTSV(AllianceCitiesArr, "AllianceCities")},
                     tip: "Download table data in TSV (tab-separated values) format."
                 }, {
                     label: "Res Production",
@@ -631,32 +519,18 @@
                     handler: createPlayerResourceWindow,
                     tip: "Total resource producton per hour for each alliance member... A full scan is needed for proper values."
                 }];
-                buttons.forEach(({
-                    label,
-                    icon,
-                    handler,
-                    tip
-                }) => {
+                buttons.forEach(({label, icon, handler, tip}) => {
                     const button = new qx.ui.form.Button(label, icon);
                     button.setToolTipText(tip);
                     button.addListener("execute", handler);
                     allianceCitiesFooterContainer.add(button);
                 });
-                const offenseLevelFilterSelectBox = new qx.ui.form.SelectBox().set({
-                    width: 150,
-                    toolTipText: "Filter Base Offense Level"
-                });
+                const offenseLevelFilterSelectBox = new qx.ui.form.SelectBox().set({width: 150, toolTipText: "Filter Base Offense Level"});
                 offenseLevelFilterSelectBox.add(new qx.ui.form.ListItem("Offense Level filter"));
-                for (let i = 1; i <= 10; i++) {
-                    offenseLevelFilterSelectBox.add(new qx.ui.form.ListItem(`Show ${i}${i === 1 ? "st" : i === 2 ? "nd" : i === 3 ? "rd" : "th"} highest OL`));
-                }
+                for (let i = 1; i <= 10; i++) {offenseLevelFilterSelectBox.add(new qx.ui.form.ListItem(`Show ${i}${i === 1 ? "st" : i === 2 ? "nd" : i === 3 ? "rd" : "th"} highest OL`))}
                 offenseLevelFilterSelectBox.addListener("changeSelection", (e) => {
                     const selectedRank = offenseLevelFilterSelectBox.getSelection()[0].getLabel().match(/\d+/);
-                    if (selectedRank) {
-                        filterCitiesByOffenseLevel(parseInt(selectedRank[0], 10));
-                    } else {
-                        tableModel.setData(AllianceCitiesArr.map(city => Object.values(city)));
-                    }
+                    selectedRank ? filterCitiesByOffenseLevel(parseInt(selectedRank[0], 10)) : tableModel.setData(AllianceCitiesArr.map(city => Object.values(city)));
                 });
                 allianceCitiesFooterContainer.add(offenseLevelFilterSelectBox);
 
@@ -673,9 +547,7 @@
                         const timeDifference = Date.now() - oldestTimestamp.getTime();
                         const formattedTime = msToTime(timeDifference);
                         footnoteAtom.setLabel(`Oldest Processed Timestamp: ${formattedTime} ago`);
-                    } else {
-                        footnoteAtom.setLabel("Oldest Processed Timestamp: No data available");
-                    }
+                    } else {footnoteAtom.setLabel("Oldest Processed Timestamp: No data available")}
                     footnoteAtom.setTextColor("darkgreen");
                 }
                 updateFooterWithOldestTimestamp();
@@ -726,27 +598,15 @@
             tableModel.setColumns(Object.keys(poiTemplate));
             poiTab.setUserData("tableModel", tableModel);
             const storedTimestamp = await Lister.get(poiTimestampKey);
-            const poiTimestamp = new qx.ui.basic.Atom().set({
-                label: storedTimestamp ? `Last POI scan age: ${msToTime(Date.now() - storedTimestamp)}` : "No data available... Refresh required.",
-                textColor: "darkgreen"
-            });
-            const poiNameSelectBox = new qx.ui.form.SelectBox().set({
-                toolTipText: "Filter POIs by name/type"
-            });
-            const poiOwnerSelectBox = new qx.ui.form.SelectBox().set({
-                width: 170,
-                toolTipText: "Filter POIs by owner"
-            });
+            const poiTimestamp = new qx.ui.basic.Atom().set({label: storedTimestamp ? `Last POI scan age: ${msToTime(Date.now() - storedTimestamp)}` : "No data available... Refresh required.", textColor: "darkgreen"});
+            const poiNameSelectBox = new qx.ui.form.SelectBox().set({toolTipText: "Filter POIs by name/type"});
+            const poiOwnerSelectBox = new qx.ui.form.SelectBox().set({width: 170,toolTipText: "Filter POIs by owner"});
             updateTableData(data, tableModel);
             updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, data);
             const poiTable = new qx.ui.table.Table(tableModel);
             poiTable.getChildControl("statusbar").setTextColor("darkgreen");
-
             // Apply cell renderers to specific columns
-            [1, 3, 4, 5, 6, 8].forEach(index =>
-                poiTable.getTableColumnModel().setDataCellRenderer(index, new qx.ui.table.cellrenderer.Html())
-            );
-
+            [1, 3, 4, 5, 6, 8].forEach(index => poiTable.getTableColumnModel().setDataCellRenderer(index, new qx.ui.table.cellrenderer.Html()));
             // Add custom renderer for Holders column
             class HoldersButtonRenderer extends qx.ui.table.cellrenderer.Abstract {
                 createDataCellHtml(cellInfo, htmlArr) {
@@ -754,31 +614,19 @@
                     const buttonId = `btn-holders-${cellInfo.row}`;
                     const buttonLabel = `${holders.length} Holders`;
                     activeButtonIds.push(buttonId);
-                    htmlArr.push(`
-						<div>
-						<button id="${buttonId}" style="cursor:pointer; padding:2px 5px; font-size:11px;">
-						${buttonLabel}
-						</button>
-						</div>
-					`);
+                    htmlArr.push(`<div><button id="${buttonId}" style="cursor:pointer; padding:2px 5px; font-size:11px;">${buttonLabel}</button></div>`);
                     setTimeout(() => {
                         const buttonElement = document.getElementById(buttonId);
-                        if (buttonElement) {
-                            buttonElement.addEventListener("click", () => showHoldersPopup(holders));
-                        }
+                        if (buttonElement) {buttonElement.addEventListener("click", () => showHoldersPopup(holders))}
                     }, 10);
                 }
             }
             poiTable.getTableColumnModel().setDataCellRenderer(0, new HoldersButtonRenderer());
-
             // Add POI Table and Footer to Tab
             const poiFooterContainer = buildPoiFooterContainer(data, tableModel, poiNameSelectBox, poiOwnerSelectBox);
-            poiTab.add(poiTable, {
-                flex: 1
-            });
+            poiTab.add(poiTable, {flex: 1});
             poiTab.add(poiFooterContainer);
             tabView.add(poiTab);
-
             // Event subscription for data refresh
             eventBus.subscribe("POIs_Refreshed", async (e) => {
                 const refreshedData = e.getData();
@@ -788,12 +636,9 @@
                 await Lister.set(poiTimestampKey, Date.now());
                 poiTimestamp.setLabel(`Last POI scan age: ${msToTime(Date.now() - (await Lister.get(poiTimestampKey)))}`);
             });
-
             // Helper Functions
             function updateTableData(filteredData, tableModel) {
-                const tableData = filteredData.map(poi =>
-                    Object.keys(poiTemplate).map(key => poi[key])
-                );
+                const tableData = filteredData.map(poi => Object.keys(poiTemplate).map(key => poi[key]));
                 tableModel.setData(tableData);
                 filteredData.forEach((poi, index) => {
                     const formattedScore = webfrontend.phe.cnc.gui.util.Numbers.formatNumbers(poi.Score);
@@ -810,9 +655,7 @@
                     };
                     Object.keys(formattedValues).forEach(key => {
                         const col = Object.keys(poiTemplate).indexOf(key);
-                        if (col !== -1) {
-                            tableModel.setValue(col, index, formattedValues[key]);
-                        }
+                        if (col !== -1) {tableModel.setValue(col, index, formattedValues[key])}
                     });
                 });
             }
@@ -822,7 +665,6 @@
                     alert("No Holders data available.");
                     return;
                 }
-
                 const holderDetails = holders.map((holder, idx) => `
 					<p>
 					<strong>Holder ${idx + 1}</strong><br>
@@ -833,28 +675,11 @@
                     <strong>Distance:</strong> ${holder.Distance || "N/A"}
 					</p>
 				`).join("");
-
-                const dialog = new qx.ui.window.Window().set({
-                    caption: "Holders Details",
-                    layout: new qx.ui.layout.VBox(),
-                    width: 230,
-                    height: 360,
-                    backgroundColor: "lightgrey"
-                });
-
-                const content = new qx.ui.basic.Label(holderDetails).set({
-                    rich: true,
-                    backgroundColor: "lightgrey",
-                    padding: 5,
-                    opacity: 0.7
-                });
-
+                const dialog = new qx.ui.window.Window().set({caption: "Holders Details", layout: new qx.ui.layout.VBox(), width: 230, height: 360, backgroundColor: "lightgrey"});
+                const content = new qx.ui.basic.Label(holderDetails).set({rich: true, backgroundColor: "lightgrey", padding: 5, opacity: 0.7});
                 const scroll = new qx.ui.container.Scroll();
                 scroll.add(content);
-
-                dialog.add(scroll, {
-                    flex: 1
-                });
+                dialog.add(scroll, {flex: 1});
                 dialog.center();
                 dialog.open();
             }
@@ -862,26 +687,16 @@
             function cleanupHoldersButtons() {
                 activeButtonIds.forEach(buttonId => {
                     const buttonElement = document.getElementById(buttonId);
-                    if (buttonElement) {
-                        // Clone to remove all listeners
-                        const newButtonElement = buttonElement.cloneNode(true);
-                        buttonElement.replaceWith(newButtonElement);
-                    }
+                    if (buttonElement) {buttonElement.replaceWith(buttonElement.cloneNode(true))} // Clone to remove all listeners
                 });
                 activeButtonIds = []; // Reset the tracking list
             }
 
             function buildPoiFooterContainer(data, tableModel, poiNameSelectBox, poiOwnerSelectBox) {
-                const refreshButton = new qx.ui.form.Button("Refresh", Icons.Refresh).set({
-                    toolTipText: "Refresh POIs"
-                });
-                const downloadButton = new qx.ui.form.Button("Download TSV", Icons.DownloadTSV).set({
-                    toolTipText: "Download table data in TSV (tab-separated values) format."
-                });
+                const refreshButton = new qx.ui.form.Button("Refresh", Icons.Refresh).set({toolTipText: "Refresh POIs"});
+                const downloadButton = new qx.ui.form.Button("Download TSV", Icons.Download).set({toolTipText: "Download table data in TSV (tab-separated values) format."});
                 refreshButton.addListener("execute", getPOIs);
-                downloadButton.addListener("execute", () => {
-                    getTSV(AllPOIs, "POIs");
-                });
+                downloadButton.addListener("execute", () => {getTSV(AllPOIs, "POIs")});
                 poiNameSelectBox.addListener("changeSelection", applyFilters);
                 poiOwnerSelectBox.addListener("changeSelection", applyFilters);
                 updateSelectBoxes(poiNameSelectBox, poiOwnerSelectBox, data);
@@ -918,14 +733,9 @@
                 const selectedName = nameSelection ? nameSelection.getLabel() : "All Names";
                 const selectedAlliance = allianceSelection ? allianceSelection.getLabel() : "All Alliances";
                 let filteredData = tabView.getUserData("poiData") || data;
-                if (selectedName !== "All Names") {
-                    filteredData = filteredData.filter(poi => poi.Name === selectedName);
-                }
-                if (selectedAlliance === "No Alliance") {
-                    filteredData = filteredData.filter(poi => !poi.Alliance || poi.Alliance.trim() === "");
-                } else if (selectedAlliance !== "All Alliances") {
-                    filteredData = filteredData.filter(poi => poi.Alliance === selectedAlliance);
-                }
+                if (selectedName !== "All Names") {filteredData = filteredData.filter(poi => poi.Name === selectedName)}
+                if (selectedAlliance === "No Alliance") {filteredData = filteredData.filter(poi => !poi.Alliance || poi.Alliance.trim() === "")}
+                else if (selectedAlliance !== "All Alliances") {filteredData = filteredData.filter(poi => poi.Alliance === selectedAlliance)}
                 updateTableData(filteredData, tableModel);
             }
         }
@@ -938,38 +748,19 @@
                 console.warn("No data available for TSV export.");
                 return;
             }
-
-            // Recursively process objects/arrays to a flat TSV-safe string
-            function flattenValue(value) {
-                if (Array.isArray(value)) {
-                    // Process sub-arrays recursively
+            const flattenValue = (value) => {// Recursively process objects/arrays to a flat TSV-safe string
+                if (Array.isArray(value)) {// Process sub-arrays recursively
                     return value.map(flattenValue).join("‖"); // Unicode separator for sub-arrays
-                } else if (value && typeof value === "object") {
-                    // Process objects as key-value pairs
-                    return Object.entries(value)
-                        .map(([key, val]) => `${key}:${flattenValue(val)}`)
-                        .join("¦"); // Unicode separator for object key-values
-                } else {
-                    // Replace tabs in raw values to avoid breaking TSV
+                } else if (value && typeof value === "object") {// Process objects as key-value pairs
+                    return Object.entries(value).map(([key, val]) => `${key}:${flattenValue(val)}`).join("¦"); // Unicode separator for object key-values
+                } else {// Replace tabs in raw values to avoid breaking TSV
                     return String(value || "").replace(/\t/g, " ");
                 }
             }
-
-            // Extract headers and rows
             const headers = Object.keys(data[0]).join("\t");
-            const rows = data
-                .map(item =>
-                    Object.values(item)
-                    .map(flattenValue) // Apply flattening to each cell
-                    .join("\t")
-                )
-                .join("\n");
-
-            // Combine into TSV content
+            const rows = data.map(item => Object.values(item).map(flattenValue).join("\t")).join("\n");
             const tsvContent = `data:text/tab-separated-values;charset=utf-8,${headers}\n${rows}`;
             const encodedUri = encodeURI(tsvContent);
-
-            // Trigger download
             const downloadLink = document.createElement("a");
             downloadLink.href = encodedUri;
             downloadLink.download = `${new Date().toISOString().slice(0, 10)}_${wid}_${name}.tsv`;
@@ -982,41 +773,18 @@
             const container = targetContainer ? targetContainer : optionsBar;
             let pbContainer = container.getChildren().find(child => child.getUserData("pbContainer"));
             if (!pbContainer) {
-                pbContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({
-                    padding: 0,
-                    width: 115,
-                    decorator: new qx.ui.decoration.Decorator().set({
-                        width: 1,
-                        style: "solid",
-                        color: "black",
-                        backgroundColor: "transparent",
-                    }),
-                });
+                pbContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox()).set({padding: 0, width: 115, decorator: new qx.ui.decoration.Decorator().set({width: 1, style: "solid", color: "black", backgroundColor: "transparent"})});
                 pbContainer.setUserData("pbContainer", true);
                 targetContainer ? container.add(pbContainer) : optionsBar.addAt(pbContainer, 1);
             }
             let pb = pbContainer.getChildren()[0];
             if (!pb) {
                 pb = new qx.ui.basic.Label();
-                pb.set({
-                    value: `${pbIndex} / ${pbLength} ${pbName}`,
-                    width: 0,
-                    height: 11,
-                    maxWidth: 113,
-                    textColor: "black",
-                    font: qx.bom.Font.fromString("9px tahoma"),
-                    backgroundColor: "white",
-                    decorator: "main",
-                });
+                pb.set({value: `${pbIndex} / ${pbLength} ${pbName}`, width: 0, height: 11, maxWidth: 113, textColor: "black", font: qx.bom.Font.fromString("9px tahoma"), backgroundColor: "white", decorator: "main"});
                 pbContainer.add(pb);
             }
-            pb.set({
-                value: `${pbIndex} / ${pbLength} ${pbName}`,
-                width: pbIndex / pbLength * pb.getMaxWidth()
-            });
-            if (pbIndex === pbLength) {
-                pbContainer.getLayoutParent().remove(pbContainer);
-            }
+            pb.set({value: `${pbIndex} / ${pbLength} ${pbName}`, width: pbIndex / pbLength * pb.getMaxWidth()});
+            pbIndex === pbLength ? pbContainer.getLayoutParent().remove(pbContainer) : null;
         }
         // Convert milliseconds to time format "hh:mm:ss:mmm"
         function msToTime(milliseconds) {
@@ -1034,9 +802,7 @@
                 angle: () => (360 + Math.atan2(deltaY, deltaX) * (180 / Math.PI)) % 360,
                 distance: () => Math.hypot(deltaX, deltaY),
                 sector: () => {
-                    if (xA !== centerX || yA !== centerY) {
-                        throw new Error("The 'sector' metric can only be calculated from the default center coordinates.");
-                    }
+                    if (xA !== centerX || yA !== centerY) {throw new Error("The 'sector' metric can only be calculated from the default center coordinates.")}
                     const angle = (Math.atan2(centerX - xB, yB - centerY) * sectorNames.length) / (2 * Math.PI) + sectorNames.length + 0.5;
                     return qxApp.tr(`tnf:${sectorNames[Math.floor(angle) % sectorNames.length]} abbr`);
                 },
@@ -1045,26 +811,31 @@
                     const normalizedAngle = (angle * 180 / Math.PI + 90 + 360) % 360; // Shift by 90 degrees for clock alignment
                     const clockIndex = Math.round((normalizedAngle / 360) * 12) % 12;
                     return clockPositions[clockIndex];
-                },
+                }
             };
-            if (!calculations[metricType]) {
-                throw new Error("Invalid metricType. Use 'angle', 'distance', 'sector', or 'clock'.");
-            }
+            if (!calculations[metricType]) {throw new Error("Invalid metricType. Use 'angle', 'distance', 'sector', or 'clock'.")}
             return calculations[metricType]();
+        }
+        function getPollFunction() {
+            const proto = ClientLib.Net.CommunicationManager.prototype;
+            for (const key of Object.keys(proto)) {
+                const fn = proto[key];
+                if (typeof fn === 'function' && fn.toString().includes('"Poll"')) {
+                    return fn;// returns the Poll function reference
+                }
+            }
+            return null;
         }
         /*
          * Initialization logic
          */
         // Add Scripts menu entries
         function init() {
-            const ScriptsButton = qxApp.getMenuBar().getScriptsButton();
-            ScriptsButton.Add("Lister UI", Icons.Lister);
-            qx.event.Timer.once(() => {
-                const children = ScriptsButton.getMenu().getChildren();
-                children[children.length - 1].addListener("execute", () => {
-                    mainUI();
-                });
-            }, null, 50); // Use a timer to delay adding listeners until the menu items are fully added
+            const scriptsButton = qxApp.getMenuBar().getScriptsButton();
+            const listerMenuItem = scriptsButton.Add("Lister UI", Icons.Lister);
+            const listerItem = scriptsButton.getMenu().getChildren().find(item => item.getLabel() === "Lister UI");
+            listerItem.set({toolTip: (new qx.ui.tooltip.ToolTip(`Some data scanners / tables...<br>(by <a target="_blank" href="https://github.com/ffi82/CnC-TA" style="color:white">ffi82</a>)`)).set({ rich: true }), blockToolTip: false});
+            listerItem.addListener('execute', mainUI);
             console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
         }
         init();
