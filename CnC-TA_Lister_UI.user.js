@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnC-TA Lister UI
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025-05-13
+// @version      2025-08-04
 // @description  Some data tables...
 // @author       ffi82
 // @contributor  leo7044 (https://github.com/leo7044), 4o (ChatGPT)
@@ -17,7 +17,7 @@
     const ListerUIScript = async () => {
         const scriptName = 'CnC-TA Lister UI';
         try {if (typeof qx === 'undefined' || typeof qx.core.Init.getApplication !== 'function' || !qx?.core?.Init?.getApplication()?.initDone || typeof ClientLib === 'undefined' || !ClientLib?.Data?.MainData?.GetInstance()?.get_EndGame()?.GetCenter()) return setTimeout(ListerUIScript, 1000)}
-        catch (e) {console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border-radius: 5px;', e)}
+        catch (e) {console.error(`%c${scriptName} error`, 'background: black; color: pink; font-weight:bold; padding: 3px; border: 1px solid black; border-radius: 5px;', e)}
         window.Lister = { // Exposing Lister globally
             db: null,
             async init(dbName = "Lister") {
@@ -72,11 +72,13 @@
             clear() {return this.performTransaction("clear")},
         }
         const qxApp = qx.core.Init.getApplication();
-        const cfg = ClientLib.Config.Main;
+        const cfg = ClientLib.Config.Main.GetInstance();
+        const communicationManager = ClientLib.Net.CommunicationManager.GetInstance();
         const region = ClientLib.Vis.VisMain.GetInstance().get_Region();
         const mainData = ClientLib.Data.MainData.GetInstance();
         const wid = mainData.get_Server().get_WorldId();
         const defaultPoint = mainData.get_EndGame().GetCenter();
+        const PollFunction = getPollFunction();
         const [centerX, centerY] = [defaultPoint.get_X() + defaultPoint.get_SizeX() / 2, defaultPoint.get_Y() + defaultPoint.get_SizeY() / 2];
         const sectorNames = ['south', 'southwest', 'west', 'northwest', 'north', 'northeast', 'east', 'southeast'];
         const clockPositions = Array(12).fill().map((_, i) => `${i || 12} o'clock`);
@@ -121,8 +123,11 @@
             Base_Offense_Level: null,
             Base_Construction_Yard_Level: null,
             Base_Command_Center_Level: null,
+            Base_Defense_HQ_Level: null,
+            Base_Defense_Facility_Level: null,
             Base_Support_Name: null,
             Base_Support_Level: null,
+            Base_IsOnControlHub: null,
             processedTimestamp: null
         };
         const poiTemplate = {
@@ -177,6 +182,33 @@
             dispatch(eventName, data) {if (this.listeners[eventName]) {this.listeners[eventName].forEach(callback => callback({getData: () => data, eventName, timestamp: performance.now()}))}}
         }
         const eventBus = new EventBus(); // Create an instance of the EventBus
+        // Build Hub terminals coords (DEE's idea)
+        const HubTerminals = (() => {
+            let terminalMap = null, hubMap = null;
+            const offsets = [[-2, -2], [-2, 0], [-2, 2], [0, -2], [0, 2], [2, -2], [2, 0], [2, 2]];
+
+            return (type) => {
+                if (!terminalMap || !hubMap) {
+                    terminalMap = {};
+                    hubMap = {};
+                    for (const hub of Object.values(ClientLib.Data.MainData.GetInstance().get_EndGame().get_Hubs().d)) {
+                        if (hub.get_Type() === ClientLib.Data.EndGame.EHubType.Control) {
+                            const name = webfrontend.phe.cnc.gui.util.Text.getControlHubName(hub, false);
+                            const cx = hub.get_X() + 3, cy = hub.get_Y() + 3;
+                            const coords = offsets.map(([dx, dy]) => `${cx + dx}:${cy + dy}`);
+                            hubMap[name] = coords;
+                            for (const coord of coords) terminalMap[coord] = name;
+                        }
+                    }
+                }
+                if (type === 'hub') return hubMap;
+                if (type === 'terminal') return terminalMap;
+                console.warn(`HubTerminals(): Use 'hub' or 'terminal'`);
+                return null;
+            };
+        })();
+        const coordToHubMap = HubTerminals('terminal');
+        const hubToCoordsMap = HubTerminals('hub');
         /*
          * Alliance Cities
          */
@@ -191,7 +223,7 @@
         // Get public member info (about 75% of each alliance city data)
         async function getPublicPlayerInfoByIdAC(playerId) {
             try {
-                const data = await new Promise((resolve, reject) => {ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicPlayerInfo', {id: playerId}, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {resolve(data)}), reject)});
+                const data = await new Promise((resolve, reject) => {communicationManager.SendSimpleCommand('GetPublicPlayerInfo', {id: playerId}, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, (context, data) => {resolve(data)}), reject)});
                 const s = mainData.get_Server().get_Name();
                 for (const city of data.c) {
                     let cityData = {...AllianceCitiesTemplate}
@@ -224,10 +256,11 @@
                         Base_Score: city.p,
                         Base_Coords: `${city.x}:${city.y}`,
                         Base_Sector: calculateMetric(city.x, city.y, 'sector'),
-                        Base_Distance_from_Center: calculateMetric(city.x, city.y, 'distance')
+                        Base_Distance_from_Center: calculateMetric(city.x, city.y, 'distance'),
+                        Base_IsOnControlHub: coordToHubMap[`${city.x}:${city.y}`]
                     });
                     //ghost bases values fix
-                    ClientLib.Net.CommunicationManager.GetInstance().SendSimpleCommand('GetPublicCityInfoById', {id: city.i}, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, async (context, data) => {
+                    communicationManager.SendSimpleCommand('GetPublicCityInfoById', {id: city.i}, webfrontend.phe.cnc.Util.createEventDelegate(ClientLib.Net.CommandResult, null, async (context, data) => {
                         if (data.g === true) {
                             Object.assign(cityData, {
                                 Base_Found_Step: -1,
@@ -241,6 +274,8 @@
                                 Base_Offense_Level: -1,
                                 Base_Construction_Yard_Level: -1,
                                 Base_Command_Center_Level: -1,
+                                Base_Defense_HQ_Level: -1,
+                                Base_Defense_Facility_Level: -1,
                                 Base_Support_Name: -1,
                                 Base_Support_Level: -1,
                                 processedTimestamp: new Date().toISOString()
@@ -259,12 +294,10 @@
         }
         // Set the play area view on the selected ID and wait for it's data to be loaded
         function loadCity(id) {
-            const comm = ClientLib.Net.CommunicationManager.GetInstance();
-            const PollFunction = getPollFunction();
             return new Promise((resolve) => {
                 ClientLib.API.Util.SetPlayAreaView(ClientLib.Data.PlayerAreaViewMode.pavmNone, id, 0, 0); // Set the play area view for the current city
-                //comm.$Poll();
-                if (PollFunction) PollFunction.call(comm);
+                //if (typeof this.communicationManager.$Poll === 'function') this.communicationManager.$Poll();
+                PollFunction?.call(communicationManager);
                 const checkLoading = setInterval(() => {
                     const loadedCity = mainData.get_Cities().get_CurrentCity();
                     // Check if the loaded city's ID matches the requested city ID
@@ -282,6 +315,8 @@
                 const cityId = remainingCityIds.shift(); // Take the first city ID
                 try {
                     const loadedCity = await loadCity(cityId);
+                    const buildings = Object.values(loadedCity.get_Buildings().d);
+                    const getLevel = name => buildings.find(b => b.get_TechGameData_Obj().dn === name)?.get_CurrentLevel();
                     let cityData = AllianceCitiesArr.find(city => city.Base_Id === cityId); // Find the existing city object in AllianceCitiesArr and update its properties
                     if (cityData) {
                         Object.assign(cityData, {
@@ -294,8 +329,10 @@
                             Base_Base_Level: loadedCity.get_LvlBase(),
                             Base_Defense_Level: loadedCity.get_LvlDefense(),
                             Base_Offense_Level: loadedCity.get_LvlOffense(),
-                            Base_Construction_Yard_Level: loadedCity.get_ConstructionYardLevel(),
-                            Base_Command_Center_Level: loadedCity.get_CommandCenterLevel(),
+                            Base_Construction_Yard_Level: getLevel('Construction Yard'), // loadedCity.get_ConstructionYardLevel(),
+                            Base_Command_Center_Level: getLevel('Command Center'), // loadedCity.get_CommandCenterLevel(),
+                            Base_Defense_HQ_Level: getLevel('Defense HQ'),
+                            Base_Defense_Facility_Level: getLevel('Defense Facility'),
                             Base_Support_Name: loadedCity.get_SupportWeapon()?.dn || "No Support",
                             Base_Support_Level: loadedCity.get_SupportData()?.get_Level() || 0,
                             processedTimestamp: new Date().toISOString()
@@ -319,8 +356,8 @@
         }
         // Set the proper zoom on region view and wait for objects to be available... get_VisAreaComplete() must return "true"
         function waitForMapAreaResize(region) {
-            cfg.GetInstance().SetConfig(cfg.CONFIG_VIS_REGION_MINZOOM, false); // Uncheck 'Allow max zoom out' in game video options
-            cfg.GetInstance().SaveToDB(); //Save settings
+            cfg.SetConfig(ClientLib.Config.Main.CONFIG_VIS_REGION_MINZOOM, false); // Uncheck 'Allow max zoom out' in game video options
+            cfg.SaveToDB(); //Save settings
             const getMinZoomMethod = region.get_MinZoomFactor.toString().match(/\$I\.[A-Z]{6}\.([A-Z]{6});?}/)?.[1]; // Extract the `getMinZoomFactor` method dynamically.
             const newMinZoomFactor = Math.max(window.innerWidth / region.get_MaxXPosition(), window.innerHeight / region.get_MaxYPosition()); // Calculate ZoomFactor for your window width and height. The bigger ZoomFactor is chosen to ensure the map fills the window and crops off whatever doesn't fit... get_VisAreaComplete() will return 'false' otherwise.
             ClientLib.Vis.Region.Region[getMinZoomMethod] = newMinZoomFactor; // Modify the MinZoomFactor to be able to zoom out further
@@ -821,7 +858,15 @@
             for (const key of Object.keys(proto)) {
                 const fn = proto[key];
                 if (typeof fn === 'function' && fn.toString().includes('"Poll"')) {
-                    return fn;// returns the Poll function reference
+                    // Attach to prototype for easy use
+                    if (typeof communicationManager.$Poll !== 'function') {
+                        Object.defineProperty(ClientLib.Net.CommunicationManager.prototype, '$Poll', {
+                            configurable: true,
+                            get: () => {return this[key]} // This is the obfuscated name for "Poll"
+                        });
+                        console.info(`%cPoll function name: ${key}`, "overflow: hidden; color: #fff; background-color: #000; background-image: linear-gradient(black, grey); padding: 3px; border: 1px solid black; border-radius: 5px;");
+                    }
+                    return fn; // This is the "Poll" function reference
                 }
             }
             return null;
@@ -836,7 +881,7 @@
             const listerItem = scriptsButton.getMenu().getChildren().find(item => item.getLabel() === "Lister UI");
             listerItem.set({toolTip: (new qx.ui.tooltip.ToolTip(`Some data scanners / tables...<br>(by <a target="_blank" href="https://github.com/ffi82/CnC-TA" style="color:white">ffi82</a>)`)).set({ rich: true }), blockToolTip: false});
             listerItem.addListener('execute', mainUI);
-            console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border-radius: 5px;');
+            console.log(`%c${scriptName} loaded`, 'background: #c4e2a0; color: darkred; font-weight:bold; padding: 3px; border: 1px solid black; border-radius: 5px;');
         }
         init();
     }
