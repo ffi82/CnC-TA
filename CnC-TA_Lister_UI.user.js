@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         CnC-TA Lister UI
 // @namespace    https://github.com/ffi82/CnC-TA/
-// @version      2025-08-04
+// @version      2025-08-18
 // @description  Some data tables...
 // @author       ffi82
 // @contributor  leo7044 (https://github.com/leo7044), 4o (ChatGPT)
@@ -128,6 +128,7 @@
             Base_Support_Name: null,
             Base_Support_Level: null,
             Base_IsOnControlHub: null,
+            Base_MoveCooldownTimespan: null,
             processedTimestamp: null
         };
         const poiTemplate = {
@@ -278,6 +279,7 @@
                                 Base_Defense_Facility_Level: -1,
                                 Base_Support_Name: -1,
                                 Base_Support_Level: -1,
+                                Base_MoveCooldownTimespan: -1,
                                 processedTimestamp: new Date().toISOString()
                             });
                             processedCityIds.push(city.i);
@@ -335,6 +337,7 @@
                             Base_Defense_Facility_Level: getLevel('Defense Facility'),
                             Base_Support_Name: loadedCity.get_SupportWeapon()?.dn || "No Support",
                             Base_Support_Level: loadedCity.get_SupportData()?.get_Level() || 0,
+                            Base_MoveCooldownTimespan: webfrontend.phe.cnc.Util.getTimespanString(mainData.get_Time().GetServerStep() - loadedCity.get_MoveCooldownEndStep(), true, true), // shown in d:h:m:s format for sorting purposes
                             processedTimestamp: new Date().toISOString()
                         });
                     }
