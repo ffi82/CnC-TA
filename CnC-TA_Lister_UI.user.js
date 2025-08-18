@@ -337,7 +337,7 @@
                             Base_Defense_Facility_Level: getLevel('Defense Facility'),
                             Base_Support_Name: loadedCity.get_SupportWeapon()?.dn || "No Support",
                             Base_Support_Level: loadedCity.get_SupportData()?.get_Level() || 0,
-                            Base_MoveCooldownTimespan: webfrontend.phe.cnc.Util.getTimespanString(mainData.get_Time().GetServerStep() - loadedCity.get_MoveCooldownEndStep(), true, true), // shown in d:h:m:s format for sorting purposes
+                            Base_MoveCooldownTimespan: mainData.get_Time().GetServerStep() - loadedCity.get_MoveCooldownEndStep(),
                             processedTimestamp: new Date().toISOString()
                         });
                     }
@@ -479,6 +479,7 @@
             booleanColumns.forEach(index => tableColumnModel.setDataCellRenderer(index, new qx.ui.table.cellrenderer.Boolean()));
             compactNumberColumns.forEach(index => tableColumnModel.setDataCellRenderer(index, createRenderer(cellInfo => webfrontend.phe.cnc.gui.util.Numbers.formatNumbersCompact(cellInfo.value))));
             allianceLinkColumns.forEach(index => tableColumnModel.setDataCellRenderer(index, createRenderer(cellInfo => webfrontend.gui.util.BBCode.createAllianceLinkText(cellInfo.value))));
+            tableColumnModel.setDataCellRenderer(45, createRenderer(cellInfo => webfrontend.phe.cnc.Util.getTimespanString(cellInfo.value, true, false)));
             tableColumnModel.setDataCellRenderer(3, createRenderer(cellInfo => webfrontend.gui.util.BBCode.createPlayerLinkText(cellInfo.value)));
             tableColumnModel.setDataCellRenderer(26, createRenderer(cellInfo => {
                 const [x, y] = cellInfo.value.split(":");
